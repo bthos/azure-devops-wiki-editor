@@ -31,4 +31,3 @@ function whenElementAppear()
 $(document).ready(function(){
     whenElementAppear();
 });
-
