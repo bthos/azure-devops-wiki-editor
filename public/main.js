@@ -15,7 +15,16 @@ function whenElementAppear()
             initialValue: content,
             events: {
                 change: contentChanged
-            }
+            },
+            customHTMLRenderer: {
+                emph: (node, context) => {
+                    if (node.literal === '[[_TOC_]]') {
+                        return entering ? '[[_TOC_]]' : '';
+                    }
+                    return context ? '**' : '**';
+                }
+            },
+            usageStatistics: false
         });
 
         function contentChanged()
@@ -23,6 +32,16 @@ function whenElementAppear()
             $(".we-ta-container textarea").val(editor.getMarkdown());
             $(".we-ta-container textarea")[0].dispatchEvent(new Event('input', { bubbles: true}));
         }
+
+        // Add custom buttons to switch between edit types
+        var markdownButton = createApplyButton(i18n.get('Markdown'));
+        markdownButton.addEventListener('click', () => {
+                editor.changeMode('markdown');
+            });
+        var wysiwygButton = $('<button>').text('WYSIWYG').click(function() {
+                editor.changeMode('wysiwyg');
+            });
+        $('.toastui-editor-header').prepend(markdownButton, wysiwygButton);
     }
 
     setTimeout(whenElementAppear, 500);
@@ -31,3 +50,4 @@ function whenElementAppear()
 $(document).ready(function(){
     whenElementAppear();
 });
+

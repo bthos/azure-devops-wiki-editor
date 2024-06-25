@@ -2,7 +2,7 @@ const path = require('path');
 const CopyPlugin = require('copy-webpack-plugin');
 module.exports = {
    entry: {
-      background: path.resolve(__dirname, "..", "src", "background.ts"),
+      background: path.resolve(__dirname, "..", "src", "background.ts")
    },
    output: {
       path: path.join(__dirname, "../dist"),
@@ -23,8 +23,7 @@ module.exports = {
    plugins: [
       new CopyPlugin({
          patterns: [
-            {from: ".", to: ".", context: "public"},
-            {from: "node_modules/@toast-ui/editor/dist/**/*", to: path.resolve(__dirname, 'dist')}
+            {from: ".", to: ".", context: "public"}
          ]
       }),
    ],
