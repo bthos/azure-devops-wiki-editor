@@ -42,6 +42,11 @@ function whenElementAppear()
                 editor.changeMode('wysiwyg');
             });
         $('.toastui-editor-header').prepend(markdownButton, wysiwygButton);
+
+        // Add hooks to handle custom events and prevent errors
+        editor.addHook('renderMarkdown', function() {
+            // Custom rendering logic here
+        });
     }
 
     setTimeout(whenElementAppear, 500);
@@ -50,4 +55,3 @@ function whenElementAppear()
 $(document).ready(function(){
     whenElementAppear();
 });
-
