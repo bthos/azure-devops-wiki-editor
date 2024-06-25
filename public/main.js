@@ -12,7 +12,8 @@ function whenElementAppear() {
             previewStyle: 'vertical',
             initialValue: content,
             events: {
-                change: contentChanged
+                change: contentChanged,
+                renderMarkdown: handleMentionsInTables // Adding missing 'renderMarkdown' event type
             },
             hooks: {
                 addImageBlobHook: function (blob, callback) {
@@ -21,8 +22,7 @@ function whenElementAppear() {
                         callback(e.target.result, blob.name);
                     };
                     reader.readAsDataURL(blob);
-                },
-                renderMarkdown: handleMentionsInTables
+                }
             }
         });
 
