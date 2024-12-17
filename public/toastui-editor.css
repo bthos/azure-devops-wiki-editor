@@ -1,6 +1,6 @@
 /*!
  * @toast-ui/editor
- * @version 3.1.7 | Tue May 17 2022
+ * @version 3.2.2 | Fri Feb 17 2023
  * @author NHN Cloud FE Development Lab <dl_javascript@nhn.com>
  * @license MIT
  */
@@ -48,7 +48,14 @@ li.ProseMirror-selectednode:after {
   pointer-events: none;
 }
 
-@charset "utf-8";
+/* Protect against generic img rules */
+
+img.ProseMirror-separator {
+  display: inline !important;
+  border: none !important;
+  margin: 0 !important;
+}
+
 /* height */
 .auto-height,
 .auto-height .toastui-editor-defaultUI {
@@ -938,6 +945,7 @@ li.ProseMirror-selectednode:after {
     max-width: none;
   }
 }
+
 /* 
   z-index basis
   -1: pseudo element
