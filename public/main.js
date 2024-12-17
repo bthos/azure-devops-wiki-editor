@@ -18,6 +18,10 @@ function whenElementAppear()
             },
             customHTMLRenderer: {
                 emph: (node, context) => {
+                    if (!node.literal) {
+                        console.error('Error: node.literal is not defined');
+                        return '';
+                    }
                     if (node.literal === '[[_TOC_]]') {
                         return '[[_TOC_]]';
                     }
