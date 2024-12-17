@@ -19,7 +19,10 @@ function whenElementAppear()
             customHTMLRenderer: {
                 emph: (node, context) => {
                     if (node.literal === '[[_TOC_]]') {
-                        return entering ? '[[_TOC_]]' : '';
+                        return '[[_TOC_]]';
+                    }
+                    if (node.literal.startsWith('@') && node.literal.includes('<') && node.literal.includes('>')) {
+                        return node.literal;
                     }
                     return context ? '**' : '**';
                 }
