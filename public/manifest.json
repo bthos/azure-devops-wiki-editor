@@ -30,10 +30,14 @@
     ],
 
     "permissions": [
-        "declarativeContent",
         "activeTab",
         "storage",
         "scripting",
         "webNavigation"
+    ],
+
+    "host_permissions": [
+        "*://dev.azure.com/*/_wiki/*",
+        "*://*.visualstudio.com/*/_wiki/*"
     ]
 }
