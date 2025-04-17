@@ -1,5 +1,7 @@
 const path = require('path');
 const CopyPlugin = require('copy-webpack-plugin');
+const ZipPlugin = require('zip-webpack-plugin');
+
 module.exports = {
    entry: {
       background: path.resolve(__dirname, "..", "src", "background.ts")
@@ -26,5 +28,12 @@ module.exports = {
             {from: ".", to: ".", context: "public"}
          ]
       }),
+      ...(process.env.NODE_ENV === 'production' ? [
+         new ZipPlugin({
+            path: '../',
+            filename: 'azure-devops-wiki-editor.zip',
+            pathPrefix: 'dist/',
+         })
+      ] : [])
    ],
 };

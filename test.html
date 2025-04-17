@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Editor Test</title>
+    <link rel="stylesheet" href="public/toastui-editor.css" />
+    <link rel="stylesheet" href="public/custom-styles.css" />
+    <script src="public/jquery-3.6.0.slim.min.js"></script>
+    <script src="public/toastui-editor-all.js"></script>
+</head>
+<body>
+    <div class="wiki-editor">
+        <form id="wikiForm" onsubmit="event.preventDefault(); alert('Form content: ' + document.querySelector('.we-ta-container textarea').value);">
+            <div class="we-ta-container">
+                <textarea style="display:block;">
+# Test Document
+
+[[_TOC_]]
+
+## Section 1
+Hello @<user1>, this is a test.
+
+## Section 2
+Testing with @<another.user> and some content.
+
+## Section 3
+More content here.
+                </textarea>
+            </div>
+            <button type="submit" style="margin: 10px;">Save Changes</button>
+        </form>
+    </div>
+    <script src="public/main.js"></script>
+</body>
+</html>
