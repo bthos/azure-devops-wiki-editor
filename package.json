@@ -9,7 +9,13 @@
     "dev-build": "npm run clean && webpack --config webpack/webpack.config.js --mode=development",
     "build": "npm run clean && cross-env NODE_ENV=production webpack --config webpack/webpack.config.js --mode=production",
     "server": "http-server . -p 8080 -c-1",
-    "version": "node -p \"require('./package.json').version\" > version.txt && git add version.txt"
+    "version": "node scripts/sync-version.js && git add version.txt public/manifest.json",
+    "commit": "git-cz",
+    "prepare-commit-msg": "exec < /dev/tty && npx cz --hook || true",
+    "release": "standard-version",
+    "release:patch": "standard-version --release-as patch && git push --follow-tags origin main",
+    "release:minor": "standard-version --release-as minor && git push --follow-tags origin main",
+    "release:major": "standard-version --release-as major && git push --follow-tags origin main"
   },
   "repository": {
     "type": "git",
@@ -26,16 +32,26 @@
     "@toast-ui/editor": "^3.2.2"
   },
   "devDependencies": {
+    "@commitlint/cli": "^19.8.0",
+    "@commitlint/config-conventional": "^19.8.0",
     "@types/chrome": "^0.0.239",
+    "commitizen": "^4.3.1",
     "copy-webpack-plugin": "^11.0.0",
     "cross-env": "^7.0.3",
     "css-minimizer-webpack-plugin": "^7.0.2",
+    "cz-conventional-changelog": "^3.3.0",
     "http-server": "^14.1.1",
+    "standard-version": "^9.5.0",
     "terser-webpack-plugin": "^5.3.14",
     "ts-loader": "^9.4.4",
     "typescript": "^5.1.6",
     "webpack": "^5.88.1",
     "webpack-cli": "^5.1.4",
     "zip-webpack-plugin": "^4.0.3"
+  },
+  "config": {
+    "commitizen": {
+      "path": "cz-conventional-changelog"
+    }
   }
 }

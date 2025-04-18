@@ -1,0 +1,10 @@
+# These owners will be the default owners for everything in the repo
+# and will be requested for review when someone opens a pull request.
+* @bthos
+
+# You can specify different owners for specific paths
+# Examples:
+# * @global-owner                # Default owner for everything 
+# /src/ @dev-team                # All files in src directory
+# *.js @javascript-specialist    # All JavaScript files
+# /docs/ @docs-team @tech-writer # Multiple owners for documentation

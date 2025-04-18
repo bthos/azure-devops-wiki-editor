@@ -2,8 +2,12 @@ name: Build and Release
 
 on:
   push:
+    branches:
+      - main
     tags:
       - 'v*'
+    paths-ignore:
+      - '**.md'
   pull_request:
     branches: [ main ]
 
@@ -12,8 +16,8 @@ permissions:
 
 jobs:
   build:
-# Skip if the commit was made by the GitHub Actions bot
-    if: github.actor != 'github-actions[bot]'
+    # Skip if the commit message contains [skip ci]
+    if: "!contains(github.event.head_commit.message, '[skip ci]')"
     runs-on: ubuntu-latest
 
     steps:
@@ -38,16 +42,15 @@ jobs:
         VERSION=${GITHUB_REF#refs/tags/v}
         echo "version=$VERSION" >> $GITHUB_OUTPUT
         
-        # Update package.json version
+        # Use our sync-version script instead of manual updates
         npm version $VERSION --no-git-tag-version --allow-same-version
+        set -e
+        node scripts/sync-version.js || { echo "Error: sync-version.js failed"; exit 1; }
         
-        # Update manifest.json version
-        sed -i "s/\"version\": \".*\"/\"version\": \"$VERSION\"/" public/manifest.json
-        
-        # Commit version updates
+        # Commit version updates with [skip ci] to avoid circular trigger
         git config --global user.name 'GitHub Actions'
         git config --global user.email 'actions@github.com'
-        git add package.json public/manifest.json
+        git add package.json public/manifest.json version.txt
         git commit -m "chore: Sync versions to $VERSION [skip ci]"
         git push origin HEAD:main
 
