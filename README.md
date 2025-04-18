@@ -52,6 +52,20 @@ To build the production version of the extension, follow these steps:
 
 This will create a production build in the `dist/` directory. The production build is optimized with minified code and no source maps. It also creates a ZIP file ready for distribution.
 
+## Development Server
+
+To test the editor functionality locally before installing it as a Chrome extension:
+
+1. Start the development server:
+   ```sh
+   npm run server
+   ```
+
+2. Open your browser and navigate to:
+   `http://localhost:8080/test.html`
+
+3. You'll see a test page with the WYSIWYG editor where you can try out the features without needing to install the extension.
+
 ## Testing the Extension
 
 ### Local Testing
@@ -77,6 +91,39 @@ If the editor doesn't appear:
 2. Try refreshing the page
 3. Ensure the extension is enabled in Chrome
 4. Verify you're on a supported Azure DevOps wiki page (URL should match `*://dev.azure.com/*/_wiki/*` or `*://*.visualstudio.com/*/_wiki/*`)
+
+## Features
+
+- WYSIWYG editing interface for Azure DevOps Wiki pages
+- Real-time preview of markdown changes
+- Support for all standard markdown syntax:
+  - Headers (H1-H6)
+  - Lists (ordered and unordered)
+  - Tables with easy editing interface
+  - Code blocks with syntax highlighting
+  - Task lists (checkboxes)
+  - Blockquotes
+- Azure DevOps specific features:
+  - @mentions support
+  - Wiki TOC generation (`[[_TOC_]]`)
+  - Wiki links
+  - Work item links (#123)
+- Image upload and embedding
+- Split screen mode (editor/preview)
+- Full screen editing mode
+
+## Keyboard Shortcuts
+
+| Action | Windows/Linux | macOS |
+|--------|--------------|-------|
+| Bold | Ctrl+B | ⌘+B |
+| Italic | Ctrl+I | ⌘+I |
+| Strike Through | Ctrl+S | ⌘+S |
+| Heading 1-6 | Ctrl+1-6 | ⌘+1-6 |
+| Code Block | Ctrl+Shift+C | ⌘+Shift+C |
+| Link | Ctrl+K | ⌘+K |
+| Switch to HTML | Ctrl+Tab | ⌘+Tab |
+| Save Changes | Ctrl+S | ⌘+S |
 
 ## Contributing
 
