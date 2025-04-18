@@ -24,9 +24,16 @@ module.exports = {
    },
    plugins: [
       new CopyPlugin({
-         patterns: [
-            {from: ".", to: ".", context: "public"}
-         ]
+         patterns: [{
+            from: ".",
+            to: ".",
+            context: "public",
+            globOptions: {
+               ignore: process.env.NODE_ENV === 'production' 
+                  ? ['**/toastui-editor-all.js', '**/toastui-editor.css']  // In production, ignore non-minified
+                  : ['**/toastui-editor-all.min.js', '**/toastui-editor.min.css']  // In development, ignore minified
+            }
+         }]
       }),
       ...(process.env.NODE_ENV === 'production' ? [
          new ZipPlugin({
