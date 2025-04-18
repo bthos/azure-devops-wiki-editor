@@ -2,9 +2,6 @@ name: Build and Release
 
 on:
   push:
-    branches: [ main ]
-    paths:
-      - 'package.json'
     tags:
       - 'v*'
   pull_request:
@@ -15,7 +12,7 @@ permissions:
 
 jobs:
   build:
-    # Skip if the commit was made by the GitHub Actions bot
+# Skip if the commit was made by the GitHub Actions bot
     if: github.actor != 'github-actions[bot]'
     runs-on: ubuntu-latest
 
@@ -34,62 +31,42 @@ jobs:
     - name: Install dependencies
       run: npm ci
 
-    - name: Update manifest and create tag
-      env:
-        GITHUB_TOKEN: ${{ secrets.PAT_TOKEN }}
+    - name: Set version from tag
+      id: get_version
+      if: startsWith(github.ref, 'refs/tags/v')
       run: |
-        # Skip if commit message indicates this is an automated version update
-        if [[ "${{ github.event.head_commit.message }}" == *"skip ci"* ]]; then
-          echo "Skipping version update as this is an automated commit"
-          exit 0
-        fi
+        VERSION=${GITHUB_REF#refs/tags/v}
+        echo "version=$VERSION" >> $GITHUB_OUTPUT
         
-        VERSION=$(node -p "require('./package.json').version")
-        echo "Updating manifest.json version to $VERSION"
+        # Update package.json version
+        npm version $VERSION --no-git-tag-version --allow-same-version
+        
+        # Update manifest.json version
         sed -i "s/\"version\": \".*\"/\"version\": \"$VERSION\"/" public/manifest.json
         
-        # Configure git
+        # Commit version updates
         git config --global user.name 'GitHub Actions'
         git config --global user.email 'actions@github.com'
-        
-        # Add and commit manifest changes
-        git add public/manifest.json
-        git commit -m "chore: Update manifest version to $VERSION [skip ci]" || echo "No manifest changes"
-        
-        # Check if tag exists and delete it if it does
-        if git rev-parse "v$VERSION" >/dev/null 2>&1; then
-          echo "Tag v$VERSION exists, deleting and recreating"
-          git tag -d "v$VERSION"
-          git push origin ":refs/tags/v$VERSION" || true
-        fi
-        
-        # Create and push new tag
-        git tag -a "v$VERSION" -m "Release version $VERSION"
-        git push origin "v$VERSION"
-        
-        # Push manifest changes
-        git push origin HEAD:${{ github.ref }}
+        git add package.json public/manifest.json
+        git commit -m "chore: Sync versions to $VERSION [skip ci]"
+        git push origin HEAD:main
 
     - name: Build
       run: npm run build
       env:
         NODE_ENV: production
 
-    - name: Get Version
-      id: get_version
-      run: |
-        VERSION=$(node -p "require('./package.json').version")
-        echo "version=$VERSION" >> $GITHUB_OUTPUT
-
     - name: Create artifacts directory
       run: mkdir -p artifacts
 
     - name: Create versioned zip
+      if: startsWith(github.ref, 'refs/tags/v')
       run: |
         cd dist
         zip -r "../artifacts/azure-devops-wiki-editor-v${{ steps.get_version.outputs.version }}.zip" *
 
     - name: Upload build artifacts
+      if: startsWith(github.ref, 'refs/tags/v')
       uses: actions/upload-artifact@v4
       with:
         name: extension-dist-v${{ steps.get_version.outputs.version }}
