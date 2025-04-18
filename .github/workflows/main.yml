@@ -32,33 +32,34 @@ jobs:
     - name: Install dependencies
       run: npm ci
 
-    - name: Check version and create tag
-      env:
-        GITHUB_TOKEN: ${{ secrets.PAT_TOKEN }}
-      run: |
-        VERSION=$(node -p "require('./package.json').version")
-        CURRENT_TAG=$(git tag -l "v$VERSION")
-        if [ -z "$CURRENT_TAG" ]; then
-          echo "Creating new tag v$VERSION"
-          git config --global user.name 'GitHub Actions'
-          git config --global user.email 'actions@github.com'
-          git tag -a "v$VERSION" -m "Release version $VERSION"
-          git push origin "v$VERSION"
-        else
-          echo "Tag v$VERSION already exists"
-        fi
-
-    - name: Update manifest version
+    - name: Update manifest and create tag
       env:
         GITHUB_TOKEN: ${{ secrets.PAT_TOKEN }}
       run: |
         VERSION=$(node -p "require('./package.json').version")
         echo "Updating manifest.json version to $VERSION"
         sed -i "s/\"version\": \".*\"/\"version\": \"$VERSION\"/" public/manifest.json
+        
+        # Configure git
         git config --global user.name 'GitHub Actions'
         git config --global user.email 'actions@github.com'
+        
+        # Add and commit manifest changes
         git add public/manifest.json
-        git commit -m "chore: Update manifest version to $VERSION" || echo "No version change"
+        git commit -m "chore: Update manifest version to $VERSION" || echo "No manifest changes"
+        
+        # Check if tag exists and delete it if it does
+        if git rev-parse "v$VERSION" >/dev/null 2>&1; then
+          echo "Tag v$VERSION exists, deleting and recreating"
+          git tag -d "v$VERSION"
+          git push origin ":refs/tags/v$VERSION" || true
+        fi
+        
+        # Create and push new tag
+        git tag -a "v$VERSION" -m "Release version $VERSION"
+        git push origin "v$VERSION"
+        
+        # Push manifest changes
         git push origin HEAD:${{ github.ref }}
 
     - name: Build
@@ -90,5 +91,6 @@ jobs:
       with:
         files: artifacts/azure-devops-wiki-editor.zip
         generate_release_notes: true
+        tag_name: ${{ github.ref_name }}
       env:
         GITHUB_TOKEN: ${{ secrets.PAT_TOKEN }}
