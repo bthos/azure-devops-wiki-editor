@@ -75,11 +75,23 @@ jobs:
       env:
         NODE_ENV: production
 
+    - name: Get Version
+      id: get_version
+      run: echo "VERSION=$(node -p "require('./package.json').version")" >> $GITHUB_ENV
+
+    - name: Create artifacts directory
+      run: mkdir -p artifacts
+
+    - name: Create versioned zip
+      run: |
+        cd dist
+        zip -r ../artifacts/azure-devops-wiki-editor-v${VERSION}.zip *
+
     - name: Upload build artifacts
       uses: actions/upload-artifact@v4
       with:
-        name: extension-dist
-        path: azure-devops-wiki-editor.zip
+        name: extension-dist-v${VERSION}
+        path: artifacts/azure-devops-wiki-editor-v${VERSION}.zip
         if-no-files-found: error
 
   release:
@@ -88,16 +100,20 @@ jobs:
     if: startsWith(github.ref, 'refs/tags/v')
 
     steps:
+    - name: Get Version
+      id: get_version
+      run: echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_ENV
+
     - name: Download artifacts
-      uses: actions/download-artifact@v3
+      uses: actions/download-artifact@v4
       with:
-        name: extension-dist
+        name: extension-dist-v${VERSION}
         path: artifacts
 
     - name: Create Release
       uses: softprops/action-gh-release@v1
       with:
-        files: artifacts/azure-devops-wiki-editor.zip
+        files: artifacts/azure-devops-wiki-editor-v${VERSION}.zip
         generate_release_notes: true
         tag_name: ${{ github.ref_name }}
       env:
