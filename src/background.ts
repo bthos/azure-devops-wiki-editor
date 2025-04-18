@@ -1,5 +1,10 @@
 let active = false;
 
+// Define the function outside of the callback to avoid dynamic evaluation
+function setBackgroundColor(color: string) {
+    document.body.style.backgroundColor = color;
+}
+
 chrome.action.onClicked.addListener((tab) => {
     // Request permissions when user clicks the extension icon
     chrome.permissions.request({
@@ -11,16 +16,19 @@ chrome.action.onClicked.addListener((tab) => {
             // Only proceed with activation if permissions are granted
             active = !active;
             const color = active ? 'orange' : 'white';
-            try {
+            
+            if (tab.id && tab.id !== -1) {
                 chrome.scripting.executeScript({
-                    target: {tabId: tab.id ? tab.id : -1},
-                    func: () => {
-                        document.body.style.backgroundColor = color;
-                    }
-                }).then();
-            } catch (error) {
-                console.error('Error executing script:', error);
-                chrome.runtime.sendMessage({action: 'error', message: 'Failed to execute script'});
+                    target: { tabId: tab.id },
+                    func: setBackgroundColor,
+                    args: [color]
+                }).catch((error) => {
+                    console.error('Error executing script:', error);
+                    chrome.runtime.sendMessage({
+                        action: 'error',
+                        message: 'Failed to execute script'
+                    }).catch(console.error);
+                });
             }
         } else {
             console.log('Azure DevOps Wiki Editor: Permissions denied');
@@ -28,10 +36,11 @@ chrome.action.onClicked.addListener((tab) => {
     });
 });
 
+// Service worker installation
 chrome.runtime.onInstalled.addListener(() => {
     console.log('Azure DevOps Wiki Editor: Service Worker installed');
     // Just set initialized flag, no permissions request here
-    chrome.storage.sync.set({initialized: true});
+    chrome.storage.sync.set({initialized: true}).catch(console.error);
 });
 
 chrome.runtime.onStartup.addListener(() => {
@@ -43,4 +52,5 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         console.log(`Azure DevOps Wiki Editor: ${message.data}`);
     }
     sendResponse({status: 'received'});
+    return true; // Required for async response
 });

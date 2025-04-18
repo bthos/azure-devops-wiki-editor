@@ -2,10 +2,11 @@
 <html>
 <head>
     <title>Editor Test</title>
-    <link rel="stylesheet" href="public/toastui-editor.css" />
-    <link rel="stylesheet" href="public/custom-styles.css" />
-    <script src="public/jquery-3.6.0.slim.min.js"></script>
-    <script src="public/toastui-editor-all.js"></script>
+    <link rel="stylesheet" href="dist/toastui-editor.css" />
+    <link rel="stylesheet" href="dist/custom-styles.css" />
+    <!-- Load only our bundled editor and main.js -->
+    <script src="dist/editor-bundle.js"></script>
+    <script src="dist/main.js"></script>
 </head>
 <body>
     <div class="wiki-editor">
@@ -29,6 +30,5 @@ More content here.
             <button type="submit" style="margin: 10px;">Save Changes</button>
         </form>
     </div>
-    <script src="public/main.js"></script>
 </body>
 </html>

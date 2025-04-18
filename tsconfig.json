@@ -2,13 +2,15 @@
    "compilerOptions": {
       "forceConsistentCasingInFileNames": true,
       "strict": true,
-      "module": "commonjs",
+      "module": "es6",
       "target": "es6",
       "esModuleInterop": true,
       "sourceMap": true,
       "rootDir": "src",
       "outDir": "dist/js",
       "noEmitOnError": true,
+      "moduleResolution": "node",
       "typeRoots": [ "node_modules/@types" ]
-   }
- }
+   },
+   "include": ["src/**/*"]
+}

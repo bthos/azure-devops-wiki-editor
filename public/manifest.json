@@ -24,8 +24,8 @@
     "content_scripts": [
         {
             "matches": ["*://dev.azure.com/*/_wiki/*", "*://*.visualstudio.com/*/_wiki/*"],
-            "js":["jquery-3.6.0.slim.min.js", "toastui-editor-all.min.js", "main.js"],
-            "css":["toastui-editor.min.css", "custom-styles.css"]
+            "js":["editor-bundle.js", "main.js"],
+            "css":["toastui-editor.css", "custom-styles.css"]
         }
     ],
 

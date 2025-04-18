@@ -4,15 +4,17 @@
 
 Chrome Extension enables WYSIWYG editor in Azure DevOps markdown wiki. Based on great work of [Toast UI Editor](https://github.com/nhn/tui.editor).
 
-## Prerequisites
+**Current Version:** 1.0.7
+
+## 🚀 Prerequisites
 
 - [Node.js](https://nodejs.org/) (v12 or higher)
 - npm (comes with Node.js)
 - Google Chrome browser
 
-## How to Build
+## 🛠️ How to Build
 
-### Development Build
+### 🔧 Development Build
 
 To build the development version of the extension, follow these steps:
 
@@ -36,7 +38,7 @@ To build the development version of the extension, follow these steps:
 
 This will create a development build in the `dist/` directory. The development build includes source maps and unminified code for easier debugging.
 
-### Production Build
+### 📦 Production Build
 
 To build the production version of the extension, follow these steps:
 
@@ -46,7 +48,12 @@ To build the production version of the extension, follow these steps:
    npm install
    ```
 
-2. **Build the Production Version**: 
+2. **Clean the Build Directory** (Optional):
+   ```sh
+   npm run clean
+   ```
+
+3. **Build the Production Version**: 
    Run the following command to build the production version of the extension:
    ```sh
    npm run build
@@ -54,7 +61,7 @@ To build the production version of the extension, follow these steps:
 
 This will create a production build in the `dist/` directory. The production build is optimized with minified code and no source maps. It also creates a ZIP file ready for distribution.
 
-## Development Server
+## 💻 Development Server
 
 To test the editor functionality locally before installing it as a Chrome extension:
 
@@ -68,9 +75,9 @@ To test the editor functionality locally before installing it as a Chrome extens
 
 3. You'll see a test page with the WYSIWYG editor where you can try out the features without needing to install the extension.
 
-## Testing the Extension
+## 🧪 Testing the Extension
 
-### Local Testing
+### 🔍 Local Testing
 
 1. Build the extension using either the development or production build steps above
 2. Open Chrome and navigate to `chrome://extensions/`
@@ -86,7 +93,7 @@ To test the editor functionality locally before installing it as a Chrome extens
    - Switching between WYSIWYG and Markdown modes
    - Saving changes to the wiki page
 
-### Troubleshooting
+### ❗ Troubleshooting
 
 If the editor doesn't appear:
 1. Check the browser's console for any error messages
@@ -94,7 +101,7 @@ If the editor doesn't appear:
 3. Ensure the extension is enabled in Chrome
 4. Verify you're on a supported Azure DevOps wiki page (URL should match `*://dev.azure.com/*/_wiki/*` or `*://*.visualstudio.com/*/_wiki/*`)
 
-## Features
+## ✨ Features
 
 - WYSIWYG editing interface for Azure DevOps Wiki pages
 - Real-time preview of markdown changes
@@ -114,7 +121,7 @@ If the editor doesn't appear:
 - Split screen mode (editor/preview)
 - Full screen editing mode
 
-## Keyboard Shortcuts
+## ⌨️ Keyboard Shortcuts
 
 | Action | Windows/Linux | macOS |
 |--------|--------------|-------|
@@ -127,7 +134,7 @@ If the editor doesn't appear:
 | Switch to HTML | Ctrl+Tab | ⌘+Tab |
 | Save Changes | Ctrl+S | ⌘+S |
 
-## Contributing
+## 👥 Contributing
 
 1. Fork the repository
 2. Create a new branch for your feature or bugfix
@@ -135,15 +142,15 @@ If the editor doesn't appear:
 4. Test thoroughly using the steps above
 5. Create a pull request with a clear description of your changes
 
-## License
+## 📄 License
 
 This project is licensed under the ISC License. See the [LICENSE](LICENSE) file for details.
 
-## Repository
+## 📚 Repository
 
 The source code for this project is available at [GitHub](https://github.com/bthos/azure-devops-wiki-editor).
 
-## Bugs and Issues
+## 🐛 Bugs and Issues
 
 If you encounter any issues:
 1. Check the [existing issues](https://github.com/bthos/azure-devops-wiki-editor/issues) to see if it's already reported
@@ -154,25 +161,29 @@ If you encounter any issues:
    - Browser version and OS
    - Any relevant error messages from the console
 
-## Dependencies
+## 📦 Dependencies
 
 - `@toast-ui/editor`: ^3.2.2 - The core WYSIWYG editor component
-- `jquery`: ^3.7.0 - Used for DOM manipulation
 
-## DevDependencies
+## 🛠️ DevDependencies
 
 - `@types/chrome`: ^0.0.239 - TypeScript definitions for Chrome extension APIs
-- `@types/jquery`: ^3.5.16 - TypeScript definitions for jQuery
 - `copy-webpack-plugin`: ^11.0.0 - Copies static assets during build
 - `cross-env`: ^7.0.3 - Sets environment variables across platforms
+- `css-minimizer-webpack-plugin`: ^7.0.2 - Minimizes CSS files
+- `http-server`: ^14.1.1 - Simple HTTP server for development
+- `terser-webpack-plugin`: ^5.3.14 - JavaScript minification
 - `ts-loader`: ^9.4.4 - TypeScript loader for webpack
 - `typescript`: ^5.1.6 - TypeScript compiler
 - `webpack`: ^5.88.1 - Module bundler
 - `webpack-cli`: ^5.1.4 - Webpack command line interface
 - `zip-webpack-plugin`: ^4.0.3 - Creates ZIP file for production builds
 
-## Scripts
+## 📜 Scripts
 
-- `test`: Currently not implemented (placeholder)
+- `clean`: Removes the dist directory and zip files
+- `test`: Currently just a placeholder (exits with code 0)
 - `dev-build`: Builds development version with source maps
 - `build`: Builds production version with optimizations and creates ZIP file
+- `server`: Starts a local development server
+- `version`: Updates version.txt file and adds it to git
