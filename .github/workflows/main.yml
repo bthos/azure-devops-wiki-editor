@@ -37,10 +37,8 @@ jobs:
       uses: actions/upload-artifact@v3
       with:
         name: extension-dist-${{ matrix.node-version }}
-        path: |
-          dist/
-          azure-devops-wiki-editor.zip
-        retention-days: 5
+        path: azure-devops-wiki-editor.zip
+        if-no-files-found: error
 
   release:
     needs: build
@@ -48,13 +46,16 @@ jobs:
     if: startsWith(github.ref, 'refs/tags/v')
 
     steps:
-    - name: Download all artifacts
+    - name: Download artifacts
       uses: actions/download-artifact@v3
+      with:
+        name: extension-dist-18.x
+        path: artifacts
 
     - name: Create Release
       uses: softprops/action-gh-release@v1
       with:
-        files: extension-dist-18.x/azure-devops-wiki-editor.zip
+        files: artifacts/azure-devops-wiki-editor.zip
         generate_release_notes: true
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
