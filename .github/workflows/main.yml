@@ -15,6 +15,8 @@ permissions:
 
 jobs:
   build:
+    # Skip if the commit was made by the GitHub Actions bot
+    if: github.actor != 'github-actions[bot]'
     runs-on: ubuntu-latest
 
     steps:
@@ -36,6 +38,12 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ secrets.PAT_TOKEN }}
       run: |
+        # Skip if commit message indicates this is an automated version update
+        if [[ "${{ github.event.head_commit.message }}" == *"skip ci"* ]]; then
+          echo "Skipping version update as this is an automated commit"
+          exit 0
+        fi
+        
         VERSION=$(node -p "require('./package.json').version")
         echo "Updating manifest.json version to $VERSION"
         sed -i "s/\"version\": \".*\"/\"version\": \"$VERSION\"/" public/manifest.json
@@ -46,7 +54,7 @@ jobs:
         
         # Add and commit manifest changes
         git add public/manifest.json
-        git commit -m "chore: Update manifest version to $VERSION" || echo "No manifest changes"
+        git commit -m "chore: Update manifest version to $VERSION [skip ci]" || echo "No manifest changes"
         
         # Check if tag exists and delete it if it does
         if git rev-parse "v$VERSION" >/dev/null 2>&1; then
