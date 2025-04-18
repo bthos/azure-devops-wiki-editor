@@ -77,7 +77,9 @@ jobs:
 
     - name: Get Version
       id: get_version
-      run: echo "VERSION=$(node -p "require('./package.json').version")" >> $GITHUB_ENV
+      run: |
+        VERSION=$(node -p "require('./package.json').version")
+        echo "version=$VERSION" >> $GITHUB_OUTPUT
 
     - name: Create artifacts directory
       run: mkdir -p artifacts
@@ -85,13 +87,13 @@ jobs:
     - name: Create versioned zip
       run: |
         cd dist
-        zip -r ../artifacts/azure-devops-wiki-editor-v${VERSION}.zip *
+        zip -r "../artifacts/azure-devops-wiki-editor-v${{ steps.get_version.outputs.version }}.zip" *
 
     - name: Upload build artifacts
       uses: actions/upload-artifact@v4
       with:
-        name: extension-dist-v${VERSION}
-        path: artifacts/azure-devops-wiki-editor-v${VERSION}.zip
+        name: extension-dist-v${{ steps.get_version.outputs.version }}
+        path: artifacts/azure-devops-wiki-editor-v${{ steps.get_version.outputs.version }}.zip
         if-no-files-found: error
 
   release:
@@ -102,18 +104,20 @@ jobs:
     steps:
     - name: Get Version
       id: get_version
-      run: echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_ENV
+      run: |
+        VERSION=${GITHUB_REF#refs/tags/v}
+        echo "version=$VERSION" >> $GITHUB_OUTPUT
 
     - name: Download artifacts
       uses: actions/download-artifact@v4
       with:
-        name: extension-dist-v${VERSION}
+        name: extension-dist-v${{ steps.get_version.outputs.version }}
         path: artifacts
 
     - name: Create Release
       uses: softprops/action-gh-release@v1
       with:
-        files: artifacts/azure-devops-wiki-editor-v${VERSION}.zip
+        files: artifacts/azure-devops-wiki-editor-v${{ steps.get_version.outputs.version }}.zip
         generate_release_notes: true
         tag_name: ${{ github.ref_name }}
       env:
