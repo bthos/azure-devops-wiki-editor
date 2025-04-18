@@ -1,13 +1,14 @@
 {
   "name": "azure-devops-wiki-editor",
   "description": "Chrome Extension enables WYSIWYG editor in Azure DevOps markdown wiki. Based on great work of [Toast UI Editor](https://github.com/nhn/tui.editor)",
-  "version": "1.0.0",
+  "version": "1.0.8",
   "main": "main.js",
   "scripts": {
     "test": "echo \"No tests specified yet\" && exit 0",
     "dev-build": "webpack --config webpack/webpack.config.js --mode=development",
     "build": "cross-env NODE_ENV=production webpack --config webpack/webpack.config.js --mode=production",
-    "server": "http-server . -p 8080 -c-1"
+    "server": "http-server . -p 8080 -c-1",
+    "version": "node -p \"require('./package.json').version\" > version.txt && git add version.txt"
   },
   "repository": {
     "type": "git",
