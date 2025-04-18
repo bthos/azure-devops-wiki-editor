@@ -44,7 +44,8 @@ jobs:
         
         # Use our sync-version script instead of manual updates
         npm version $VERSION --no-git-tag-version --allow-same-version
-        node scripts/sync-version.js
+        set -e
+        node scripts/sync-version.js || { echo "Error: sync-version.js failed"; exit 1; }
         
         # Commit version updates with [skip ci] to avoid circular trigger
         git config --global user.name 'GitHub Actions'
