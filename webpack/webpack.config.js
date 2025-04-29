@@ -10,29 +10,15 @@ module.exports = {
    entry: {
       background: path.resolve(__dirname, "..", "src", "background.ts"),
       main: path.resolve(__dirname, "..", "src", "main.ts"),
-      // Add a new entry to create a standalone bundle with Toast UI Editor 
       "editor-bundle": path.resolve(__dirname, "..", "src", "editor-bundle.ts")
    },
    output: {
       path: path.join(__dirname, "../dist"),
       filename: "[name].js",
    },
-   // Using 'inline-source-map' instead of the default 'eval' for development
-   // This prevents CSP errors in Chrome extensions
-   devtool: isProduction ? false : 'inline-source-map',
+   devtool: isProduction ? false : 'source-map',
    resolve: {
       extensions: [".ts", ".js"],
-   },
-   externals: {
-      // Only use this as external in production mode
-      ...(isProduction ? {
-         '@toast-ui/editor': {
-            commonjs: '@toast-ui/editor',
-            commonjs2: '@toast-ui/editor',
-            amd: '@toast-ui/editor',
-            root: ['toastui', 'Editor']
-         }
-      } : {})
    },
    module: {
       rules: [
@@ -44,18 +30,23 @@ module.exports = {
       ],
    },
    optimization: {
-      minimize: process.env.NODE_ENV === 'production',
+      minimize: isProduction,
       minimizer: [
          new TerserPlugin({
-            test: /\.js$/
+            terserOptions: {
+               compress: {
+                  drop_console: false,
+                  drop_debugger: isProduction
+               }
+            }
          }),
          new CssMinimizerPlugin()
       ],
+      splitChunks: false
    },
    plugins: [
       new CopyPlugin({
          patterns: [
-            // Copy static assets from public
             {
                from: ".",
                to: ".",
@@ -69,20 +60,18 @@ module.exports = {
                   ]
                }
             },
-            // Copy Toast UI Editor CSS
             {
                from: 'node_modules/@toast-ui/editor/dist/toastui-editor.css',
                to: 'toastui-editor.css'
             }
-            // jQuery copy removed as it's no longer needed
          ]
       }),
       new ZipPlugin({
          path: path.join(__dirname, '..'),
-         filename: process.env.NODE_ENV === 'production' 
+         filename: isProduction 
             ? 'azure-devops-wiki-editor.zip'
             : 'azure-devops-wiki-editor-dev.zip',
-         pathPrefix: 'dist/',
+         pathPrefix: 'dist/'
       })
    ]
-};
+}

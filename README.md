@@ -4,8 +4,6 @@
 
 Chrome Extension enables WYSIWYG editor in Azure DevOps markdown wiki. Based on great work of [Toast UI Editor](https://github.com/nhn/tui.editor).
 
-**Current Version:** 1.0.7
-
 ## 🚀 Prerequisites
 
 - [Node.js](https://nodejs.org/) (v12 or higher)

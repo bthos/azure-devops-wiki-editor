@@ -4,9 +4,6 @@
     <title>Editor Test</title>
     <link rel="stylesheet" href="dist/toastui-editor.css" />
     <link rel="stylesheet" href="dist/custom-styles.css" />
-    <!-- Load only our bundled editor and main.js -->
-    <script src="dist/editor-bundle.js"></script>
-    <script src="dist/main.js"></script>
 </head>
 <body>
     <div class="wiki-editor">
@@ -30,5 +27,26 @@ More content here.
             <button type="submit" style="margin: 10px;">Save Changes</button>
         </form>
     </div>
+    <script>
+        // Add error handling for script loading
+        window.onerror = function(msg, url, line, col, error) {
+            console.error('An error occurred:', msg, 'at', url, 'line:', line);
+            return false;
+        };
+        
+        // Load editor-bundle.js first and wait for it to complete
+        const editorScript = document.createElement('script');
+        editorScript.src = 'dist/editor-bundle.js';
+        editorScript.onload = function() {
+            // Only load main.js after editor-bundle.js is loaded
+            const mainScript = document.createElement('script');
+            mainScript.src = 'dist/main.js';
+            document.body.appendChild(mainScript);
+        };
+        editorScript.onerror = function() {
+            console.error('Failed to load editor-bundle.js');
+        };
+        document.body.appendChild(editorScript);
+    </script>
 </body>
 </html>
