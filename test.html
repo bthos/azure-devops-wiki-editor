@@ -12,16 +12,134 @@
                 <textarea style="display:block;">
 # Test Document
 
+```TEST
+TOC plugin
+```
+
 [[_TOC_]]
 
-## Section 1
+```TEST
+TOSP plugin
+```
+
+[[_TOSP_]]
+
+```TEST
+Issue reference (#)
+```
+
+#75756
+#3458979
+
+```TEST
+User reference (@)
+```
+
 Hello @<user1>, this is a test.
 
-## Section 2
 Testing with @<another.user> and some content.
 
-## Section 3
-More content here.
+```TEST
+External link
+```
+
+[skdjhsdf](http://aaa.com)
+
+```TEST
+Internal (relative) links
+```
+
+[some text](other_page.md)
+
+```TEST
+Formula ($)
+```
+
+$e=mc^2$
+
+```TEST
+Attachment
+```
+
+![icon-128.png](/.attachments/icon-128-61cd3149-94a4-435c-b5f4-41d7aa0cecb4.png)
+
+```TEST
+Video block
+```
+
+::: video
+\<Insert iframe block from YouTube, Microsoft Stream or SharePoint here.>
+:::
+
+```TEST
+Code block
+```
+
+```js
+const editor = new Editor(options);
+```
+
+```TEST
+Headers
+```
+
+# 1\. First level
+
+## 2.1. Second level, one
+
+## Second level, two
+
+fgfghf
+
+### Third level
+
+```TEST
+Mermaid plugin
+```
+
+::: mermaid
+graph LR;
+A[Wiki supports Mermaid] --> B[Visit https://mermaidjs.github.io/ for Mermaid syntax];
+:::
+
+```TEST
+Table
+```
+
+|  |  |  |
+| --- | --- | --- |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+
+```TEST
+Table (merged cells)
+```
+
+| @=2:merged |
+| ---------- |
+|  |
+
+```TEST
+Line
+```
+
+***
+
+***
+
+```TEST
+List
+```
+
+tags:
+
+* post
+* code
+* web
+    title: Hello world
+
+
                 </textarea>
             </div>
             <button type="submit" style="margin: 10px;">Save Changes</button>

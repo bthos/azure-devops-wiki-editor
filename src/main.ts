@@ -10,10 +10,10 @@ declare global {
 // Export an empty object to ensure this file is treated as a module
 export {};
 
-const enableFilter = true;
 const MAX_RETRIES = 10; // Maximum number of retries to wait for Toast UI
 let retryCount = 0;
 let timeoutId: number | null = null;
+let editorInitialized = false; // Guard against multiple initializations
 
 /**
  * Helper function to check if an element is visible
@@ -37,7 +37,59 @@ function findClosest(element: HTMLElement, selector: string): HTMLElement | null
     return currentElement;
 }
 
+/**
+ * Get the base URL for resolving relative wiki image paths
+ * Azure DevOps wiki images are typically stored relative to the wiki root
+ */
+function getWikiBaseUrl(): string {
+    const url = window.location.href;
+    
+    // Match Azure DevOps wiki URL patterns:
+    // https://dev.azure.com/{org}/{project}/_wiki/wikis/{wikiId}/{pagePath}
+    // https://{org}.visualstudio.com/{project}/_wiki/wikis/{wikiId}/{pagePath}
+    const wikiMatch = url.match(/^(https?:\/\/[^/]+\/[^/]+\/_wiki\/wikis\/[^/]+)/);
+    
+    if (wikiMatch) {
+        return wikiMatch[1];
+    }
+    
+    // Fallback: use the current page's directory
+    return url.substring(0, url.lastIndexOf('/'));
+}
+
+/**
+ * Resolve a relative image URL to an absolute URL
+ */
+function resolveImageUrl(src: string): string {
+    // If already absolute, return as-is
+    if (/^https?:\/\//.test(src) || src.startsWith('data:')) {
+        return src;
+    }
+    
+    const baseUrl = getWikiBaseUrl();
+    
+    // Handle .attachments folder (common for Azure DevOps wiki uploads)
+    if (src.startsWith('.attachments/') || src.startsWith('/.attachments/')) {
+        // Images in .attachments folder are at the wiki root level
+        return `${baseUrl}/${src.replace(/^\//, '')}`;
+    }
+    
+    // Handle relative paths
+    if (src.startsWith('/')) {
+        // Absolute path from wiki root
+        return `${baseUrl}${src}`;
+    }
+    
+    // Relative to current page
+    return `${baseUrl}/${src}`;
+}
+
 function whenElementAppear(): void {
+    // Guard against multiple initializations
+    if (editorInitialized) {
+        return;
+    }
+
     if (retryCount >= MAX_RETRIES) {
         console.error("Failed to load Toast UI Editor after multiple retries");
         return;
@@ -59,7 +111,32 @@ function whenElementAppear(): void {
     if (visibleTextarea) {
         const content = visibleTextarea.value;
         
-        // Hide preview container
+        // Find the form that contains our textarea
+        const form = findClosest(visibleTextarea, 'form');
+        const textarea = visibleTextarea;
+        
+        // Check if Toast UI Editor is available globally
+        if (!window.toastui || !window.toastui.Editor) {
+            console.warn(`Waiting for Toast UI Editor to load (attempt ${retryCount + 1}/${MAX_RETRIES})`);
+            retryCount++;
+            timeoutId = window.setTimeout(whenElementAppear, 500);
+            return;
+        }
+        
+        // Mark as initialized FIRST to prevent re-entry
+        editorInitialized = true;
+        
+        // Clean up the timeout and observer BEFORE making DOM changes
+        if (timeoutId) {
+            window.clearTimeout(timeoutId);
+            timeoutId = null;
+        }
+        if (window.editorObserver) {
+            window.editorObserver.disconnect();
+            delete window.editorObserver;
+        }
+        
+        // Hide preview container (DOM changes are safe now)
         const previewContainer = document.querySelector('.wiki-editor .we-text-preview-container');
         if (previewContainer) {
             (previewContainer as HTMLElement).style.display = 'none';
@@ -75,30 +152,8 @@ function whenElementAppear(): void {
                 wikiEditor.appendChild(editorDiv);
             }
         }
-        
-        // Find the form that contains our textarea
-        const form = findClosest(visibleTextarea, 'form');
-        const textarea = visibleTextarea;
-        
-        // Check if Toast UI Editor is available globally
-        if (!window.toastui || !window.toastui.Editor) {
-            console.warn(`Waiting for Toast UI Editor to load (attempt ${retryCount + 1}/${MAX_RETRIES})`);
-            retryCount++;
-            timeoutId = window.setTimeout(whenElementAppear, 500);
-            return;
-        }
-        
-        // Toast UI is loaded, clean up the timeout and observer
-        if (timeoutId) {
-            window.clearTimeout(timeoutId);
-            timeoutId = null;
-        }
-        if (window.editorObserver) {
-            window.editorObserver.disconnect();
-            delete window.editorObserver;
-        }
 
-        // Create a custom renderer for special text
+        // Create a custom renderer for special text and images
         const customRenderer = {
             text(node: any) {
                 const text = node.literal || '';
@@ -115,8 +170,8 @@ function whenElementAppear(): void {
                         tagName: 'span'
                     }];
                 }
-                // Match complete @ mention pattern
-                if (/@[a-zA-Z0-9._-]+/.test(text)) {
+                // Match Azure DevOps @ mention patterns: @<username> or @username
+                if (/@<[^>]+>/.test(text) || /@[a-zA-Z0-9._-]+/.test(text)) {
                     return [{
                         type: 'openTag',
                         tagName: 'span',
@@ -130,6 +185,36 @@ function whenElementAppear(): void {
                     }];
                 }
                 return null;
+            },
+            // Preserve HTML-like @ mentions that might be parsed as HTML
+            htmlInline(node: any) {
+                const html = node.literal || '';
+                return [{
+                    type: 'html',
+                    content: html
+                }];
+            },
+            // Custom image renderer to handle relative URLs
+            image(node: any, context: any) {
+                const { destination, title } = node;
+                const altText = context.entering ? '' : (node.firstChild?.literal || '');
+                
+                // Resolve relative URLs to absolute
+                const resolvedSrc = resolveImageUrl(destination || '');
+                
+                if (context.entering) {
+                    return [{
+                        type: 'openTag',
+                        tagName: 'img',
+                        selfClose: true,
+                        attributes: {
+                            src: resolvedSrc,
+                            alt: altText,
+                            ...(title ? { title } : {})
+                        }
+                    }];
+                }
+                return [];
             }
         };
 
@@ -144,10 +229,14 @@ function whenElementAppear(): void {
                 events: {
                     change: () => {
                         // Get current content and fix special markers
-                        const currentContent = editor.getMarkdown()
+                        let currentContent = editor.getMarkdown();
+                        
+                        // Fix TOC markers that may have been escaped
+                        currentContent = currentContent
                             .replace(/\[\[\*TOC\*\]\]/g, '[[_TOC_]]')
                             .replace(/\[\[\*TOSP\*\]\]/g, '[[_TOSP_]]')
-                            .replace(/@([a-zA-Z0-9._-]+)/g, (match: string) => match);
+                            .replace(/\\\[\\\[_TOC_\\\]\\\]/g, '[[_TOC_]]')
+                            .replace(/\\\[\\\[_TOSP_\\\]\\\]/g, '[[_TOSP_]]');
                         
                         // Update textarea and trigger events for Azure DevOps to detect the change
                         textarea.value = currentContent;
@@ -169,10 +258,14 @@ function whenElementAppear(): void {
             if (form) {
                 form.addEventListener('submit', function() {
                     // Get current content and fix special markers
-                    const currentContent = editor.getMarkdown()
+                    let currentContent = editor.getMarkdown();
+                    
+                    // Fix TOC markers that may have been escaped
+                    currentContent = currentContent
                         .replace(/\[\[\*TOC\*\]\]/g, '[[_TOC_]]')
                         .replace(/\[\[\*TOSP\*\]\]/g, '[[_TOSP_]]')
-                        .replace(/@([a-zA-Z0-9._-]+)/g, (match: string) => match);
+                        .replace(/\\\[\\\[_TOC_\\\]\\\]/g, '[[_TOC_]]')
+                        .replace(/\\\[\\\[_TOSP_\\\]\\\]/g, '[[_TOSP_]]');
                     
                     // Update textarea value before form submission
                     textarea.value = currentContent;

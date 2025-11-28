@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "Azure DevOps Wiki Editor",
   "description": "This extension will replace standard Azure DevOps Wiki markdown editor with custom editor with WYSIWYG capabilities",
-  "version": "1.0.8",
+  "version": "1.0.9",
   "action": {
     "default_icon": {
       "16": "icon-16.png",
@@ -48,12 +48,13 @@
   "permissions": [
     "activeTab",
     "storage",
-    "scripting",
-    "webNavigation",
-    "alarms"
+    "scripting"
   ],
   "host_permissions": [
-    "*://dev.azure.com/*/_wiki/*",
-    "*://*.visualstudio.com/*/_wiki/*"
+    "*://dev.azure.com/*",
+    "*://*.visualstudio.com/*"
+  ],
+  "optional_host_permissions": [
+    "*://*/*"
   ]
 }

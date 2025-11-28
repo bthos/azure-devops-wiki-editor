@@ -1,56 +1,77 @@
-let active = false;
+// Azure DevOps Wiki Editor - Background Service Worker
 
-// Define the function outside of the callback to avoid dynamic evaluation
-function setBackgroundColor(color: string) {
-    document.body.style.backgroundColor = color;
+/**
+ * Register content scripts for custom domains stored in chrome.storage
+ */
+async function registerCustomDomainScripts(): Promise<void> {
+    try {
+        const result = await chrome.storage.sync.get(['customDomains']);
+        const domains: string[] = result.customDomains || [];
+        
+        for (const domain of domains) {
+            const scriptId = 'custom-' + domain.replace(/[^a-zA-Z0-9]/g, '_');
+            
+            try {
+                await chrome.scripting.registerContentScripts([{
+                    id: scriptId,
+                    matches: [`*://${domain}/*/_wiki/*`],
+                    js: ['editor-bundle.js', 'main.js'],
+                    css: ['toastui-editor.css', 'custom-styles.css'],
+                    runAt: 'document_idle'
+                }]);
+                console.log(`Azure DevOps Wiki Editor: Registered script for ${domain}`);
+            } catch (err) {
+                // Script might already be registered, ignore error
+                console.log(`Azure DevOps Wiki Editor: Script for ${domain} already registered or error:`, err);
+            }
+        }
+    } catch (error) {
+        console.error('Azure DevOps Wiki Editor: Error registering custom domain scripts:', error);
+    }
 }
 
-chrome.action.onClicked.addListener((tab) => {
-    // Request permissions when user clicks the extension icon
-    chrome.permissions.request({
-        permissions: ['storage'],
-        origins: ['*://dev.azure.com/*/_wiki/*', '*://*.visualstudio.com/*/_wiki/*']
-    }, (granted) => {
-        if (granted) {
-            console.log('Azure DevOps Wiki Editor: Permissions granted');
-            // Only proceed with activation if permissions are granted
-            active = !active;
-            const color = active ? 'orange' : 'white';
-            
-            if (tab.id && tab.id !== -1) {
-                chrome.scripting.executeScript({
-                    target: { tabId: tab.id },
-                    func: setBackgroundColor,
-                    args: [color]
-                }).catch((error) => {
-                    console.error('Error executing script:', error);
-                    chrome.runtime.sendMessage({
-                        action: 'error',
-                        message: 'Failed to execute script'
-                    }).catch(console.error);
-                });
-            }
-        } else {
-            console.log('Azure DevOps Wiki Editor: Permissions denied');
-        }
-    });
-});
-
 // Service worker installation
-chrome.runtime.onInstalled.addListener(() => {
+chrome.runtime.onInstalled.addListener(async () => {
     console.log('Azure DevOps Wiki Editor: Service Worker installed');
-    // Just set initialized flag, no permissions request here
-    chrome.storage.sync.set({initialized: true}).catch(console.error);
+    
+    // Initialize storage
+    try {
+        await chrome.storage.sync.set({ initialized: true });
+        // Register any previously saved custom domains
+        await registerCustomDomainScripts();
+    } catch (error) {
+        console.error('Azure DevOps Wiki Editor: Error during installation:', error);
+    }
 });
 
-chrome.runtime.onStartup.addListener(() => {
+// Service worker startup - re-register custom domain scripts
+chrome.runtime.onStartup.addListener(async () => {
     console.log('Azure DevOps Wiki Editor: Service Worker started');
+    await registerCustomDomainScripts();
 });
 
-chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+// Listen for messages from popup or content scripts
+chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
     if (message.action === 'log') {
         console.log(`Azure DevOps Wiki Editor: ${message.data}`);
+    } else if (message.action === 'registerDomain') {
+        // Handle domain registration request from popup
+        registerCustomDomainScripts().then(() => {
+            sendResponse({ status: 'success' });
+        }).catch((error) => {
+            sendResponse({ status: 'error', message: error.message });
+        });
+        return true; // Keep message channel open for async response
     }
-    sendResponse({status: 'received'});
-    return true; // Required for async response
+    
+    sendResponse({ status: 'received' });
+    return true;
+});
+
+// Listen for storage changes to update content scripts
+chrome.storage.onChanged.addListener((changes, areaName) => {
+    if (areaName === 'sync' && changes.customDomains) {
+        console.log('Azure DevOps Wiki Editor: Custom domains changed, re-registering scripts');
+        registerCustomDomainScripts();
+    }
 });
