@@ -4,147 +4,153 @@
     <title>Editor Test</title>
     <link rel="stylesheet" href="dist/toastui-editor.css" />
     <link rel="stylesheet" href="dist/custom-styles.css" />
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        h1 {
+            color: #323130;
+            margin-bottom: 20px;
+        }
+        .wiki-editor {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        /* Simulate ADO toolbar */
+        .we-toolbar-container {
+            padding: 10px;
+            background: #f3f2f1;
+            border-bottom: 1px solid #e1e1e1;
+            display: flex;
+            gap: 8px;
+        }
+        .we-toolbar-container button {
+            padding: 6px 12px;
+            background: white;
+            border: 1px solid #c8c6c4;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 13px;
+        }
+        .we-toolbar-container button:hover {
+            background: #f3f2f1;
+        }
+        .we-ta-container {
+            padding: 10px;
+        }
+        .we-ta-container textarea {
+            width: 100%;
+            min-height: 300px;
+            padding: 12px;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 14px;
+            border: 1px solid #c8c6c4;
+            border-radius: 4px;
+            resize: vertical;
+            box-sizing: border-box;
+        }
+        .we-text-preview-container {
+            padding: 10px;
+            background: #fafafa;
+            border-top: 1px solid #e1e1e1;
+            min-height: 100px;
+            color: #666;
+            font-size: 13px;
+        }
+        #wikiForm button[type="submit"] {
+            margin: 10px;
+            padding: 10px 24px;
+            background: #0078d4;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        #wikiForm button[type="submit"]:hover {
+            background: #106ebe;
+        }
+        .instructions {
+            margin-top: 20px;
+            padding: 15px;
+            background: #fff8e1;
+            border-radius: 8px;
+            border-left: 4px solid #ffc107;
+        }
+        .instructions h3 {
+            margin-top: 0;
+            color: #e65100;
+        }
+    </style>
 </head>
 <body>
+    <h1>🖊️ Azure DevOps Wiki Editor Test</h1>
+    
     <div class="wiki-editor">
-        <form id="wikiForm" onsubmit="event.preventDefault(); alert('Form content: ' + document.querySelector('.we-ta-container textarea').value);">
+        <form id="wikiForm" onsubmit="event.preventDefault(); alert('Form content:\n\n' + document.querySelector('.we-ta-container textarea').value);">
+            <!-- Simulated ADO toolbar -->
+            <div class="we-toolbar-container">
+                <button type="button">Bold</button>
+                <button type="button">Italic</button>
+                <button type="button">Link</button>
+                <button type="button">Image</button>
+                <button type="button">Code</button>
+            </div>
+            
             <div class="we-ta-container">
                 <textarea style="display:block;">
 # Test Document
 
-```TEST
-TOC plugin
-```
-
 [[_TOC_]]
 
-```TEST
-TOSP plugin
-```
-
-[[_TOSP_]]
-
-```TEST
-Issue reference (#)
-```
-
-#75756
-#3458979
-
-```TEST
-User reference (@)
-```
-
+## Section 1
 Hello @<user1>, this is a test.
 
+## Section 2
 Testing with @<another.user> and some content.
 
-```TEST
-External link
+| Name | Role | Status |
+|------|------|--------|
+| @<john.doe> | Developer | Active |
+| @<jane.smith> | Designer | Active |
+
+## Section 3
+More content here.
+
+- [ ] Task 1
+- [x] Task 2 (completed)
+- [ ] Task 3
+
+```javascript
+console.log("Hello World!");
 ```
-
-[skdjhsdf](http://aaa.com)
-
-```TEST
-Internal (relative) links
-```
-
-[some text](other_page.md)
-
-```TEST
-Formula ($)
-```
-
-$e=mc^2$
-
-```TEST
-Attachment
-```
-
-![icon-128.png](/.attachments/icon-128-61cd3149-94a4-435c-b5f4-41d7aa0cecb4.png)
-
-```TEST
-Video block
-```
-
-::: video
-\<Insert iframe block from YouTube, Microsoft Stream or SharePoint here.>
-:::
-
-```TEST
-Code block
-```
-
-```js
-const editor = new Editor(options);
-```
-
-```TEST
-Headers
-```
-
-# 1\. First level
-
-## 2.1. Second level, one
-
-## Second level, two
-
-fgfghf
-
-### Third level
-
-```TEST
-Mermaid plugin
-```
-
-::: mermaid
-graph LR;
-A[Wiki supports Mermaid] --> B[Visit https://mermaidjs.github.io/ for Mermaid syntax];
-:::
-
-```TEST
-Table
-```
-
-|  |  |  |
-| --- | --- | --- |
-|  |  |  |
-|  |  |  |
-|  |  |  |
-
-```TEST
-Table (merged cells)
-```
-
-| @=2:merged |
-| ---------- |
-|  |
-
-```TEST
-Line
-```
-
-***
-
-***
-
-```TEST
-List
-```
-
-tags:
-
-* post
-* code
-* web
-    title: Hello world
-
-
                 </textarea>
             </div>
-            <button type="submit" style="margin: 10px;">Save Changes</button>
+            
+            <!-- Simulated ADO preview container -->
+            <div class="we-text-preview-container">
+                Preview area (normally shows rendered markdown)
+            </div>
+            
+            <button type="submit">Save Changes</button>
         </form>
     </div>
+    
+    <div class="instructions">
+        <h3>📋 Instructions</h3>
+        <ul>
+            <li>Toggle the switch at the top to enable/disable WYSIWYG mode</li>
+            <li>In <strong>Markdown mode</strong>: Standard textarea with ADO toolbar</li>
+            <li>In <strong>WYSIWYG mode</strong>: Toast UI Editor with rich formatting</li>
+            <li>Click "Save Changes" to see the current markdown content</li>
+        </ul>
+    </div>
+
     <script>
         // Add error handling for script loading
         window.onerror = function(msg, url, line, col, error) {
@@ -156,9 +162,13 @@ tags:
         const editorScript = document.createElement('script');
         editorScript.src = 'dist/editor-bundle.js';
         editorScript.onload = function() {
+            console.log('Editor bundle loaded successfully');
             // Only load main.js after editor-bundle.js is loaded
             const mainScript = document.createElement('script');
             mainScript.src = 'dist/main.js';
+            mainScript.onload = function() {
+                console.log('Main script loaded successfully');
+            };
             document.body.appendChild(mainScript);
         };
         editorScript.onerror = function() {

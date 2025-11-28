@@ -1,68 +1,293 @@
 /* Azure DevOps Wiki Editor - Custom Styles */
+/* Using Microsoft Fluent UI / Fabric UI design language */
+
+/* ===== Custom Toggle Switch (Fabric UI Style) ===== */
+#wysiwyg-toggle-container {
+    padding: 8px 12px;
+    background-color: #faf9f8;
+    border-bottom: 1px solid #edebe9;
+    display: flex;
+    justify-content: flex-start;
+}
+
+.wysiwyg-toggle {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-family: 'Segoe UI', 'Segoe UI Web (West European)', -apple-system, BlinkMacSystemFont, Roboto, 'Helvetica Neue', sans-serif;
+    user-select: none;
+}
+
+.toggle-label {
+    font-size: 14px;
+    font-weight: 400;
+    color: #605e5c;
+    transition: color 0.1s ease;
+    cursor: pointer;
+}
+
+.toggle-label.active {
+    color: #323130;
+    font-weight: 600;
+}
+
+.toggle-label:hover {
+    color: #323130;
+}
+
+/* Fabric UI Toggle Switch */
+.toggle-switch {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    width: 40px;
+    height: 20px;
+    cursor: pointer;
+}
+
+/* Hide default checkbox */
+.toggle-switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+    position: absolute;
+}
+
+/* The pill/track - Fabric UI style */
+.toggle-slider {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #ffffff;
+    border: 1px solid #8a8886;
+    border-radius: 10px;
+    transition: all 0.1s ease;
+}
+
+/* The circle/thumb */
+.toggle-slider:before {
+    position: absolute;
+    content: "";
+    height: 12px;
+    width: 12px;
+    left: 3px;
+    top: 50%;
+    transform: translateY(-50%);
+    background-color: #323130;
+    border-radius: 50%;
+    transition: all 0.1s ease;
+}
+
+/* Hover state - unchecked */
+.toggle-switch:hover .toggle-slider {
+    border-color: #323130;
+}
+
+.toggle-switch:hover .toggle-slider:before {
+    background-color: #201f1e;
+}
+
+/* Checked state - Fabric UI blue */
+.toggle-switch input:checked + .toggle-slider {
+    background-color: #0078d4;
+    border-color: #0078d4;
+}
+
+.toggle-switch input:checked + .toggle-slider:before {
+    background-color: #ffffff;
+    left: calc(100% - 15px);
+}
+
+/* Hover state - checked */
+.toggle-switch:hover input:checked + .toggle-slider {
+    background-color: #106ebe;
+    border-color: #106ebe;
+}
+
+/* Focus state - Fabric UI focus ring */
+.toggle-switch input:focus-visible + .toggle-slider {
+    outline: none;
+    box-shadow: 0 0 0 2px #ffffff, 0 0 0 4px #605e5c;
+}
+
+/* Disabled state */
+.toggle-switch input:disabled + .toggle-slider {
+    background-color: #f3f2f1;
+    border-color: #c8c6c4;
+    cursor: not-allowed;
+}
+
+.toggle-switch input:disabled + .toggle-slider:before {
+    background-color: #c8c6c4;
+}
+
+/* Active/pressed state */
+.toggle-switch:active .toggle-slider:before {
+    width: 14px;
+}
+
+/* ===== Editor Styling ===== */
+
+/* Hide the default Toast UI mode switch */
+.toastui-editor-mode-switch {
+    display: none !important;
+}
+
+/* 
+ * Fix scroll behavior - ensure editor doesn't break ADO's scroll container hierarchy.
+ * ADO uses flex layout with specific scroll containers. The editor must stay within 
+ * the content area and not affect parent scroll context.
+ */
+
+/* Make editor blend with Azure DevOps UI and contain scroll */
+#new-editor {
+    margin-top: 0;
+    border: 1px solid #c8c6c4;
+    border-top: none;
+    overflow: hidden;
+    /* Ensure editor doesn't grow beyond container */
+    max-height: calc(100vh - 200px);
+    display: flex;
+    flex-direction: column;
+}
+
+#new-editor .toastui-editor-defaultUI {
+    border: none;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    overflow: hidden;
+}
+
+/* Make the editor main area scrollable, not the whole page */
+#new-editor .toastui-editor-main {
+    flex: 1;
+    overflow: auto;
+    min-height: 0; /* Important for flex children to allow shrinking */
+}
+
+/* WYSIWYG container should scroll internally */
+.toastui-editor-ww-container {
+    min-height: 350px;
+    overflow: auto;
+}
+
+/* Ensure the editor content area scrolls, not the page */
+#new-editor .toastui-editor-ww-container .ProseMirror {
+    min-height: 300px;
+}
+
+/* Keep toolbar fixed at top of editor */
+#new-editor .toastui-editor-toolbar {
+    flex-shrink: 0;
+}
+
+/* Prevent wiki-editor from breaking scroll context */
+.wiki-editor {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    height: 100%;
+}
+
+/* Style the Toast UI toolbar - Fabric UI style */
+.toastui-editor-toolbar {
+    background-color: #faf9f8;
+    border-bottom: 1px solid #edebe9;
+    padding: 4px 8px;
+}
+
+.toastui-editor-toolbar-icons {
+    background-color: transparent;
+    border-radius: 2px;
+    transition: background-color 0.1s ease;
+    color: #323130;
+}
+
+.toastui-editor-toolbar-icons:hover {
+    background-color: #f3f2f1;
+    color: #201f1e;
+}
+
+.toastui-editor-toolbar-icons:active {
+    background-color: #edebe9;
+}
+
+.toastui-editor-toolbar-icons.active {
+    background-color: #e1dfdd;
+    color: #0078d4;
+}
+
+/* ===== Content Styling ===== */
 
 /* TOC markers styling */
 .toc-marker {
     color: #0078d4;
-    font-family: monospace;
-    padding: 2px 4px;
-    background: rgba(0, 120, 212, 0.1);
-    border-radius: 3px;
+    font-family: 'Consolas', 'Monaco', monospace;
+    padding: 2px 6px;
+    background: rgba(0, 120, 212, 0.08);
+    border: 1px solid rgba(0, 120, 212, 0.2);
+    border-radius: 4px;
     white-space: nowrap;
+    font-size: 12px;
 }
 
 /* @ mention styling */
 .mention {
     color: #0078d4;
     font-weight: 500;
+    background: rgba(0, 120, 212, 0.06);
+    padding: 1px 4px;
+    border-radius: 3px;
 }
 
-/* Move the mode switch tabs (Markdown/WYSIWYG) to the top of the editor */
-.toastui-editor-defaultUI {
-    display: flex;
-    flex-direction: column;
+/* ===== ADO Page Scroll Fix ===== */
+
+/* 
+ * Preserve ADO's scroll container behavior.
+ * The header should remain fixed while only the content area scrolls.
+ */
+
+/* Ensure the toggle stays with the editor, not affecting page scroll */
+#wysiwyg-toggle-container {
+    flex-shrink: 0;
+    position: relative;
+    z-index: 10;
 }
 
-/* Position the mode switch at the top using order */
-.toastui-editor-mode-switch {
-    order: -1;
-    border-top: none;
-    border-bottom: 1px solid #dadde6;
-    margin-top: 0;
-}
-
-/* Ensure toolbar stays below mode switch */
-.toastui-editor-toolbar {
-    order: 0;
-}
-
-/* Editor content area */
-.toastui-editor-main {
-    order: 1;
-}
-
-/* Style the mode switch tabs to look better at top */
-.toastui-editor-mode-switch .tab-item {
-    padding: 8px 16px;
-    font-size: 13px;
-}
-
-.toastui-editor-mode-switch .tab-item.active {
-    font-weight: 600;
-}
-
-/* Make editor blend better with Azure DevOps UI */
-#new-editor {
-    margin-top: 8px;
-    border: 1px solid #c8c6c4;
-    border-radius: 4px;
+/* When WYSIWYG mode is active, ensure proper scroll containment */
+.wiki-editor:has(#new-editor[style*="display: block"]),
+.wiki-editor:has(#new-editor:not([style*="display: none"])) {
     overflow: hidden;
 }
 
-#new-editor .toastui-editor-defaultUI {
-    border: none;
+/* Fix for ADO's content scroll container */
+.custom-scrollbar.scroll-auto-hide {
+    overflow: auto !important;
 }
 
-/* Improve WYSIWYG editor appearance */
-.toastui-editor-ww-container {
-    min-height: 300px;
+/* Ensure the editor respects the available height */
+.v-scroll-auto:has(#new-editor) {
+    overflow: hidden !important;
+}
+
+/* ===== Responsive adjustments ===== */
+@media (max-width: 768px) {
+    #wysiwyg-toggle-container {
+        padding: 6px 10px;
+    }
+    
+    .wysiwyg-toggle {
+        gap: 6px;
+    }
+    
+    .toggle-label {
+        font-size: 12px;
+    }
+    
+    #new-editor {
+        max-height: calc(100vh - 150px);
+    }
 }

@@ -4,6 +4,8 @@ declare global {
         toastui: {
             Editor: any;
         };
+        editorObserver?: MutationObserver;
+        wikiEditorInstance?: any;
     }
 }
 
@@ -13,7 +15,8 @@ export {};
 const MAX_RETRIES = 10; // Maximum number of retries to wait for Toast UI
 let retryCount = 0;
 let timeoutId: number | null = null;
-let editorInitialized = false; // Guard against multiple initializations
+let editorReady = false;
+let isWysiwygMode = false;
 
 /**
  * Helper function to check if an element is visible
@@ -84,9 +87,268 @@ function resolveImageUrl(src: string): string {
     return `${baseUrl}/${src}`;
 }
 
-function whenElementAppear(): void {
-    // Guard against multiple initializations
-    if (editorInitialized) {
+/**
+ * Create the custom mode toggle switch
+ */
+function createModeToggle(): HTMLElement {
+    const container = document.createElement('div');
+    container.id = 'wysiwyg-toggle-container';
+    container.innerHTML = `
+        <div class="wysiwyg-toggle">
+            <span class="toggle-label markdown-label active">Markdown</span>
+            <label class="toggle-switch">
+                <input type="checkbox" id="wysiwyg-toggle-input">
+                <span class="toggle-slider"></span>
+            </label>
+            <span class="toggle-label wysiwyg-label">WYSIWYG</span>
+        </div>
+    `;
+    return container;
+}
+
+/**
+ * Get the content from the editor and update the textarea
+ */
+function syncEditorToTextarea(textarea: HTMLTextAreaElement): void {
+    if (window.wikiEditorInstance) {
+        let content = window.wikiEditorInstance.getMarkdown();
+        
+        // Fix TOC markers that may have been escaped
+        content = content
+            .replace(/\[\[\*TOC\*\]\]/g, '[[_TOC_]]')
+            .replace(/\[\[\*TOSP\*\]\]/g, '[[_TOSP_]]')
+            .replace(/\\\[\\\[_TOC_\\\]\\\]/g, '[[_TOC_]]')
+            .replace(/\\\[\\\[_TOSP_\\\]\\\]/g, '[[_TOSP_]]');
+        
+        textarea.value = content;
+        textarea.dispatchEvent(new Event('input', { bubbles: true }));
+        textarea.dispatchEvent(new Event('change', { bubbles: true }));
+    }
+}
+
+/**
+ * Switch to WYSIWYG mode
+ */
+function enableWysiwygMode(textarea: HTMLTextAreaElement, wikiEditor: HTMLElement): void {
+    isWysiwygMode = true;
+    
+    // Hide ADO toolbar (multiple possible selectors)
+    const adoToolbar = wikiEditor.querySelector('.we-toolbar-container');
+    if (adoToolbar) {
+        (adoToolbar as HTMLElement).style.display = 'none';
+    }
+    
+    // Hide the wiki markdown toolbar (wiki-markdown-toolbar bowtie we-toolbar)
+    const wikiMarkdownToolbar = document.querySelector('.wiki-markdown-toolbar');
+    if (wikiMarkdownToolbar) {
+        (wikiMarkdownToolbar as HTMLElement).style.display = 'none';
+    }
+    
+    // Hide ADO preview container
+    const previewContainer = wikiEditor.querySelector('.we-text-preview-container');
+    if (previewContainer) {
+        (previewContainer as HTMLElement).style.display = 'none';
+    }
+    
+    // Hide ADO textarea container
+    const taContainer = wikiEditor.querySelector('.we-ta-container');
+    if (taContainer) {
+        (taContainer as HTMLElement).style.display = 'none';
+    }
+    
+    // Show/create editor
+    let editorDiv = document.querySelector('#new-editor') as HTMLElement;
+    if (!editorDiv) {
+        editorDiv = document.createElement('div');
+        editorDiv.id = 'new-editor';
+        wikiEditor.appendChild(editorDiv);
+    }
+    editorDiv.style.display = 'block';
+    
+    // Initialize editor if not already done
+    if (!window.wikiEditorInstance) {
+        initializeEditor(textarea, editorDiv);
+    } else {
+        // Update editor content from textarea
+        window.wikiEditorInstance.setMarkdown(textarea.value);
+    }
+    
+    // Update toggle labels
+    updateToggleLabels(true);
+}
+
+/**
+ * Switch to Markdown mode
+ */
+function disableWysiwygMode(textarea: HTMLTextAreaElement, wikiEditor: HTMLElement): void {
+    isWysiwygMode = false;
+    
+    // Sync content back to textarea
+    syncEditorToTextarea(textarea);
+    
+    // Show ADO toolbar
+    const adoToolbar = wikiEditor.querySelector('.we-toolbar-container');
+    if (adoToolbar) {
+        (adoToolbar as HTMLElement).style.display = '';
+    }
+    
+    // Show the wiki markdown toolbar
+    const wikiMarkdownToolbar = document.querySelector('.wiki-markdown-toolbar');
+    if (wikiMarkdownToolbar) {
+        (wikiMarkdownToolbar as HTMLElement).style.display = '';
+    }
+    
+    // Show ADO preview container
+    const previewContainer = wikiEditor.querySelector('.we-text-preview-container');
+    if (previewContainer) {
+        (previewContainer as HTMLElement).style.display = '';
+    }
+    
+    // Show ADO textarea container
+    const taContainer = wikiEditor.querySelector('.we-ta-container');
+    if (taContainer) {
+        (taContainer as HTMLElement).style.display = '';
+    }
+    
+    // Hide editor
+    const editorDiv = document.querySelector('#new-editor');
+    if (editorDiv) {
+        (editorDiv as HTMLElement).style.display = 'none';
+    }
+    
+    // Update toggle labels
+    updateToggleLabels(false);
+}
+
+/**
+ * Update the toggle label active states
+ */
+function updateToggleLabels(isWysiwyg: boolean): void {
+    const mdLabel = document.querySelector('.toggle-label.markdown-label');
+    const wysiwygLabel = document.querySelector('.toggle-label.wysiwyg-label');
+    
+    if (mdLabel && wysiwygLabel) {
+        if (isWysiwyg) {
+            mdLabel.classList.remove('active');
+            wysiwygLabel.classList.add('active');
+        } else {
+            mdLabel.classList.add('active');
+            wysiwygLabel.classList.remove('active');
+        }
+    }
+}
+
+/**
+ * Initialize the Toast UI Editor
+ */
+function initializeEditor(textarea: HTMLTextAreaElement, editorDiv: HTMLElement): void {
+    const form = findClosest(textarea, 'form');
+    const content = textarea.value;
+    
+    // Create custom renderer for special text and images
+    const customRenderer = {
+        text(node: any) {
+            const text = node.literal || '';
+            if (text === '[[_TOC_]]' || text === '[[_TOSP_]]') {
+                return [{
+                    type: 'openTag',
+                    tagName: 'span',
+                    attributes: { class: 'toc-marker' }
+                }, {
+                    type: 'text',
+                    content: text
+                }, {
+                    type: 'closeTag',
+                    tagName: 'span'
+                }];
+            }
+            // Match Azure DevOps @ mention patterns: @<username> or @username
+            if (/@<[^>]+>/.test(text) || /@[a-zA-Z0-9._-]+/.test(text)) {
+                return [{
+                    type: 'openTag',
+                    tagName: 'span',
+                    attributes: { class: 'mention' }
+                }, {
+                    type: 'text',
+                    content: text
+                }, {
+                    type: 'closeTag',
+                    tagName: 'span'
+                }];
+            }
+            return null;
+        },
+        // Preserve HTML-like @ mentions that might be parsed as HTML
+        htmlInline(node: any) {
+            const html = node.literal || '';
+            return [{
+                type: 'html',
+                content: html
+            }];
+        },
+        // Custom image renderer to handle relative URLs
+        image(node: any, context: any) {
+            const { destination, title } = node;
+            const altText = context.entering ? '' : (node.firstChild?.literal || '');
+                
+            // Resolve relative URLs to absolute
+            const resolvedSrc = resolveImageUrl(destination || '');
+            
+            if (context.entering) {
+                return [{
+                    type: 'openTag',
+                    tagName: 'img',
+                    selfClose: true,
+                    attributes: {
+                        src: resolvedSrc,
+                        alt: altText,
+                        ...(title ? { title } : {})
+                    }
+                }];
+            }
+            return [];
+        }
+    };
+
+    try {
+        window.wikiEditorInstance = new window.toastui.Editor({
+            el: editorDiv,
+            height: 'auto',
+            initialEditType: 'wysiwyg',
+            previewStyle: 'vertical',
+            initialValue: content,
+            hideModeSwitch: true, // Hide the default mode switch
+            events: {
+                change: () => {
+                    syncEditorToTextarea(textarea);
+                }
+            },
+            customHTMLRenderer: customRenderer,
+            toolbarItems: [
+                ['heading', 'bold', 'italic', 'strike'],
+                ['hr', 'quote'],
+                ['ul', 'ol', 'task', 'indent', 'outdent'],
+                ['table', 'link'],
+                ['code', 'codeblock']
+            ]
+        });
+
+        // Handle form submission
+        if (form) {
+            form.addEventListener('submit', function() {
+                syncEditorToTextarea(textarea);
+            });
+        }
+    } catch (error) {
+        console.error("Failed to initialize Toast UI Editor:", error);
+    }
+}
+
+/**
+ * Setup the toggle and wait for Toast UI to load
+ */
+function setupEditor(): void {
+    if (editorReady) {
         return;
     }
 
@@ -95,11 +357,10 @@ function whenElementAppear(): void {
         return;
     }
 
-    // Get all textareas in the container
+    // Find visible textarea
     const textareas = document.querySelectorAll('.we-ta-container textarea');
-    
-    // Find a visible textarea
     let visibleTextarea: HTMLTextAreaElement | null = null;
+    
     for (let i = 0; i < textareas.length; i++) {
         if (isElementVisible(textareas[i] as HTMLTextAreaElement)) {
             visibleTextarea = textareas[i] as HTMLTextAreaElement;
@@ -107,188 +368,66 @@ function whenElementAppear(): void {
         }
     }
     
-    // Only proceed if a visible textarea is found
-    if (visibleTextarea) {
-        const content = visibleTextarea.value;
-        
-        // Find the form that contains our textarea
-        const form = findClosest(visibleTextarea, 'form');
-        const textarea = visibleTextarea;
-        
-        // Check if Toast UI Editor is available globally
-        if (!window.toastui || !window.toastui.Editor) {
-            console.warn(`Waiting for Toast UI Editor to load (attempt ${retryCount + 1}/${MAX_RETRIES})`);
-            retryCount++;
-            timeoutId = window.setTimeout(whenElementAppear, 500);
-            return;
-        }
-        
-        // Mark as initialized FIRST to prevent re-entry
-        editorInitialized = true;
-        
-        // Clean up the timeout and observer BEFORE making DOM changes
-        if (timeoutId) {
-            window.clearTimeout(timeoutId);
-            timeoutId = null;
-        }
-        if (window.editorObserver) {
-            window.editorObserver.disconnect();
-            delete window.editorObserver;
-        }
-        
-        // Hide preview container (DOM changes are safe now)
-        const previewContainer = document.querySelector('.wiki-editor .we-text-preview-container');
-        if (previewContainer) {
-            (previewContainer as HTMLElement).style.display = 'none';
-        }
-        
-        // Create and append the editor container
-        const wikiEditor = document.querySelector('.wiki-editor');
-        if (wikiEditor) {
-            let editorDiv = document.querySelector('#new-editor');
-            if (!editorDiv) {
-                editorDiv = document.createElement('div');
-                editorDiv.id = 'new-editor';
-                wikiEditor.appendChild(editorDiv);
+    if (!visibleTextarea) {
+        timeoutId = window.setTimeout(setupEditor, 500);
+        return;
+    }
+    
+    // Check if Toast UI Editor is available
+    if (!window.toastui || !window.toastui.Editor) {
+        console.warn(`Waiting for Toast UI Editor to load (attempt ${retryCount + 1}/${MAX_RETRIES})`);
+        retryCount++;
+        timeoutId = window.setTimeout(setupEditor, 500);
+        return;
+    }
+    
+    // Mark as ready
+    editorReady = true;
+    
+    // Clean up
+    if (timeoutId) {
+        window.clearTimeout(timeoutId);
+        timeoutId = null;
+    }
+    if (window.editorObserver) {
+        window.editorObserver.disconnect();
+        delete window.editorObserver;
+    }
+    
+    const wikiEditor = document.querySelector('.wiki-editor') as HTMLElement;
+    if (!wikiEditor) {
+        return;
+    }
+    
+    const textarea = visibleTextarea;
+    
+    // Check if toggle already exists
+    if (document.querySelector('#wysiwyg-toggle-container')) {
+        return;
+    }
+    
+    // Create and insert toggle at the top of the wiki editor
+    const toggle = createModeToggle();
+    wikiEditor.insertBefore(toggle, wikiEditor.firstChild);
+    
+    // Setup toggle event listener
+    const toggleInput = document.querySelector('#wysiwyg-toggle-input') as HTMLInputElement;
+    if (toggleInput) {
+        toggleInput.addEventListener('change', function() {
+            if (this.checked) {
+                enableWysiwygMode(textarea, wikiEditor);
+            } else {
+                disableWysiwygMode(textarea, wikiEditor);
             }
-        }
-
-        // Create a custom renderer for special text and images
-        const customRenderer = {
-            text(node: any) {
-                const text = node.literal || '';
-                if (text === '[[_TOC_]]' || text === '[[_TOSP_]]') {
-                    return [{
-                        type: 'openTag',
-                        tagName: 'span',
-                        attributes: { class: 'toc-marker' }
-                    }, {
-                        type: 'text',
-                        content: text
-                    }, {
-                        type: 'closeTag',
-                        tagName: 'span'
-                    }];
-                }
-                // Match Azure DevOps @ mention patterns: @<username> or @username
-                if (/@<[^>]+>/.test(text) || /@[a-zA-Z0-9._-]+/.test(text)) {
-                    return [{
-                        type: 'openTag',
-                        tagName: 'span',
-                        attributes: { class: 'mention' }
-                    }, {
-                        type: 'text',
-                        content: text
-                    }, {
-                        type: 'closeTag',
-                        tagName: 'span'
-                    }];
-                }
-                return null;
-            },
-            // Preserve HTML-like @ mentions that might be parsed as HTML
-            htmlInline(node: any) {
-                const html = node.literal || '';
-                return [{
-                    type: 'html',
-                    content: html
-                }];
-            },
-            // Custom image renderer to handle relative URLs
-            image(node: any, context: any) {
-                const { destination, title } = node;
-                const altText = context.entering ? '' : (node.firstChild?.literal || '');
-                
-                // Resolve relative URLs to absolute
-                const resolvedSrc = resolveImageUrl(destination || '');
-                
-                if (context.entering) {
-                    return [{
-                        type: 'openTag',
-                        tagName: 'img',
-                        selfClose: true,
-                        attributes: {
-                            src: resolvedSrc,
-                            alt: altText,
-                            ...(title ? { title } : {})
-                        }
-                    }];
-                }
-                return [];
-            }
-        };
-
-        try {
-            // Initialize the editor with the global constructor
-            const editor = new window.toastui.Editor({
-                el: document.querySelector('#new-editor') as HTMLElement,
-                height: 'auto',
-                initialEditType: 'wysiwyg',
-                previewStyle: 'vertical',
-                initialValue: content,
-                events: {
-                    change: () => {
-                        // Get current content and fix special markers
-                        let currentContent = editor.getMarkdown();
-                        
-                        // Fix TOC markers that may have been escaped
-                        currentContent = currentContent
-                            .replace(/\[\[\*TOC\*\]\]/g, '[[_TOC_]]')
-                            .replace(/\[\[\*TOSP\*\]\]/g, '[[_TOSP_]]')
-                            .replace(/\\\[\\\[_TOC_\\\]\\\]/g, '[[_TOC_]]')
-                            .replace(/\\\[\\\[_TOSP_\\\]\\\]/g, '[[_TOSP_]]');
-                        
-                        // Update textarea and trigger events for Azure DevOps to detect the change
-                        textarea.value = currentContent;
-                        textarea.dispatchEvent(new Event('input', { bubbles: true }));
-                        textarea.dispatchEvent(new Event('change', { bubbles: true }));
-                    }
-                },
-                customHTMLRenderer: customRenderer,
-                toolbarItems: [
-                    ['heading', 'bold', 'italic', 'strike'],
-                    ['hr', 'quote'],
-                    ['ul', 'ol', 'task', 'indent', 'outdent'],
-                    ['table', 'link'],
-                    ['code', 'codeblock']
-                ]
-            });
-
-            // Handle form submission
-            if (form) {
-                form.addEventListener('submit', function() {
-                    // Get current content and fix special markers
-                    let currentContent = editor.getMarkdown();
-                    
-                    // Fix TOC markers that may have been escaped
-                    currentContent = currentContent
-                        .replace(/\[\[\*TOC\*\]\]/g, '[[_TOC_]]')
-                        .replace(/\[\[\*TOSP\*\]\]/g, '[[_TOSP_]]')
-                        .replace(/\\\[\\\[_TOC_\\\]\\\]/g, '[[_TOC_]]')
-                        .replace(/\\\[\\\[_TOSP_\\\]\\\]/g, '[[_TOSP_]]');
-                    
-                    // Update textarea value before form submission
-                    textarea.value = currentContent;
-                });
-            }
-        } catch (error) {
-            console.error("Failed to initialize Toast UI Editor:", error);
-            // Don't retry on initialization error
-            return;
-        }
-    } else {
-        // No visible textarea, schedule next check
-        timeoutId = window.setTimeout(whenElementAppear, 500);
+        });
     }
 }
 
 // Use MutationObserver for better performance
 function observeDOM(): void {
-    // Store the observer globally so we can disconnect it later
-    window.editorObserver = new MutationObserver((mutations) => {
-        // Only call whenElementAppear if we haven't exceeded retries
-        if (retryCount < MAX_RETRIES) {
-            whenElementAppear();
+    window.editorObserver = new MutationObserver(() => {
+        if (retryCount < MAX_RETRIES && !editorReady) {
+            setupEditor();
         }
     });
     
@@ -297,15 +436,7 @@ function observeDOM(): void {
         subtree: true
     });
     
-    // Also check immediately
-    whenElementAppear();
-}
-
-// Add type definition for our global additions
-declare global {
-    interface Window {
-        editorObserver?: MutationObserver;
-    }
+    setupEditor();
 }
 
 // Initialize when document is ready

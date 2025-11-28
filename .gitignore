@@ -1,7 +1,8 @@
 dist
 node_modules
-*.pem
 azure-devops-wiki-editor*.zip
+*.pem
+examples
 
 # IDE files
-.vscode/
+.vscode
