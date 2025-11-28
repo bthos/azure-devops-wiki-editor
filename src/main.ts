@@ -167,13 +167,19 @@ function enableWysiwygMode(textarea: HTMLTextAreaElement, wikiEditor: HTMLElemen
     }
     editorDiv.style.display = 'block';
     
-    // Initialize editor if not already done
-    if (!window.wikiEditorInstance) {
-        initializeEditor(textarea, editorDiv);
-    } else {
-        // Update editor content from textarea
-        window.wikiEditorInstance.setMarkdown(textarea.value);
+    // Always create a fresh editor to avoid TextSelection errors
+    // that occur when calling setMarkdown on existing editor with bullet lists
+    if (window.wikiEditorInstance) {
+        try {
+            window.wikiEditorInstance.destroy();
+        } catch (e) {
+            console.warn('Error destroying editor:', e);
+        }
+        window.wikiEditorInstance = null;
+        editorDiv.innerHTML = ''; // Clear the container
     }
+    
+    initializeEditor(textarea, editorDiv);
     
     // Update toggle labels
     updateToggleLabels(true);
@@ -313,13 +319,26 @@ function initializeEditor(textarea: HTMLTextAreaElement, editorDiv: HTMLElement)
     };
 
     try {
+        // Temporarily suppress the TextSelection warning from ProseMirror
+        const originalWarn = console.warn;
+        console.warn = function(...args: any[]) {
+            // Suppress the specific TextSelection warning
+            if (args[0] && typeof args[0] === 'string' && 
+                args[0].includes('TextSelection endpoint not pointing into a node with inline content')) {
+                return; // Suppress this warning
+            }
+            originalWarn.apply(console, args);
+        };
+        
+        // Initialize editor in WYSIWYG mode with autofocus disabled
         window.wikiEditorInstance = new window.toastui.Editor({
             el: editorDiv,
             height: 'auto',
             initialEditType: 'wysiwyg',
             previewStyle: 'vertical',
             initialValue: content,
-            hideModeSwitch: true, // Hide the default mode switch
+            hideModeSwitch: true,
+            autofocus: false, // Prevent auto-focus to avoid cursor issues
             events: {
                 change: () => {
                     syncEditorToTextarea(textarea);
@@ -334,6 +353,11 @@ function initializeEditor(textarea: HTMLTextAreaElement, editorDiv: HTMLElement)
                 ['code', 'codeblock']
             ]
         });
+
+        // Restore console.warn after a short delay
+        setTimeout(() => {
+            console.warn = originalWarn;
+        }, 500);
 
         // Handle form submission
         if (form) {
