@@ -190,6 +190,110 @@
             font-size: 14px;
             flex-shrink: 0;
         }
+
+        /* ===== Dark Mode Support ===== */
+        @media (prefers-color-scheme: dark) {
+            body {
+                background: #1b1a19;
+                color: #f3f2f1;
+            }
+
+            h3 {
+                color: #2899f5;
+            }
+
+            h4 {
+                color: #f3f2f1;
+            }
+
+            p {
+                color: #a19f9d;
+            }
+
+            .section {
+                background: #252423;
+                box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+            }
+
+            .shortcut-row {
+                border-bottom-color: #3b3a39;
+                color: #f3f2f1;
+            }
+
+            .shortcut-key {
+                background: #3b3a39;
+                color: #f3f2f1;
+            }
+
+            #customDomain {
+                background: #1b1a19;
+                border-color: #605e5c;
+                color: #f3f2f1;
+            }
+
+            #customDomain::placeholder {
+                color: #8a8886;
+            }
+
+            #customDomain:focus {
+                border-color: #2899f5;
+            }
+
+            button {
+                background: #2899f5;
+            }
+
+            button:hover {
+                background: #3aa0f3;
+            }
+
+            button.remove-btn {
+                background: #f1707b;
+            }
+
+            button.remove-btn:hover {
+                background: #d13438;
+            }
+
+            .domain-item {
+                border-bottom-color: #3b3a39;
+                color: #f3f2f1;
+            }
+
+            .status-success {
+                background: #0e3b0e;
+                color: #92c353;
+            }
+
+            .status-error {
+                background: #3b0e0e;
+                color: #f1707b;
+            }
+
+            .hint {
+                color: #8a8886;
+            }
+
+            .setting-label {
+                color: #f3f2f1;
+            }
+
+            .setting-select {
+                background: #1b1a19;
+                border-color: #605e5c;
+                color: #f3f2f1;
+            }
+
+            .setting-select:focus {
+                border-color: #2899f5;
+            }
+
+            .reminder-notice {
+                background: #3d3225;
+                border-color: #c19c00;
+                color: #f3f2f1;
+            }
+        }
     </style>
 </head>
 

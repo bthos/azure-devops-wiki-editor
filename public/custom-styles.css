@@ -306,3 +306,464 @@
         max-height: calc(100vh - 150px);
     }
 }
+
+/* ===== Azure DevOps Theme Support ===== */
+/* 
+ * ADO themes are set via body[data-theme]:
+ * - 'ms.vss-web.vsts-theme' - Light theme (default)
+ * - 'ms.vss-web.vsts-theme-dark' - Dark theme
+ * - 'ms.vss-web.vsts-theme-hc-dark' - High Contrast Dark
+ * - 'ms.vss-web.vsts-theme-hc-light' - High Contrast Light
+ */
+
+/* ===== Dark Theme ===== */
+body[data-theme="ms.vss-web.vsts-theme-dark"] #wysiwyg-toggle-container {
+    background-color: #1b1a19;
+    border-bottom-color: #3b3a39;
+}
+
+body[data-theme="ms.vss-web.vsts-theme-dark"] .toggle-label {
+    color: #a19f9d;
+}
+
+body[data-theme="ms.vss-web.vsts-theme-dark"] .toggle-label.active {
+    color: #f3f2f1;
+}
+
+body[data-theme="ms.vss-web.vsts-theme-dark"] .toggle-label:hover {
+    color: #f3f2f1;
+}
+
+/* Dark theme toggle - OFF: dark filled, white circle. ON: blue filled, white circle */
+body[data-theme="ms.vss-web.vsts-theme-dark"] .toggle-slider {
+    background-color: #323130;
+    border-color: #323130;
+}
+
+body[data-theme="ms.vss-web.vsts-theme-dark"] .toggle-slider:before {
+    background-color: #ffffff;
+}
+
+body[data-theme="ms.vss-web.vsts-theme-dark"] .toggle-switch:hover .toggle-slider {
+    background-color: #484644;
+    border-color: #484644;
+}
+
+body[data-theme="ms.vss-web.vsts-theme-dark"] .toggle-switch input:checked + .toggle-slider {
+    background-color: #0078d4;
+    border-color: #0078d4;
+}
+
+body[data-theme="ms.vss-web.vsts-theme-dark"] .toggle-switch input:checked + .toggle-slider:before {
+    background-color: #ffffff;
+}
+
+body[data-theme="ms.vss-web.vsts-theme-dark"] .toggle-switch:hover input:checked + .toggle-slider {
+    background-color: #106ebe;
+    border-color: #106ebe;
+}
+
+body[data-theme="ms.vss-web.vsts-theme-dark"] .toggle-switch input:focus-visible + .toggle-slider {
+    box-shadow: 0 0 0 2px #1b1a19, 0 0 0 4px #ffffff;
+}
+
+body[data-theme="ms.vss-web.vsts-theme-dark"] .toastui-editor-toolbar {
+    background-color: #1b1a19;
+    border-bottom-color: #3b3a39;
+}
+
+body[data-theme="ms.vss-web.vsts-theme-dark"] .toastui-editor-toolbar-icons {
+    color: #f3f2f1;
+}
+
+body[data-theme="ms.vss-web.vsts-theme-dark"] .toastui-editor-toolbar-icons:hover {
+    background-color: #3b3a39;
+    color: #ffffff;
+}
+
+body[data-theme="ms.vss-web.vsts-theme-dark"] .toastui-editor-toolbar-icons:active {
+    background-color: #484644;
+}
+
+body[data-theme="ms.vss-web.vsts-theme-dark"] .toastui-editor-toolbar-icons.active {
+    background-color: #484644;
+    color: #2899f5;
+}
+
+body[data-theme="ms.vss-web.vsts-theme-dark"] .toastui-editor-defaultUI {
+    background-color: #1b1a19;
+    border-color: #3b3a39;
+}
+
+body[data-theme="ms.vss-web.vsts-theme-dark"] .toastui-editor-ww-container {
+    background-color: #252423;
+}
+
+body[data-theme="ms.vss-web.vsts-theme-dark"] .toastui-editor-contents,
+body[data-theme="ms.vss-web.vsts-theme-dark"] .toastui-editor-contents p,
+body[data-theme="ms.vss-web.vsts-theme-dark"] .toastui-editor-contents li,
+body[data-theme="ms.vss-web.vsts-theme-dark"] .toastui-editor-contents td,
+body[data-theme="ms.vss-web.vsts-theme-dark"] .toastui-editor-contents th,
+body[data-theme="ms.vss-web.vsts-theme-dark"] .ProseMirror {
+    color: #f3f2f1;
+}
+
+body[data-theme="ms.vss-web.vsts-theme-dark"] .toastui-editor-contents h1,
+body[data-theme="ms.vss-web.vsts-theme-dark"] .toastui-editor-contents h2,
+body[data-theme="ms.vss-web.vsts-theme-dark"] .toastui-editor-contents h3,
+body[data-theme="ms.vss-web.vsts-theme-dark"] .toastui-editor-contents h4,
+body[data-theme="ms.vss-web.vsts-theme-dark"] .toastui-editor-contents h5,
+body[data-theme="ms.vss-web.vsts-theme-dark"] .toastui-editor-contents h6 {
+    color: #ffffff;
+    border-bottom-color: #3b3a39;
+}
+
+body[data-theme="ms.vss-web.vsts-theme-dark"] .toastui-editor-contents a {
+    color: #2899f5;
+}
+
+/* Dark theme - Inline code */
+body[data-theme="ms.vss-web.vsts-theme-dark"] .toastui-editor-contents code {
+    background-color: #3b3a39;
+    color: #e8e6e3;
+    border: 1px solid #4a4847;
+    padding: 2px 6px;
+    border-radius: 3px;
+}
+
+/* Dark theme - Code blocks */
+body[data-theme="ms.vss-web.vsts-theme-dark"] .toastui-editor-contents pre {
+    background-color: #1e1e1e;
+    border: 1px solid #4a4847;
+    border-radius: 4px;
+    padding: 12px;
+}
+
+body[data-theme="ms.vss-web.vsts-theme-dark"] .toastui-editor-contents pre code {
+    background-color: transparent;
+    border: none;
+    padding: 0;
+    color: #d4d4d4;
+}
+
+body[data-theme="ms.vss-web.vsts-theme-dark"] .toastui-editor-contents blockquote {
+    border-left-color: #3b3a39;
+    color: #a19f9d;
+}
+
+body[data-theme="ms.vss-web.vsts-theme-dark"] .toastui-editor-contents table,
+body[data-theme="ms.vss-web.vsts-theme-dark"] .toastui-editor-contents table td {
+    border-color: #3b3a39;
+}
+
+body[data-theme="ms.vss-web.vsts-theme-dark"] .toastui-editor-contents table th {
+    background-color: #323130;
+    border-color: #3b3a39;
+    color: #f3f2f1;
+}
+
+body[data-theme="ms.vss-web.vsts-theme-dark"] .toastui-editor-contents hr {
+    border-color: #3b3a39;
+}
+
+body[data-theme="ms.vss-web.vsts-theme-dark"] .toc-marker {
+    color: #2899f5;
+    background: rgba(40, 153, 245, 0.15);
+    border-color: rgba(40, 153, 245, 0.3);
+}
+
+body[data-theme="ms.vss-web.vsts-theme-dark"] .mention {
+    color: #2899f5;
+    background: rgba(40, 153, 245, 0.1);
+}
+
+body[data-theme="ms.vss-web.vsts-theme-dark"] .toastui-editor-dropdown-toolbar,
+body[data-theme="ms.vss-web.vsts-theme-dark"] .toastui-editor-popup,
+body[data-theme="ms.vss-web.vsts-theme-dark"] .toastui-editor-popup-body {
+    background-color: #252423;
+    border-color: #3b3a39;
+}
+
+body[data-theme="ms.vss-web.vsts-theme-dark"] .toastui-editor-popup-body label {
+    color: #f3f2f1;
+}
+
+body[data-theme="ms.vss-web.vsts-theme-dark"] .toastui-editor-popup-body input {
+    background-color: #1b1a19;
+    border-color: #3b3a39;
+    color: #f3f2f1;
+}
+
+/* ===== High Contrast Dark Theme ===== */
+body[data-theme="ms.vss-web.vsts-theme-hc-dark"] #wysiwyg-toggle-container {
+    background-color: #000000;
+    border-bottom-color: #ffffff;
+}
+
+body[data-theme="ms.vss-web.vsts-theme-hc-dark"] .toggle-label {
+    color: #ffffff;
+}
+
+body[data-theme="ms.vss-web.vsts-theme-hc-dark"] .toggle-label.active {
+    color: #ffff00;
+}
+
+/* HC Dark toggle - OFF: black bg, white border, white circle. ON: cyan filled, black circle */
+body[data-theme="ms.vss-web.vsts-theme-hc-dark"] .toggle-slider {
+    background-color: #000000;
+    border-color: #ffffff;
+    border-width: 1px;
+}
+
+body[data-theme="ms.vss-web.vsts-theme-hc-dark"] .toggle-slider:before {
+    background-color: #ffffff;
+}
+
+body[data-theme="ms.vss-web.vsts-theme-hc-dark"] .toggle-switch:hover .toggle-slider {
+    border-color: #1aebff;
+}
+
+body[data-theme="ms.vss-web.vsts-theme-hc-dark"] .toggle-switch input:checked + .toggle-slider {
+    background-color: #1aebff;
+    border-color: #1aebff;
+}
+
+body[data-theme="ms.vss-web.vsts-theme-hc-dark"] .toggle-switch input:checked + .toggle-slider:before {
+    background-color: #000000;
+}
+
+body[data-theme="ms.vss-web.vsts-theme-hc-dark"] .toggle-switch input:focus-visible + .toggle-slider {
+    box-shadow: 0 0 0 2px #000000, 0 0 0 4px #ffffff;
+}
+
+body[data-theme="ms.vss-web.vsts-theme-hc-dark"] .toastui-editor-toolbar {
+    background-color: #000000;
+    border-bottom-color: #ffffff;
+}
+
+body[data-theme="ms.vss-web.vsts-theme-hc-dark"] .toastui-editor-toolbar-icons {
+    color: #ffffff;
+}
+
+body[data-theme="ms.vss-web.vsts-theme-hc-dark"] .toastui-editor-toolbar-icons:hover,
+body[data-theme="ms.vss-web.vsts-theme-hc-dark"] .toastui-editor-toolbar-icons:focus {
+    background-color: #1aebff;
+    color: #000000;
+}
+
+body[data-theme="ms.vss-web.vsts-theme-hc-dark"] .toastui-editor-defaultUI {
+    background-color: #000000;
+    border-color: #ffffff;
+}
+
+body[data-theme="ms.vss-web.vsts-theme-hc-dark"] .toastui-editor-ww-container {
+    background-color: #000000;
+}
+
+body[data-theme="ms.vss-web.vsts-theme-hc-dark"] .toastui-editor-contents,
+body[data-theme="ms.vss-web.vsts-theme-hc-dark"] .toastui-editor-contents p,
+body[data-theme="ms.vss-web.vsts-theme-hc-dark"] .toastui-editor-contents li,
+body[data-theme="ms.vss-web.vsts-theme-hc-dark"] .ProseMirror {
+    color: #ffffff;
+}
+
+/* HC Dark - Headers: bright white/yellow for high contrast */
+body[data-theme="ms.vss-web.vsts-theme-hc-dark"] .toastui-editor-contents h1,
+body[data-theme="ms.vss-web.vsts-theme-hc-dark"] .toastui-editor-contents h2,
+body[data-theme="ms.vss-web.vsts-theme-hc-dark"] .toastui-editor-contents h3,
+body[data-theme="ms.vss-web.vsts-theme-hc-dark"] .toastui-editor-contents h4,
+body[data-theme="ms.vss-web.vsts-theme-hc-dark"] .toastui-editor-contents h5,
+body[data-theme="ms.vss-web.vsts-theme-hc-dark"] .toastui-editor-contents h6 {
+    color: #ffff00;
+    border-bottom-color: #ffffff;
+}
+
+body[data-theme="ms.vss-web.vsts-theme-hc-dark"] .toastui-editor-contents a {
+    color: #1aebff;
+}
+
+/* HC Dark - Code: less bright, use white text with visible border */
+body[data-theme="ms.vss-web.vsts-theme-hc-dark"] .toastui-editor-contents code {
+    background-color: #1a1a1a;
+    color: #ffffff;
+    border: 1px solid #ffffff;
+}
+
+/* HC Dark - Code blocks/pre: dark bg with white text and border */
+body[data-theme="ms.vss-web.vsts-theme-hc-dark"] .toastui-editor-contents pre {
+    background-color: #1a1a1a;
+    border: 1px solid #ffffff;
+}
+
+body[data-theme="ms.vss-web.vsts-theme-hc-dark"] .toastui-editor-contents pre code {
+    background-color: transparent;
+    color: #ffffff;
+    border: none;
+}
+
+/* HC Dark - Tables: visible white borders */
+body[data-theme="ms.vss-web.vsts-theme-hc-dark"] .toastui-editor-contents table {
+    border: 1px solid #ffffff;
+    border-collapse: collapse;
+}
+
+body[data-theme="ms.vss-web.vsts-theme-hc-dark"] .toastui-editor-contents table th,
+body[data-theme="ms.vss-web.vsts-theme-hc-dark"] .toastui-editor-contents table td {
+    border: 1px solid #ffffff;
+    color: #ffffff;
+    padding: 8px;
+}
+
+body[data-theme="ms.vss-web.vsts-theme-hc-dark"] .toastui-editor-contents table th {
+    background-color: #1a1a1a;
+    color: #ffff00;
+}
+
+body[data-theme="ms.vss-web.vsts-theme-hc-dark"] .toastui-editor-contents table td {
+    background-color: #000000;
+}
+
+/* HC Dark - Blockquote */
+body[data-theme="ms.vss-web.vsts-theme-hc-dark"] .toastui-editor-contents blockquote {
+    border-left: 3px solid #ffffff;
+    color: #ffffff;
+}
+
+/* HC Dark - HR */
+body[data-theme="ms.vss-web.vsts-theme-hc-dark"] .toastui-editor-contents hr {
+    border-color: #ffffff;
+}
+
+body[data-theme="ms.vss-web.vsts-theme-hc-dark"] .toc-marker,
+body[data-theme="ms.vss-web.vsts-theme-hc-dark"] .mention {
+    color: #ffff00;
+    background: transparent;
+    border-color: #ffff00;
+}
+
+/* ===== High Contrast Light Theme ===== */
+body[data-theme="ms.vss-web.vsts-theme-hc-light"] #wysiwyg-toggle-container {
+    background-color: #ffffff;
+    border-bottom-color: #000000;
+    border-bottom-width: 2px;
+}
+
+body[data-theme="ms.vss-web.vsts-theme-hc-light"] .toggle-label {
+    color: #000000;
+}
+
+body[data-theme="ms.vss-web.vsts-theme-hc-light"] .toggle-label.active {
+    color: #000000;
+    text-decoration: underline;
+}
+
+/* HC Light toggle - OFF: white bg, dark border, dark circle. ON: blue filled, white circle */
+body[data-theme="ms.vss-web.vsts-theme-hc-light"] .toggle-slider {
+    background-color: #ffffff;
+    border-color: #000000;
+    border-width: 1px;
+}
+
+body[data-theme="ms.vss-web.vsts-theme-hc-light"] .toggle-slider:before {
+    background-color: #000000;
+}
+
+body[data-theme="ms.vss-web.vsts-theme-hc-light"] .toggle-switch:hover .toggle-slider {
+    border-color: #0078d4;
+}
+
+body[data-theme="ms.vss-web.vsts-theme-hc-light"] .toggle-switch input:checked + .toggle-slider {
+    background-color: #0078d4;
+    border-color: #0078d4;
+}
+
+body[data-theme="ms.vss-web.vsts-theme-hc-light"] .toggle-switch input:checked + .toggle-slider:before {
+    background-color: #ffffff;
+}
+
+body[data-theme="ms.vss-web.vsts-theme-hc-light"] .toggle-switch input:focus-visible + .toggle-slider {
+    box-shadow: 0 0 0 2px #ffffff, 0 0 0 4px #000000;
+}
+
+body[data-theme="ms.vss-web.vsts-theme-hc-light"] .toastui-editor-toolbar {
+    background-color: #ffffff;
+    border-bottom-color: #000000;
+    border-bottom-width: 2px;
+}
+
+body[data-theme="ms.vss-web.vsts-theme-hc-light"] .toastui-editor-toolbar-icons {
+    color: #000000;
+}
+
+body[data-theme="ms.vss-web.vsts-theme-hc-light"] .toastui-editor-toolbar-icons:hover,
+body[data-theme="ms.vss-web.vsts-theme-hc-light"] .toastui-editor-toolbar-icons:focus {
+    background-color: #0000cd;
+    color: #ffffff;
+}
+
+body[data-theme="ms.vss-web.vsts-theme-hc-light"] .toastui-editor-defaultUI {
+    background-color: #ffffff;
+    border-color: #000000;
+}
+
+body[data-theme="ms.vss-web.vsts-theme-hc-light"] .toastui-editor-ww-container {
+    background-color: #ffffff;
+}
+
+body[data-theme="ms.vss-web.vsts-theme-hc-light"] .toastui-editor-contents,
+body[data-theme="ms.vss-web.vsts-theme-hc-light"] .toastui-editor-contents p,
+body[data-theme="ms.vss-web.vsts-theme-hc-light"] .toastui-editor-contents li,
+body[data-theme="ms.vss-web.vsts-theme-hc-light"] .ProseMirror {
+    color: #000000;
+}
+
+body[data-theme="ms.vss-web.vsts-theme-hc-light"] .toastui-editor-contents a {
+    color: #0000cd;
+}
+
+/* HC Light - Inline code */
+body[data-theme="ms.vss-web.vsts-theme-hc-light"] .toastui-editor-contents code {
+    background-color: #f0f0f0;
+    color: #0000cd;
+    border: 2px solid #000000;
+    padding: 2px 6px;
+    border-radius: 3px;
+}
+
+/* HC Light - Code blocks */
+body[data-theme="ms.vss-web.vsts-theme-hc-light"] .toastui-editor-contents pre {
+    background-color: #f0f0f0;
+    border: 2px solid #000000;
+    border-radius: 4px;
+    padding: 12px;
+}
+
+body[data-theme="ms.vss-web.vsts-theme-hc-light"] .toastui-editor-contents pre code {
+    background-color: transparent;
+    border: none;
+    padding: 0;
+    color: #000000;
+}
+
+/* HC Light - Tables */
+body[data-theme="ms.vss-web.vsts-theme-hc-light"] .toastui-editor-contents table {
+    border: 2px solid #000000;
+}
+
+body[data-theme="ms.vss-web.vsts-theme-hc-light"] .toastui-editor-contents table th,
+body[data-theme="ms.vss-web.vsts-theme-hc-light"] .toastui-editor-contents table td {
+    border: 2px solid #000000;
+}
+
+body[data-theme="ms.vss-web.vsts-theme-hc-light"] .toastui-editor-contents table th {
+    background-color: #e0e0e0;
+    color: #000000;
+    font-weight: bold;
+}
+
+body[data-theme="ms.vss-web.vsts-theme-hc-light"] .toc-marker,
+body[data-theme="ms.vss-web.vsts-theme-hc-light"] .mention {
+    color: #0000cd;
+    background: transparent;
+    border-color: #0000cd;
+}
