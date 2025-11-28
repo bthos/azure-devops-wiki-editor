@@ -7,7 +7,17 @@
     background-color: #faf9f8;
     border-bottom: 1px solid #edebe9;
     display: flex;
+    justify-content: flex-end; /* Default: right */
+}
+
+/* Toggle position: left */
+#wysiwyg-toggle-container[data-position="left"] {
     justify-content: flex-start;
+}
+
+/* Toggle position: right (explicit) */
+#wysiwyg-toggle-container[data-position="right"] {
+    justify-content: flex-end;
 }
 
 .wysiwyg-toggle {
@@ -144,7 +154,7 @@
 /* Make editor blend with Azure DevOps UI and contain scroll */
 #new-editor {
     margin-top: 0;
-    border: 1px solid #c8c6c4;
+    border: none;
     border-top: none;
     overflow: hidden;
     /* Ensure editor doesn't grow beyond container */
@@ -176,7 +186,7 @@
 
 /* Ensure the editor content area scrolls, not the page */
 #new-editor .toastui-editor-ww-container .ProseMirror {
-    min-height: 300px;
+    min-height: 50px;
 }
 
 /* Keep toolbar fixed at top of editor */
@@ -197,6 +207,11 @@
     background-color: #faf9f8;
     border-bottom: 1px solid #edebe9;
     padding: 4px 8px;
+    height: 50px;
+}
+
+.toastui-editor-defaultUI-toolbar {
+    border: none;
 }
 
 .toastui-editor-toolbar-icons {

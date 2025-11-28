@@ -89,10 +89,12 @@ function resolveImageUrl(src: string): string {
 
 /**
  * Create the custom mode toggle switch
+ * @param position - 'left' or 'right' (default: 'right')
  */
-function createModeToggle(): HTMLElement {
+function createModeToggle(position: string = 'right'): HTMLElement {
     const container = document.createElement('div');
     container.id = 'wysiwyg-toggle-container';
+    container.setAttribute('data-position', position);
     container.innerHTML = `
         <div class="wysiwyg-toggle">
             <span class="toggle-label markdown-label active">Markdown</span>
@@ -406,21 +408,26 @@ function setupEditor(): void {
         return;
     }
     
-    // Create and insert toggle at the top of the wiki editor
-    const toggle = createModeToggle();
-    wikiEditor.insertBefore(toggle, wikiEditor.firstChild);
-    
-    // Setup toggle event listener
-    const toggleInput = document.querySelector('#wysiwyg-toggle-input') as HTMLInputElement;
-    if (toggleInput) {
-        toggleInput.addEventListener('change', function() {
-            if (this.checked) {
-                enableWysiwygMode(textarea, wikiEditor);
-            } else {
-                disableWysiwygMode(textarea, wikiEditor);
-            }
-        });
-    }
+    // Load toggle position setting and create toggle
+    chrome.storage.sync.get(['togglePosition'], function(result) {
+        const position = result.togglePosition || 'right'; // Default to right
+        
+        // Create and insert toggle at the top of the wiki editor
+        const toggle = createModeToggle(position);
+        wikiEditor.insertBefore(toggle, wikiEditor.firstChild);
+        
+        // Setup toggle event listener
+        const toggleInput = document.querySelector('#wysiwyg-toggle-input') as HTMLInputElement;
+        if (toggleInput) {
+            toggleInput.addEventListener('change', function() {
+                if (this.checked) {
+                    enableWysiwygMode(textarea, wikiEditor);
+                } else {
+                    disableWysiwygMode(textarea, wikiEditor);
+                }
+            });
+        }
+    });
 }
 
 // Use MutationObserver for better performance

@@ -144,12 +144,86 @@
             color: #8a8886;
             margin-top: 4px;
         }
+
+        /* Settings styles */
+        .setting-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 6px 0;
+        }
+
+        .setting-label {
+            font-size: 13px;
+            color: #323130;
+        }
+
+        .setting-select {
+            padding: 4px 8px;
+            border: 1px solid #8a8886;
+            border-radius: 4px;
+            font-size: 12px;
+            background: white;
+            cursor: pointer;
+        }
+
+        .setting-select:focus {
+            outline: none;
+            border-color: #0078d4;
+        }
+
+        /* Reminder notice */
+        .reminder-notice {
+            background: #fff4ce;
+            border: 1px solid #ffb900;
+            border-radius: 4px;
+            padding: 8px 10px;
+            margin-bottom: 10px;
+            font-size: 12px;
+            color: #323130;
+            display: flex;
+            align-items: flex-start;
+            gap: 6px;
+        }
+
+        .reminder-notice .icon {
+            font-size: 14px;
+            flex-shrink: 0;
+        }
     </style>
 </head>
 
 <body>
     <h3>🖊️ Azure DevOps Wiki Editor</h3>
     <p>WYSIWYG editor for Azure DevOps Wiki pages</p>
+
+    <div class="reminder-notice">
+        <span class="icon">💡</span>
+        <span>Refresh the wiki page to apply settings changes or if the toggle switch is not displayed.</span>
+    </div>
+
+    <div class="section">
+        <h4>⚙️ Settings</h4>
+        <div class="setting-row">
+            <span class="setting-label">Toggle switch position</span>
+            <select id="togglePosition" class="setting-select">
+                <option value="right">Right</option>
+                <option value="left">Left</option>
+            </select>
+        </div>
+    </div>
+
+    <div class="section">
+        <h4>🌐 Custom Domains</h4>
+        <p>Add custom Azure DevOps Server domains:</p>
+        <div class="domain-input-container">
+            <input type="text" id="customDomain" placeholder="e.g., devops.company.com">
+            <button id="addDomain">Add</button>
+        </div>
+        <div class="hint">Enter domain without protocol (https://)</div>
+        <div id="statusMessage" class="status-message" style="display: none;"></div>
+        <div id="domainList" class="domain-list"></div>
+    </div>
 
     <div class="section">
         <h4>⌨️ Keyboard Shortcuts</h4>
@@ -169,18 +243,6 @@
             <span>Code Block</span>
             <span class="shortcut-key">Ctrl+Shift+C</span>
         </div>
-    </div>
-
-    <div class="section">
-        <h4>🌐 Custom Domains</h4>
-        <p>Add custom Azure DevOps Server domains:</p>
-        <div class="domain-input-container">
-            <input type="text" id="customDomain" placeholder="e.g., devops.company.com">
-            <button id="addDomain">Add</button>
-        </div>
-        <div class="hint">Enter domain without protocol (https://)</div>
-        <div id="statusMessage" class="status-message" style="display: none;"></div>
-        <div id="domainList" class="domain-list"></div>
     </div>
 
     <script src="popup.js"></script>

@@ -1,8 +1,13 @@
 // Azure DevOps Wiki Editor - Popup Script
 
 document.addEventListener("DOMContentLoaded", function () {
+    loadSettings();
     loadDomains();
     
+    // Settings event listeners
+    document.getElementById("togglePosition").addEventListener("change", saveSettings);
+    
+    // Domain event listeners
     document.getElementById("addDomain").addEventListener("click", addDomain);
     document.getElementById("customDomain").addEventListener("keypress", function(e) {
         if (e.key === "Enter") {
@@ -10,6 +15,31 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     });
 });
+
+/**
+ * Load saved settings
+ */
+function loadSettings() {
+    chrome.storage.sync.get(['togglePosition'], function(result) {
+        const position = result.togglePosition || 'right'; // Default to right
+        document.getElementById('togglePosition').value = position;
+    });
+}
+
+/**
+ * Save settings when changed
+ */
+function saveSettings() {
+    const togglePosition = document.getElementById('togglePosition').value;
+    
+    chrome.storage.sync.set({ togglePosition: togglePosition }, function() {
+        if (chrome.runtime.lastError) {
+            console.error('Error saving settings:', chrome.runtime.lastError);
+            return;
+        }
+        console.log('Settings saved: togglePosition =', togglePosition);
+    });
+}
 
 /**
  * Load saved custom domains and display them
