@@ -10,11 +10,201 @@
             margin: 0;
             padding: 20px;
             background: #f5f5f5;
+            transition: background-color 0.3s, color 0.3s;
         }
         h1 {
             color: #323130;
             margin-bottom: 20px;
         }
+        
+        /* Theme switcher */
+        .theme-switcher {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 20px;
+            padding: 12px 16px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        .theme-switcher label {
+            font-weight: 600;
+            color: #323130;
+        }
+        .theme-switcher select {
+            padding: 8px 12px;
+            border: 1px solid #8a8886;
+            border-radius: 4px;
+            font-size: 14px;
+            cursor: pointer;
+            background: white;
+        }
+        .theme-switcher select:focus {
+            outline: none;
+            border-color: #0078d4;
+        }
+        
+        /* Dark theme page styles */
+        body[data-theme="ms.vss-web.vsts-theme-dark"] {
+            background: #1b1a19;
+            color: #f3f2f1;
+        }
+        body[data-theme="ms.vss-web.vsts-theme-dark"] h1 {
+            color: #f3f2f1;
+        }
+        body[data-theme="ms.vss-web.vsts-theme-dark"] .theme-switcher {
+            background: #252423;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+        }
+        body[data-theme="ms.vss-web.vsts-theme-dark"] .theme-switcher label {
+            color: #f3f2f1;
+        }
+        body[data-theme="ms.vss-web.vsts-theme-dark"] .theme-switcher select {
+            background: #1b1a19;
+            border-color: #605e5c;
+            color: #f3f2f1;
+        }
+        body[data-theme="ms.vss-web.vsts-theme-dark"] .wiki-editor {
+            background: #252423;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+        }
+        body[data-theme="ms.vss-web.vsts-theme-dark"] .we-toolbar-container {
+            background: #323130;
+            border-color: #3b3a39;
+        }
+        body[data-theme="ms.vss-web.vsts-theme-dark"] .we-toolbar-container button {
+            background: #252423;
+            border-color: #605e5c;
+            color: #f3f2f1;
+        }
+        body[data-theme="ms.vss-web.vsts-theme-dark"] .we-ta-container textarea {
+            background: #1b1a19;
+            border-color: #605e5c;
+            color: #f3f2f1;
+        }
+        body[data-theme="ms.vss-web.vsts-theme-dark"] .we-text-preview-container {
+            background: #1b1a19;
+            border-color: #3b3a39;
+            color: #a19f9d;
+        }
+        body[data-theme="ms.vss-web.vsts-theme-dark"] .instructions {
+            background: #3d3225;
+            border-color: #c19c00;
+            color: #f3f2f1;
+        }
+        body[data-theme="ms.vss-web.vsts-theme-dark"] .instructions h3 {
+            color: #ffb900;
+        }
+        
+        /* High Contrast Dark theme page styles */
+        body[data-theme="ms.vss-web.vsts-theme-hc-dark"] {
+            background: #000000;
+            color: #ffffff;
+        }
+        body[data-theme="ms.vss-web.vsts-theme-hc-dark"] h1 {
+            color: #ffffff;
+        }
+        body[data-theme="ms.vss-web.vsts-theme-hc-dark"] .theme-switcher {
+            background: #000000;
+            border: 2px solid #ffffff;
+            box-shadow: none;
+        }
+        body[data-theme="ms.vss-web.vsts-theme-hc-dark"] .theme-switcher label {
+            color: #ffffff;
+        }
+        body[data-theme="ms.vss-web.vsts-theme-hc-dark"] .theme-switcher select {
+            background: #000000;
+            border: 2px solid #ffffff;
+            color: #ffffff;
+        }
+        body[data-theme="ms.vss-web.vsts-theme-hc-dark"] .wiki-editor {
+            background: #000000;
+            border: 2px solid #ffffff;
+            box-shadow: none;
+        }
+        body[data-theme="ms.vss-web.vsts-theme-hc-dark"] .we-toolbar-container {
+            background: #000000;
+            border-color: #ffffff;
+        }
+        body[data-theme="ms.vss-web.vsts-theme-hc-dark"] .we-toolbar-container button {
+            background: #000000;
+            border: 2px solid #ffffff;
+            color: #ffffff;
+        }
+        body[data-theme="ms.vss-web.vsts-theme-hc-dark"] .we-ta-container textarea {
+            background: #000000;
+            border: 2px solid #ffffff;
+            color: #ffffff;
+        }
+        body[data-theme="ms.vss-web.vsts-theme-hc-dark"] .we-text-preview-container {
+            background: #000000;
+            border: 2px solid #ffffff;
+            color: #ffffff;
+        }
+        body[data-theme="ms.vss-web.vsts-theme-hc-dark"] .instructions {
+            background: #000000;
+            border: 2px solid #1aebff;
+            color: #ffffff;
+        }
+        body[data-theme="ms.vss-web.vsts-theme-hc-dark"] .instructions h3 {
+            color: #1aebff;
+        }
+        
+        /* High Contrast Light theme page styles */
+        body[data-theme="ms.vss-web.vsts-theme-hc-light"] {
+            background: #ffffff;
+            color: #000000;
+        }
+        body[data-theme="ms.vss-web.vsts-theme-hc-light"] h1 {
+            color: #000000;
+        }
+        body[data-theme="ms.vss-web.vsts-theme-hc-light"] .theme-switcher {
+            background: #ffffff;
+            border: 2px solid #000000;
+            box-shadow: none;
+        }
+        body[data-theme="ms.vss-web.vsts-theme-hc-light"] .theme-switcher label {
+            color: #000000;
+        }
+        body[data-theme="ms.vss-web.vsts-theme-hc-light"] .theme-switcher select {
+            background: #ffffff;
+            border: 2px solid #000000;
+            color: #000000;
+        }
+        body[data-theme="ms.vss-web.vsts-theme-hc-light"] .wiki-editor {
+            background: #ffffff;
+            border: 2px solid #000000;
+            box-shadow: none;
+        }
+        body[data-theme="ms.vss-web.vsts-theme-hc-light"] .we-toolbar-container {
+            background: #ffffff;
+            border-color: #000000;
+        }
+        body[data-theme="ms.vss-web.vsts-theme-hc-light"] .we-toolbar-container button {
+            background: #ffffff;
+            border: 2px solid #000000;
+            color: #000000;
+        }
+        body[data-theme="ms.vss-web.vsts-theme-hc-light"] .we-ta-container textarea {
+            background: #ffffff;
+            border: 2px solid #000000;
+            color: #000000;
+        }
+        body[data-theme="ms.vss-web.vsts-theme-hc-light"] .we-text-preview-container {
+            background: #ffffff;
+            border: 2px solid #000000;
+            color: #000000;
+        }
+        body[data-theme="ms.vss-web.vsts-theme-hc-light"] .instructions {
+            background: #ffffff;
+            border: 2px solid #0078d4;
+            color: #000000;
+        }
+        body[data-theme="ms.vss-web.vsts-theme-hc-light"] .instructions h3 {
+            color: #0078d4;
+        }
+        
         .wiki-editor {
             background: white;
             border-radius: 8px;
@@ -77,6 +267,7 @@
         }
         .instructions {
             margin-top: 20px;
+            margin-bottom: 20px;
             padding: 15px;
             background: #fff8e1;
             border-radius: 8px;
@@ -91,6 +282,27 @@
 <body>
     <h1>🖊️ Azure DevOps Wiki Editor Test</h1>
     
+    <div class="theme-switcher">
+        <label for="themeSelect">🎨 Theme:</label>
+        <select id="themeSelect">
+            <option value="">Light (default)</option>
+            <option value="ms.vss-web.vsts-theme-dark">Dark</option>
+            <option value="ms.vss-web.vsts-theme-hc-dark">High Contrast Dark</option>
+            <option value="ms.vss-web.vsts-theme-hc-light">High Contrast Light</option>
+        </select>
+    </div>
+    
+    <div class="instructions">
+        <h3>📋 Instructions</h3>
+        <ul>
+            <li><strong>Theme Switcher</strong>: Use the dropdown to test different Azure DevOps themes</li>
+            <li>Toggle the switch at the top to enable/disable WYSIWYG mode</li>
+            <li>In <strong>Markdown mode</strong>: Standard textarea with ADO toolbar</li>
+            <li>In <strong>WYSIWYG mode</strong>: Toast UI Editor with rich formatting</li>
+            <li>Click "Save Changes" to see the current markdown content</li>
+        </ul>
+    </div>
+
     <div class="wiki-editor">
         <form id="wikiForm" onsubmit="event.preventDefault(); alert('Form content:\n\n' + document.querySelector('.we-ta-container textarea').value);">
             <!-- Simulated ADO toolbar -->
@@ -141,17 +353,26 @@ console.log("Hello World!");
         </form>
     </div>
     
-    <div class="instructions">
-        <h3>📋 Instructions</h3>
-        <ul>
-            <li>Toggle the switch at the top to enable/disable WYSIWYG mode</li>
-            <li>In <strong>Markdown mode</strong>: Standard textarea with ADO toolbar</li>
-            <li>In <strong>WYSIWYG mode</strong>: Toast UI Editor with rich formatting</li>
-            <li>Click "Save Changes" to see the current markdown content</li>
-        </ul>
-    </div>
-
     <script>
+        // Theme switcher functionality
+        document.getElementById('themeSelect').addEventListener('change', function() {
+            const theme = this.value;
+            if (theme) {
+                document.body.setAttribute('data-theme', theme);
+            } else {
+                document.body.removeAttribute('data-theme');
+            }
+            // Save to localStorage
+            localStorage.setItem('test-theme', theme);
+        });
+        
+        // Restore saved theme
+        const savedTheme = localStorage.getItem('test-theme');
+        if (savedTheme) {
+            document.body.setAttribute('data-theme', savedTheme);
+            document.getElementById('themeSelect').value = savedTheme;
+        }
+        
         // Add error handling for script loading
         window.onerror = function(msg, url, line, col, error) {
             console.error('An error occurred:', msg, 'at', url, 'line:', line);

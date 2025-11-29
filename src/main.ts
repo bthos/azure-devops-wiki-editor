@@ -432,10 +432,8 @@ function setupEditor(): void {
         return;
     }
     
-    // Load toggle position setting and create toggle
-    chrome.storage.sync.get(['togglePosition'], function(result) {
-        const position = result.togglePosition || 'right'; // Default to right
-        
+    // Function to create toggle and set up event listener
+    function createToggleWithPosition(position: string) {
         // Create and insert toggle at the top of the wiki editor
         const toggle = createModeToggle(position);
         wikiEditor.insertBefore(toggle, wikiEditor.firstChild);
@@ -451,7 +449,19 @@ function setupEditor(): void {
                 }
             });
         }
-    });
+    }
+    
+    // Load toggle position setting and create toggle
+    // Check if chrome.storage is available (not available in test.html)
+    if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.sync) {
+        chrome.storage.sync.get(['togglePosition'], function(result) {
+            const position = result.togglePosition || 'right'; // Default to right
+            createToggleWithPosition(position);
+        });
+    } else {
+        // Fallback for non-extension context (test.html)
+        createToggleWithPosition('right');
+    }
 }
 
 // Use MutationObserver for better performance
