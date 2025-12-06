@@ -1,8 +1,10 @@
-dist
 node_modules
+dist
 azure-devops-wiki-editor*.zip
 *.pem
-examples
 
 # IDE files
 .vscode
+.specstory
+
+.inputs

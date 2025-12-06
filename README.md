@@ -69,7 +69,7 @@ To test the editor functionality locally before installing it as a Chrome extens
    ```
 
 2. Open your browser and navigate to:
-   `http://localhost:8080/test.html`
+   `http://localhost:8080/playground.html`
 
 3. You'll see a test page with the WYSIWYG editor where you can try out the features without needing to install the extension.
 

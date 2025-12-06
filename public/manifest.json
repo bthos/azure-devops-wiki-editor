@@ -40,7 +40,7 @@
         "main.js"
       ],
       "css": [
-        "toastui-editor.css",
+        "milkdown-editor.css",
         "custom-styles.css"
       ]
     }

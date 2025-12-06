@@ -1,0 +1,33 @@
+# Test Environment
+robot/venv/
+robot/.venv/
+robot/__pycache__/
+**/__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# Robot Framework output
+robot/reports/
+robot/logs/
+robot/screenshots/
+*.html
+*.xml
+!robot/resources/*.robot
+
+# Environment configuration (contains secrets)
+robot/.env
+
+# Test data with credentials
+robot/data/*.xlsx
+!robot/data/sample_*.xlsx
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo

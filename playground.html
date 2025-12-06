@@ -1,16 +1,24 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Editor Test</title>
-    <link rel="stylesheet" href="dist/toastui-editor.css" />
+    <title>Editor Test - Milkdown</title>
+    <!-- Milkdown CSS -->
     <link rel="stylesheet" href="dist/custom-styles.css" />
+    <link rel="stylesheet" href="dist/milkdown-editor.css" />
     <style>
+        html, body {
+            height: 100%;
+            margin: 0;
+            overflow: hidden; /* Prevent page scroll */
+        }
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            margin: 0;
             padding: 20px;
             background: #f5f5f5;
             transition: background-color 0.3s, color 0.3s;
+            display: flex;
+            flex-direction: column;
+            box-sizing: border-box;
         }
         h1 {
             color: #323130;
@@ -196,20 +204,42 @@
             border: 2px solid #000000;
             color: #000000;
         }
-        body[data-theme="ms.vss-web.vsts-theme-hc-light"] .instructions {
-            background: #ffffff;
-            border: 2px solid #0078d4;
-            color: #000000;
-        }
-        body[data-theme="ms.vss-web.vsts-theme-hc-light"] .instructions h3 {
-            color: #0078d4;
-        }
         
         .wiki-editor {
             background: white;
             border-radius: 8px;
             box-shadow: 0 2px 8px rgba(0,0,0,0.1);
             overflow: hidden;
+            /* Flex to fill remaining space */
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            min-height: 0; /* Allow shrinking */
+        }
+        
+        /* When WYSIWYG mode is active, hide textarea container and form elements */
+        .wiki-editor:has(#milkdown-editor[style*="display: block"]) .we-ta-container {
+            display: none !important;
+        }
+        .wiki-editor:has(#milkdown-editor[style*="display: block"]) .we-toolbar-container {
+            display: none !important;
+        }
+        .wiki-editor:has(#milkdown-editor[style*="display: block"]) form {
+            display: none !important;
+        }
+        
+        /* Ensure form fills the wiki-editor */
+        .wiki-editor form {
+            display: flex;
+            flex-direction: column;
+            flex: 1;
+            min-height: 0;
+            overflow: hidden;
+        }
+        
+        /* Page header elements - don't flex */
+        h1, .theme-switcher {
+            flex-shrink: 0;
         }
         /* Simulate ADO toolbar */
         .we-toolbar-container {
@@ -218,6 +248,7 @@
             border-bottom: 1px solid #e1e1e1;
             display: flex;
             gap: 8px;
+            align-items: center;
         }
         .we-toolbar-container button {
             padding: 6px 12px;
@@ -230,57 +261,54 @@
         .we-toolbar-container button:hover {
             background: #f3f2f1;
         }
+        .we-toolbar-container button[type="submit"] {
+            margin-left: auto;
+            background: #0078d4;
+            color: white;
+            border-color: #0078d4;
+        }
+        .we-toolbar-container button[type="submit"]:hover {
+            background: #106ebe;
+        }
         .we-ta-container {
             padding: 10px;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            min-height: 0;
+            overflow: auto;
         }
         .we-ta-container textarea {
             width: 100%;
-            min-height: 300px;
+            flex: 1;
             padding: 12px;
             font-family: 'Consolas', 'Monaco', monospace;
             font-size: 14px;
             border: 1px solid #c8c6c4;
             border-radius: 4px;
-            resize: vertical;
+            resize: none;
             box-sizing: border-box;
         }
-        .we-text-preview-container {
-            padding: 10px;
-            background: #fafafa;
-            border-top: 1px solid #e1e1e1;
-            min-height: 100px;
-            color: #666;
-            font-size: 13px;
+        /* Milkdown editor container - occupies same space as textarea */
+        #milkdown-editor {
+            flex: 1;
+            min-height: 0;
+            overflow: auto;
+            display: none; /* Hidden by default, shown via JS */
         }
-        #wikiForm button[type="submit"] {
-            margin: 10px;
-            padding: 10px 24px;
-            background: #0078d4;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 14px;
+        #milkdown-editor .milkdown {
+            height: 100%;
+            display: flex;
+            flex-direction: column;
         }
-        #wikiForm button[type="submit"]:hover {
-            background: #106ebe;
-        }
-        .instructions {
-            margin-top: 20px;
-            margin-bottom: 20px;
-            padding: 15px;
-            background: #fff8e1;
-            border-radius: 8px;
-            border-left: 4px solid #ffc107;
-        }
-        .instructions h3 {
-            margin-top: 0;
-            color: #e65100;
+        #milkdown-editor .milkdown .editor {
+            flex: 1;
+            overflow: auto;
         }
     </style>
 </head>
 <body>
-    <h1>🖊️ Azure DevOps Wiki Editor Test</h1>
+    <h1>🖊️ Azure DevOps Wiki Editor Test (Milkdown)</h1>
     
     <div class="theme-switcher">
         <label for="themeSelect">🎨 Theme:</label>
@@ -290,17 +318,6 @@
             <option value="ms.vss-web.vsts-theme-hc-dark">High Contrast Dark</option>
             <option value="ms.vss-web.vsts-theme-hc-light">High Contrast Light</option>
         </select>
-    </div>
-    
-    <div class="instructions">
-        <h3>📋 Instructions</h3>
-        <ul>
-            <li><strong>Theme Switcher</strong>: Use the dropdown to test different Azure DevOps themes</li>
-            <li>Toggle the switch at the top to enable/disable WYSIWYG mode</li>
-            <li>In <strong>Markdown mode</strong>: Standard textarea with ADO toolbar</li>
-            <li>In <strong>WYSIWYG mode</strong>: Toast UI Editor with rich formatting</li>
-            <li>Click "Save Changes" to see the current markdown content</li>
-        </ul>
     </div>
 
     <div class="wiki-editor">
@@ -312,44 +329,47 @@
                 <button type="button">Link</button>
                 <button type="button">Image</button>
                 <button type="button">Code</button>
+                <button type="submit">Save Changes</button>
             </div>
             
             <div class="we-ta-container">
-                <textarea style="display:block;">
+                <textarea placeholder="Enter markdown content here...">
 # Test Document
 
 [[_TOC_]]
 
 ## Section 1
-Hello @<user1>, this is a test.
+More content here.
+
+[[_TOSP_]]
 
 ## Section 2
-Testing with @<another.user> and some content.
+Hello @<user1>, this is a test.
+Testing @<another.user2> and some content.
+And @<another user3>
 
+Testing tables with @
 | Name | Role | Status |
 |------|------|--------|
-| @<john.doe> | Developer | Active |
+| @<johndoe> | Developer | Active |
 | @<jane.smith> | Designer | Active |
 
 ## Section 3
-More content here.
-
+### Section 3.1
 - [ ] Task 1
 - [x] Task 2 (completed)
 - [ ] Task 3
 
+### Section 3.2
 ```javascript
 console.log("Hello World!");
 ```
+
+### Section 3.3
+#### Section 3.3.1
+
                 </textarea>
             </div>
-            
-            <!-- Simulated ADO preview container -->
-            <div class="we-text-preview-container">
-                Preview area (normally shows rendered markdown)
-            </div>
-            
-            <button type="submit">Save Changes</button>
         </form>
     </div>
     

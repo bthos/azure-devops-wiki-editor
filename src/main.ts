@@ -1,18 +1,36 @@
-// Define a global type for the Toast UI Editor
+// Azure DevOps Wiki Editor - Main Content Script
+// Uses Milkdown Core for WYSIWYG markdown editing
+
+import { 
+    Editor, 
+    rootCtx, 
+    defaultValueCtx, 
+    commonmark,
+    gfm,
+    history,
+    listener,
+    listenerCtx,
+    clipboard,
+    getMarkdown,
+    adoTheme,
+    detectAdoTheme,
+    adoSyntaxPlugin,
+    toolbarPlugin
+} from './editor-bundle';
+
+// Define global types
 declare global {
     interface Window {
-        toastui: {
-            Editor: any;
-        };
+        MilkdownEditor: typeof Editor;
         editorObserver?: MutationObserver;
-        wikiEditorInstance?: any;
+        wikiEditorInstance?: Editor;
     }
 }
 
-// Export an empty object to ensure this file is treated as a module
+// Export empty object to ensure this file is treated as a module
 export {};
 
-const MAX_RETRIES = 10; // Maximum number of retries to wait for Toast UI
+const MAX_RETRIES = 10;
 let retryCount = 0;
 let timeoutId: number | null = null;
 let editorReady = false;
@@ -41,55 +59,7 @@ function findClosest(element: HTMLElement, selector: string): HTMLElement | null
 }
 
 /**
- * Get the base URL for resolving relative wiki image paths
- * Azure DevOps wiki images are typically stored relative to the wiki root
- */
-function getWikiBaseUrl(): string {
-    const url = window.location.href;
-    
-    // Match Azure DevOps wiki URL patterns:
-    // https://dev.azure.com/{org}/{project}/_wiki/wikis/{wikiId}/{pagePath}
-    // https://{org}.visualstudio.com/{project}/_wiki/wikis/{wikiId}/{pagePath}
-    const wikiMatch = url.match(/^(https?:\/\/[^/]+\/[^/]+\/_wiki\/wikis\/[^/]+)/);
-    
-    if (wikiMatch) {
-        return wikiMatch[1];
-    }
-    
-    // Fallback: use the current page's directory
-    return url.substring(0, url.lastIndexOf('/'));
-}
-
-/**
- * Resolve a relative image URL to an absolute URL
- */
-function resolveImageUrl(src: string): string {
-    // If already absolute, return as-is
-    if (/^https?:\/\//.test(src) || src.startsWith('data:')) {
-        return src;
-    }
-    
-    const baseUrl = getWikiBaseUrl();
-    
-    // Handle .attachments folder (common for Azure DevOps wiki uploads)
-    if (src.startsWith('.attachments/') || src.startsWith('/.attachments/')) {
-        // Images in .attachments folder are at the wiki root level
-        return `${baseUrl}/${src.replace(/^\//, '')}`;
-    }
-    
-    // Handle relative paths
-    if (src.startsWith('/')) {
-        // Absolute path from wiki root
-        return `${baseUrl}${src}`;
-    }
-    
-    // Relative to current page
-    return `${baseUrl}/${src}`;
-}
-
-/**
  * Create the custom mode toggle switch
- * @param position - 'left' or 'right' (default: 'right')
  */
 function createModeToggle(position: string = 'right'): HTMLElement {
     const container = document.createElement('div');
@@ -113,14 +83,11 @@ function createModeToggle(position: string = 'right'): HTMLElement {
  */
 function syncEditorToTextarea(textarea: HTMLTextAreaElement): void {
     if (window.wikiEditorInstance) {
-        let content = window.wikiEditorInstance.getMarkdown();
+        // Get markdown content using the action API
+        let content = window.wikiEditorInstance.action(getMarkdown());
         
-        // Fix TOC markers that may have been escaped
-        content = content
-            .replace(/\[\[\*TOC\*\]\]/g, '[[_TOC_]]')
-            .replace(/\[\[\*TOSP\*\]\]/g, '[[_TOSP_]]')
-            .replace(/\\\[\\\[_TOC_\\\]\\\]/g, '[[_TOC_]]')
-            .replace(/\\\[\\\[_TOSP_\\\]\\\]/g, '[[_TOSP_]]');
+        // Restore ADO markers to original format
+        content = postprocessAdoMarkers(content);
         
         textarea.value = content;
         textarea.dispatchEvent(new Event('input', { bubbles: true }));
@@ -134,13 +101,13 @@ function syncEditorToTextarea(textarea: HTMLTextAreaElement): void {
 function enableWysiwygMode(textarea: HTMLTextAreaElement, wikiEditor: HTMLElement): void {
     isWysiwygMode = true;
     
-    // Hide ADO toolbar (multiple possible selectors)
+    // Hide ADO toolbar
     const adoToolbar = wikiEditor.querySelector('.we-toolbar-container');
     if (adoToolbar) {
         (adoToolbar as HTMLElement).style.display = 'none';
     }
     
-    // Hide the wiki markdown toolbar (wiki-markdown-toolbar bowtie we-toolbar)
+    // Hide the wiki markdown toolbar
     const wikiMarkdownToolbar = document.querySelector('.wiki-markdown-toolbar');
     if (wikiMarkdownToolbar) {
         (wikiMarkdownToolbar as HTMLElement).style.display = 'none';
@@ -159,24 +126,23 @@ function enableWysiwygMode(textarea: HTMLTextAreaElement, wikiEditor: HTMLElemen
     }
     
     // Show/create editor
-    let editorDiv = document.querySelector('#new-editor') as HTMLElement;
+    let editorDiv = document.querySelector('#milkdown-editor') as HTMLElement;
     if (!editorDiv) {
         editorDiv = document.createElement('div');
-        editorDiv.id = 'new-editor';
+        editorDiv.id = 'milkdown-editor';
         wikiEditor.appendChild(editorDiv);
     }
     editorDiv.style.display = 'block';
     
-    // Always create a fresh editor to avoid TextSelection errors
-    // that occur when calling setMarkdown on existing editor with bullet lists
+    // Destroy existing editor if present
     if (window.wikiEditorInstance) {
         try {
             window.wikiEditorInstance.destroy();
         } catch (e) {
             console.warn('Error destroying editor:', e);
         }
-        window.wikiEditorInstance = null;
-        editorDiv.innerHTML = ''; // Clear the container
+        window.wikiEditorInstance = undefined;
+        editorDiv.innerHTML = '';
     }
     
     initializeEditor(textarea, editorDiv);
@@ -219,7 +185,7 @@ function disableWysiwygMode(textarea: HTMLTextAreaElement, wikiEditor: HTMLEleme
     }
     
     // Hide editor
-    const editorDiv = document.querySelector('#new-editor');
+    const editorDiv = document.querySelector('#milkdown-editor');
     if (editorDiv) {
         (editorDiv as HTMLElement).style.display = 'none';
     }
@@ -247,131 +213,80 @@ function updateToggleLabels(isWysiwyg: boolean): void {
 }
 
 /**
- * Initialize the Toast UI Editor
+ * Postprocess markdown to restore escaped characters
+ * The new syntax plugins handle TOC/TOSP parsing directly,
+ * so we only need to unescape special characters here.
  */
-function initializeEditor(textarea: HTMLTextAreaElement, editorDiv: HTMLElement): void {
+function postprocessAdoMarkers(content: string): string {
+    return content
+        // Restore escaped angle brackets: \< → <
+        .replace(/\\</g, '<');
+}
+
+/**
+ * Initialize the Milkdown Core Editor
+ */
+async function initializeEditor(textarea: HTMLTextAreaElement, editorDiv: HTMLElement): Promise<void> {
     const form = findClosest(textarea, 'form');
     const content = textarea.value;
     
-    // Create custom renderer for special text and images
-    const customRenderer = {
-        text(node: any) {
-            const text = node.literal || '';
-            if (text === '[[_TOC_]]' || text === '[[_TOSP_]]') {
-                return [{
-                    type: 'openTag',
-                    tagName: 'span',
-                    attributes: { class: 'toc-marker' }
-                }, {
-                    type: 'text',
-                    content: text
-                }, {
-                    type: 'closeTag',
-                    tagName: 'span'
-                }];
-            }
-            // Match Azure DevOps @ mention patterns: @<username> or @username
-            if (/@<[^>]+>/.test(text) || /@[a-zA-Z0-9._-]+/.test(text)) {
-                return [{
-                    type: 'openTag',
-                    tagName: 'span',
-                    attributes: { class: 'mention' }
-                }, {
-                    type: 'text',
-                    content: text
-                }, {
-                    type: 'closeTag',
-                    tagName: 'span'
-                }];
-            }
-            return null;
-        },
-        // Preserve HTML-like @ mentions that might be parsed as HTML
-        htmlInline(node: any) {
-            const html = node.literal || '';
-            return [{
-                type: 'html',
-                content: html
-            }];
-        },
-        // Custom image renderer to handle relative URLs
-        image(node: any, context: any) {
-            const { destination, title } = node;
-            const altText = context.entering ? '' : (node.firstChild?.literal || '');
-                
-            // Resolve relative URLs to absolute
-            const resolvedSrc = resolveImageUrl(destination || '');
-            
-            if (context.entering) {
-                return [{
-                    type: 'openTag',
-                    tagName: 'img',
-                    selfClose: true,
-                    attributes: {
-                        src: resolvedSrc,
-                        alt: altText,
-                        ...(title ? { title } : {})
-                    }
-                }];
-            }
-            return [];
-        }
-    };
-
+    // Detect current theme
+    const currentTheme = detectAdoTheme();
+    const isDarkTheme = currentTheme === 'dark' || currentTheme === 'hc-dark';
+    
     try {
-        // Temporarily suppress the TextSelection warning from ProseMirror
-        const originalWarn = console.warn;
-        console.warn = function(...args: any[]) {
-            // Suppress the specific TextSelection warning
-            if (args[0] && typeof args[0] === 'string' && 
-                args[0].includes('TextSelection endpoint not pointing into a node with inline content')) {
-                return; // Suppress this warning
-            }
-            originalWarn.apply(console, args);
-        };
+        // Create Milkdown Core editor with plugins
+        const editor = await Editor.make()
+            .config(adoTheme)
+            .config((ctx) => {
+                // Set the root element
+                ctx.set(rootCtx, editorDiv);
+                
+                // Set default content
+                ctx.set(defaultValueCtx, content);
+                
+                // Add markdown listener for syncing to textarea
+                ctx.get(listenerCtx).markdownUpdated((_ctx, markdown, _prevMarkdown) => {
+                    if (isWysiwygMode) {
+                        // Restore ADO markers to original format
+                        let processedContent = postprocessAdoMarkers(markdown);
+                        textarea.value = processedContent;
+                        textarea.dispatchEvent(new Event('input', { bubbles: true }));
+                    }
+                });
+            })
+            .use(commonmark)
+            .use(gfm)
+            .use(history)
+            .use(listener)
+            .use(clipboard)
+            .use(adoSyntaxPlugin)
+            .use(toolbarPlugin)
+            .create();
         
-        // Initialize editor in WYSIWYG mode with autofocus disabled
-        window.wikiEditorInstance = new window.toastui.Editor({
-            el: editorDiv,
-            height: 'auto',
-            initialEditType: 'wysiwyg',
-            previewStyle: 'vertical',
-            initialValue: content,
-            hideModeSwitch: true,
-            autofocus: false, // Prevent auto-focus to avoid cursor issues
-            events: {
-                change: () => {
-                    syncEditorToTextarea(textarea);
-                }
-            },
-            customHTMLRenderer: customRenderer,
-            toolbarItems: [
-                ['heading', 'bold', 'italic', 'strike'],
-                ['hr', 'quote'],
-                ['ul', 'ol', 'task', 'indent', 'outdent'],
-                ['table', 'link'],
-                ['code', 'codeblock']
-            ]
-        });
-
-        // Restore console.warn after a short delay
-        setTimeout(() => {
-            console.warn = originalWarn;
-        }, 500);
-
+        // Store the editor instance
+        window.wikiEditorInstance = editor;
+        
+        // Apply dark theme class if needed
+        if (isDarkTheme) {
+            editorDiv.classList.add('milkdown-dark-theme');
+        }
+        
         // Handle form submission
         if (form) {
             form.addEventListener('submit', function() {
                 syncEditorToTextarea(textarea);
             });
         }
+        
+        console.log('Milkdown Core editor initialized successfully');
     } catch (error) {
-        console.error("Failed to initialize Toast UI Editor:", error);
+        console.error('Failed to initialize Milkdown Core Editor:', error);
     }
 }
 
 /**
- * Setup the toggle and wait for Toast UI to load
+ * Setup the toggle and wait for Milkdown to load
  */
 function setupEditor(): void {
     if (editorReady) {
@@ -379,7 +294,7 @@ function setupEditor(): void {
     }
 
     if (retryCount >= MAX_RETRIES) {
-        console.error("Failed to load Toast UI Editor after multiple retries");
+        console.error('Failed to setup editor after multiple retries');
         return;
     }
 
@@ -399,9 +314,9 @@ function setupEditor(): void {
         return;
     }
     
-    // Check if Toast UI Editor is available
-    if (!window.toastui || !window.toastui.Editor) {
-        console.warn(`Waiting for Toast UI Editor to load (attempt ${retryCount + 1}/${MAX_RETRIES})`);
+    // Check if Milkdown Editor is available
+    if (typeof Editor === 'undefined' && !window.MilkdownEditor) {
+        console.warn(`Waiting for Milkdown Editor to load (attempt ${retryCount + 1}/${MAX_RETRIES})`);
         retryCount++;
         timeoutId = window.setTimeout(setupEditor, 500);
         return;
@@ -452,14 +367,13 @@ function setupEditor(): void {
     }
     
     // Load toggle position setting and create toggle
-    // Check if chrome.storage is available (not available in test.html)
     if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.sync) {
         chrome.storage.sync.get(['togglePosition'], function(result) {
-            const position = result.togglePosition || 'right'; // Default to right
+            const position = result.togglePosition || 'right';
             createToggleWithPosition(position);
         });
     } else {
-        // Fallback for non-extension context (test.html)
+        // Fallback for non-extension context (playground.html)
         createToggleWithPosition('right');
     }
 }
@@ -484,6 +398,5 @@ function observeDOM(): void {
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', observeDOM);
 } else {
-    // Document already loaded, run immediately
     observeDOM();
 }

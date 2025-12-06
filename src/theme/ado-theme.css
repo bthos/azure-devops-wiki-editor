@@ -1,0 +1,1040 @@
+/**
+ * Azure DevOps Theme for Milkdown
+ * 
+ * This theme matches the Azure DevOps Wiki styling from:
+ * - ms.vss-features.markdown.min.css
+ * - ms.vss-features.markdown-editor-content.min.css
+ * 
+ * Supports: Light, Dark, High Contrast Dark, High Contrast Light themes
+ */
+
+/* ===== CSS Custom Properties (Design Tokens) ===== */
+:root {
+    /* Light Theme (Default) */
+    --ado-text-primary: rgba(0, 0, 0, 0.9);
+    --ado-text-secondary: rgba(0, 0, 0, 0.55);
+    --ado-text-tertiary: rgba(0, 0, 0, 0.7);
+    --ado-link-color: rgba(0, 90, 158, 1);
+    --ado-link-hover: rgba(0, 69, 120, 1);
+    --ado-border-color: rgba(234, 234, 234, 1);
+    --ado-code-bg: rgba(0, 0, 0, 0.06);
+    --ado-surface-bg: #ffffff;
+    --ado-surface-secondary: #faf9f8;
+    --ado-focus-color: rgba(0, 120, 212, 1);
+    
+    /* Font Stack */
+    --ado-font-family: 'Segoe UI', 'Segoe UI Web (West European)', -apple-system, BlinkMacSystemFont, Roboto, 'Helvetica Neue', sans-serif;
+    --ado-font-mono: Menlo, Consolas, 'Courier New', monospace;
+}
+
+/* ===== Base Editor Styling ===== */
+.milkdown {
+    font-family: var(--ado-font-family);
+    color: var(--ado-text-primary);
+    background-color: var(--ado-surface-bg);
+}
+
+.milkdown .editor {
+    outline: none;
+    padding: 16px;
+    font-size: 0.9375rem; /* 15px - ADO default */
+    line-height: 1.6;
+    color: var(--ado-text-primary);
+    word-wrap: break-word;
+}
+
+.milkdown .ProseMirror {
+    outline: none;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    -webkit-font-variant-ligatures: none;
+    font-variant-ligatures: none;
+}
+
+.milkdown .ProseMirror:focus {
+    outline: none;
+}
+
+/* ===== Typography ===== */
+
+/* Paragraphs and Block Elements */
+.milkdown p,
+.milkdown blockquote,
+.milkdown ul,
+.milkdown ol,
+.milkdown table,
+.milkdown pre {
+    margin: 0 0 16px 0;
+}
+
+.milkdown p {
+    position: relative;
+}
+
+/* Headings */
+.milkdown h1 {
+    font-size: 1.3125rem; /* 21px */
+    font-weight: 600;
+    color: var(--ado-text-primary);
+    margin: 24px 0 8px 0;
+    letter-spacing: -0.04em;
+}
+
+.milkdown h2 {
+    font-size: 1.0625rem; /* 17px */
+    font-weight: 600;
+    color: var(--ado-text-primary);
+    margin: 24px 0 8px 0;
+}
+
+.milkdown h3 {
+    font-size: 0.9375rem; /* 15px */
+    font-weight: 600;
+    color: var(--ado-text-primary);
+    margin: 24px 0 8px 0;
+}
+
+.milkdown h4 {
+    font-size: 0.875rem; /* 14px */
+    font-weight: 600;
+    color: var(--ado-text-primary);
+    margin: 24px 0 8px 0;
+}
+
+.milkdown h5 {
+    font-size: 0.75rem; /* 12px */
+    font-weight: 600;
+    color: var(--ado-text-primary);
+    margin: 24px 0 8px 0;
+}
+
+.milkdown h6 {
+    font-size: 0.75rem; /* 12px */
+    font-weight: 600;
+    color: var(--ado-text-secondary);
+    margin: 24px 0 8px 0;
+}
+
+/* Remove top margin from first child */
+.milkdown > *:first-child,
+.milkdown .ProseMirror > *:first-child,
+.milkdown .editor > *:first-child {
+    margin-top: 0;
+}
+
+/* Remove bottom margin from last child */
+.milkdown > *:last-child,
+.milkdown .ProseMirror > *:last-child,
+.milkdown .editor > *:last-child {
+    margin-bottom: 0;
+}
+
+/* ===== Links ===== */
+.milkdown a {
+    color: var(--ado-link-color);
+    text-decoration: none;
+    outline: transparent;
+}
+
+.milkdown a:hover {
+    color: var(--ado-link-hover);
+    text-decoration: underline;
+}
+
+/* ===== Code ===== */
+.milkdown code {
+    font-family: var(--ado-font-mono);
+    font-size: 0.75rem; /* 12px */
+    background-color: var(--ado-code-bg);
+    color: var(--ado-text-primary);
+    padding: 2px 4px;
+    border-radius: 2px;
+}
+
+/* Code Blocks */
+.milkdown pre {
+    font-family: var(--ado-font-mono);
+    font-size: 0.75rem; /* 12px */
+    white-space: pre;
+    word-wrap: normal;
+    background-color: var(--ado-code-bg);
+    border-radius: 2px;
+    padding: 15px;
+    overflow-x: auto;
+}
+
+.milkdown pre code {
+    font-size: inherit;
+    background-color: transparent;
+    padding: 0;
+    border-radius: 0;
+}
+
+/* ===== Blockquote ===== */
+.milkdown blockquote {
+    color: var(--ado-text-tertiary);
+    border-left: 2px solid var(--ado-border-color);
+    padding-left: 16px;
+    margin-left: 0;
+    margin-right: 0;
+}
+
+.milkdown blockquote > *:first-child {
+    margin-top: 0;
+}
+
+.milkdown blockquote > *:last-child {
+    margin-bottom: 0;
+}
+
+.milkdown blockquote > p,
+.milkdown blockquote ol,
+.milkdown blockquote ul {
+    margin: 16px 0;
+}
+
+/* ===== Tables ===== */
+.milkdown table {
+    border-collapse: collapse;
+    border-spacing: 0;
+    color: var(--ado-text-primary);
+    cursor: default;
+    display: block;
+    overflow-x: auto;
+    margin: 0 0 16px 0;
+}
+
+.milkdown table table {
+    margin-bottom: 0;
+}
+
+.milkdown th {
+    color: var(--ado-text-secondary);
+    font-size: 0.9375rem;
+    font-weight: 600;
+    text-align: left;
+    border: 1px solid var(--ado-border-color);
+    padding: 13px 11px;
+}
+
+.milkdown td {
+    border: 1px solid var(--ado-border-color);
+    text-align: left;
+    padding: 10px 13px;
+    min-width: 50px;
+    max-width: 1000px;
+}
+
+/* Table cell selection */
+.milkdown .tableWrapper .selectedCell {
+    background-color: rgba(0, 120, 212, 0.1);
+}
+
+/* ===== Horizontal Rule ===== */
+.milkdown hr {
+    border: none;
+    border-top: 1px solid var(--ado-border-color);
+    margin: 16px 0;
+}
+
+/* ===== Lists ===== */
+.milkdown ul,
+.milkdown ol {
+    padding-left: 32px;
+}
+
+.milkdown ul ul,
+.milkdown ul ol,
+.milkdown ol ul,
+.milkdown ol ol {
+    margin-top: 0;
+    margin-bottom: 0;
+}
+
+.milkdown li {
+    list-style: inherit;
+}
+
+.milkdown li + li {
+    margin-top: 4px;
+}
+
+/* Task Lists */
+.milkdown ul.task-list,
+.milkdown .task-list {
+    padding-left: 7px;
+    list-style: none;
+}
+
+.milkdown li.task-list-item,
+.milkdown .task-list-item {
+    list-style-type: none;
+    min-height: 18px;
+}
+
+.milkdown .task-list-item-checkbox,
+.milkdown input[type="checkbox"] {
+    vertical-align: middle;
+    margin: 4px;
+    margin-right: 8px;
+}
+
+/* ===== Images ===== */
+.milkdown img {
+    max-width: 100%;
+    height: auto;
+}
+
+/* ===== Selection ===== */
+.milkdown ::selection {
+    background-color: rgba(0, 120, 212, 0.2);
+}
+
+/* ===== Placeholder ===== */
+.milkdown .placeholder {
+    color: var(--ado-text-secondary);
+    font-style: italic;
+}
+
+.milkdown .ProseMirror-placeholder::before {
+    color: var(--ado-text-secondary);
+    font-style: italic;
+    content: attr(data-placeholder);
+    pointer-events: none;
+    position: absolute;
+}
+
+/* ===== Strong/Bold and Emphasis/Italic ===== */
+.milkdown strong {
+    font-weight: 600;
+}
+
+.milkdown em {
+    font-style: italic;
+}
+
+/* ===== Strikethrough ===== */
+.milkdown s,
+.milkdown del {
+    text-decoration: line-through;
+}
+
+/* =========================================== */
+/* ===== DARK THEME ===== */
+/* =========================================== */
+
+/* Dark theme via data attribute */
+[data-theme*="dark"] .milkdown,
+.milkdown.dark,
+.milkdown-dark-theme .milkdown {
+    --ado-text-primary: rgba(243, 242, 241, 1);
+    --ado-text-secondary: rgba(161, 159, 157, 1);
+    --ado-text-tertiary: rgba(200, 198, 196, 1);
+    --ado-link-color: rgba(40, 153, 245, 1);
+    --ado-link-hover: rgba(79, 175, 255, 1);
+    --ado-border-color: rgba(59, 58, 57, 1);
+    --ado-code-bg: rgba(255, 255, 255, 0.06);
+    --ado-surface-bg: #252423;
+    --ado-surface-secondary: #1b1a19;
+}
+
+/* Also support body-level theme */
+body[data-theme="ms.vss-web.vsts-theme-dark"] .milkdown {
+    --ado-text-primary: rgba(243, 242, 241, 1);
+    --ado-text-secondary: rgba(161, 159, 157, 1);
+    --ado-text-tertiary: rgba(200, 198, 196, 1);
+    --ado-link-color: rgba(40, 153, 245, 1);
+    --ado-link-hover: rgba(79, 175, 255, 1);
+    --ado-border-color: rgba(59, 58, 57, 1);
+    --ado-code-bg: rgba(255, 255, 255, 0.06);
+    --ado-surface-bg: #252423;
+    --ado-surface-secondary: #1b1a19;
+}
+
+/* =========================================== */
+/* ===== HIGH CONTRAST DARK THEME ===== */
+/* =========================================== */
+
+body[data-theme="ms.vss-web.vsts-theme-hc-dark"] .milkdown {
+    --ado-text-primary: #ffffff;
+    --ado-text-secondary: #ffffff;
+    --ado-text-tertiary: #ffffff;
+    --ado-link-color: #1aebff;
+    --ado-link-hover: #00ffff;
+    --ado-border-color: #ffffff;
+    --ado-code-bg: transparent;
+    --ado-surface-bg: #000000;
+    --ado-surface-secondary: #000000;
+}
+
+body[data-theme="ms.vss-web.vsts-theme-hc-dark"] .milkdown code {
+    border: 1px solid #ffffff;
+}
+
+body[data-theme="ms.vss-web.vsts-theme-hc-dark"] .milkdown pre {
+    border: 1px solid #ffffff;
+}
+
+body[data-theme="ms.vss-web.vsts-theme-hc-dark"] .milkdown pre code {
+    border: none;
+}
+
+/* =========================================== */
+/* ===== HIGH CONTRAST LIGHT THEME ===== */
+/* =========================================== */
+
+body[data-theme="ms.vss-web.vsts-theme-hc-light"] .milkdown {
+    --ado-text-primary: #000000;
+    --ado-text-secondary: #000000;
+    --ado-text-tertiary: #000000;
+    --ado-link-color: #0000cd;
+    --ado-link-hover: #0000ff;
+    --ado-border-color: #000000;
+    --ado-code-bg: #f0f0f0;
+    --ado-surface-bg: #ffffff;
+    --ado-surface-secondary: #ffffff;
+}
+
+body[data-theme="ms.vss-web.vsts-theme-hc-light"] .milkdown code {
+    border: 2px solid #000000;
+}
+
+body[data-theme="ms.vss-web.vsts-theme-hc-light"] .milkdown pre {
+    border: 2px solid #000000;
+}
+
+body[data-theme="ms.vss-web.vsts-theme-hc-light"] .milkdown pre code {
+    border: none;
+}
+
+body[data-theme="ms.vss-web.vsts-theme-hc-light"] .milkdown th {
+    background-color: #e0e0e0;
+}
+
+body[data-theme="ms.vss-web.vsts-theme-hc-light"] .milkdown hr {
+    border-top-width: 2px;
+}
+
+body[data-theme="ms.vss-web.vsts-theme-hc-light"] .milkdown blockquote {
+    border-left-width: 3px;
+}
+
+/* =========================================== */
+/* ===== ADO WIKI MARKERS ===== */
+/* =========================================== */
+
+/* Hide the actual marker text completely */
+.ado-marker-hidden {
+    display: none !important;
+    font-size: 0 !important;
+    width: 0 !important;
+    height: 0 !important;
+    overflow: hidden !important;
+    position: absolute !important;
+    opacity: 0 !important;
+}
+
+/* ===== Base Widget Styling (ADO Wiki Pattern) ===== */
+/* Using span with display:block to be valid inside <p> while looking block-level */
+.ado-toc-widget,
+.ado-tosp-widget {
+    display: block;
+    font-family: var(--ado-font-family);
+    background-color: var(--ado-surface-bg);
+    border: 1px solid var(--ado-border-color);
+    border-radius: 4px;
+    margin: 12px 0 16px 0;
+    min-width: 250px;
+    max-width: 400px;
+    position: relative;
+}
+
+/* ===== Widget Header (ADO Wiki Style) ===== */
+.ado-widget-header {
+    display: block;
+    padding: 8px 12px;
+    background-color: var(--ado-surface-secondary);
+    border-bottom: 1px solid var(--ado-border-color);
+    border-radius: 4px 4px 0 0;
+    position: relative;
+    min-height: 16px;
+}
+
+.ado-toc-title,
+.ado-tosp-title {
+    display: inline;
+    font-weight: 600;
+    font-size: 12px;
+    line-height: 16px;
+    color: var(--ado-text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin: 0;
+}
+
+/* ===== Delete Button (ADO Wiki Style) ===== */
+/* Uses visibility/opacity pattern to prevent layout shifts */
+.ado-widget-delete {
+    position: absolute;
+    right: 8px;
+    top: 50%;
+    transform: translateY(-50%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+    border: none;
+    border-radius: 2px;
+    cursor: pointer;
+    width: 24px;
+    height: 24px;
+    font-size: 12px;
+    color: var(--ado-text-secondary);
+    visibility: visible;
+    opacity: 0;
+    transition: opacity 0.1s ease, background-color 0.1s ease, color 0.1s ease;
+}
+
+.ado-toc-widget:hover .ado-widget-delete,
+.ado-tosp-widget:hover .ado-widget-delete {
+    opacity: 1;
+}
+
+.ado-widget-delete:hover {
+    background-color: rgba(0, 0, 0, 0.05);
+    color: #a80000;
+}
+
+.ado-widget-delete:active {
+    background-color: rgba(0, 0, 0, 0.1);
+}
+
+/* ===== TOC Content ===== */
+.ado-toc-content {
+    display: block;
+    padding: 10px 12px 12px 12px;
+}
+
+.ado-toc-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.ado-toc-list .ado-toc-list {
+    padding-left: 12px;
+    margin-top: 0;
+    border-left: 1px solid var(--ado-border-color);
+    margin-left: 4px;
+}
+
+.ado-toc-list li {
+    margin: 0;
+    padding: 3px 0;
+    line-height: 1.4;
+}
+
+/* Bullet points for TOC list items */
+.ado-toc-list > li::before {
+    content: "\2022 ";
+    color: var(--ado-link-color);
+}
+
+.ado-toc-link {
+    font-size: 13px;
+    color: var(--ado-link-color);
+    text-decoration: none;
+    cursor: pointer;
+    display: inline-block;
+    padding: 1px 4px;
+    margin: -1px -4px;
+    border-radius: 2px;
+    transition: background-color 0.1s ease, color 0.1s ease;
+}
+
+.ado-toc-link:hover {
+    color: var(--ado-link-hover);
+    background-color: rgba(0, 120, 212, 0.08);
+    text-decoration: none;
+}
+
+.ado-toc-link:active {
+    background-color: rgba(0, 120, 212, 0.15);
+}
+
+.ado-toc-empty {
+    padding: 10px 12px 12px 12px;
+    font-size: 13px;
+    color: var(--ado-text-secondary);
+    font-style: italic;
+}
+
+/* ===== TOSP Content ===== */
+.ado-tosp-placeholder {
+    padding: 10px 12px 12px 12px;
+    font-size: 13px;
+    color: var(--ado-text-secondary);
+    font-style: italic;
+}
+
+/* =========================================== */
+/* ===== WORK ITEM REFERENCES ===== */
+/* =========================================== */
+
+.ado-work-item-ref {
+    display: inline-flex;
+    align-items: center;
+    font-family: var(--ado-font-family);
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--ado-link-color);
+    background-color: rgba(0, 120, 212, 0.08);
+    border: 1px solid rgba(0, 120, 212, 0.25);
+    border-radius: 3px;
+    padding: 1px 6px;
+    margin: 0 2px;
+    text-decoration: none;
+    cursor: pointer;
+    transition: background-color 0.1s ease, border-color 0.1s ease;
+}
+
+.ado-work-item-ref:hover {
+    background-color: rgba(0, 120, 212, 0.15);
+    border-color: rgba(0, 120, 212, 0.4);
+}
+
+.ado-work-item-icon {
+    font-weight: 600;
+    margin-right: 1px;
+}
+
+.ado-work-item-id {
+    font-weight: 500;
+}
+
+/* =========================================== */
+/* ===== USER MENTIONS ===== */
+/* =========================================== */
+
+.ado-mention {
+    display: inline-flex;
+    align-items: center;
+    font-family: var(--ado-font-family);
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--ado-link-color);
+    background-color: rgba(0, 120, 212, 0.08);
+    border-radius: 3px;
+    padding: 1px 6px;
+    margin: 0 2px;
+    text-decoration: none;
+    cursor: pointer;
+    transition: background-color 0.1s ease;
+}
+
+.ado-mention:hover {
+    background-color: rgba(0, 120, 212, 0.15);
+}
+
+.ado-mention-icon {
+    font-weight: 600;
+    color: var(--ado-text-secondary);
+    margin-right: 2px;
+}
+
+.ado-mention-name {
+    font-weight: 500;
+}
+
+/* =========================================== */
+/* ===== VIDEO WIDGET ===== */
+/* =========================================== */
+
+.ado-video-widget {
+    display: block;
+    font-family: var(--ado-font-family);
+    background-color: var(--ado-surface-bg);
+    border: 1px solid var(--ado-border-color);
+    border-radius: 2px;
+    box-shadow: 0 1.6px 3.6px 0 rgba(0, 0, 0, 0.132), 
+                0 0.3px 0.9px 0 rgba(0, 0, 0, 0.108);
+    margin: 12px 0 16px 0;
+    max-width: 560px;
+    transition: box-shadow 0.1s ease;
+    position: relative;
+}
+
+.ado-video-widget:hover {
+    box-shadow: 0 3.2px 7.2px 0 rgba(0, 0, 0, 0.132), 
+                0 0.6px 1.8px 0 rgba(0, 0, 0, 0.108);
+}
+
+.ado-video-widget:hover .ado-widget-delete {
+    display: flex;
+}
+
+.ado-video-title {
+    font-weight: 600;
+    font-size: 12px;
+    line-height: 16px;
+    color: var(--ado-text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.ado-video-icon {
+    font-size: 10px;
+    color: #c23b22;
+}
+
+.ado-video-preview {
+    padding: 16px;
+    background-color: rgba(0, 0, 0, 0.02);
+    min-height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.ado-video-url {
+    font-size: 12px;
+    color: var(--ado-link-color);
+    word-break: break-all;
+    font-family: var(--ado-font-mono);
+}
+
+.ado-video-placeholder {
+    font-size: 13px;
+    color: var(--ado-text-secondary);
+    font-style: italic;
+}
+
+/* =========================================== */
+/* ===== MERMAID WIDGET ===== */
+/* =========================================== */
+
+.ado-mermaid-widget {
+    display: block;
+    font-family: var(--ado-font-family);
+    background-color: var(--ado-surface-bg);
+    border: 1px solid var(--ado-border-color);
+    border-radius: 2px;
+    box-shadow: 0 1.6px 3.6px 0 rgba(0, 0, 0, 0.132), 
+                0 0.3px 0.9px 0 rgba(0, 0, 0, 0.108);
+    margin: 12px 0 16px 0;
+    max-width: 100%;
+    transition: box-shadow 0.1s ease;
+    position: relative;
+}
+
+.ado-mermaid-widget:hover {
+    box-shadow: 0 3.2px 7.2px 0 rgba(0, 0, 0, 0.132), 
+                0 0.6px 1.8px 0 rgba(0, 0, 0, 0.108);
+}
+
+.ado-mermaid-widget:hover .ado-widget-delete {
+    display: flex;
+}
+
+.ado-mermaid-title {
+    font-weight: 600;
+    font-size: 12px;
+    line-height: 16px;
+    color: var(--ado-text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.ado-mermaid-icon {
+    font-size: 12px;
+    color: #ff69b4;
+}
+
+.ado-mermaid-preview {
+    padding: 12px;
+    background-color: rgba(0, 0, 0, 0.02);
+    max-height: 200px;
+    overflow: auto;
+}
+
+.ado-mermaid-code {
+    margin: 0;
+    font-family: var(--ado-font-mono);
+    font-size: 11px;
+    line-height: 1.4;
+    color: var(--ado-text-primary);
+    white-space: pre;
+    overflow-x: auto;
+}
+
+/* =========================================== */
+/* ===== DARK THEME WIDGETS ===== */
+/* =========================================== */
+
+[data-theme*="dark"] .ado-toc-widget,
+[data-theme*="dark"] .ado-tosp-widget,
+[data-theme*="dark"] .ado-video-widget,
+[data-theme*="dark"] .ado-mermaid-widget,
+body[data-theme="ms.vss-web.vsts-theme-dark"] .ado-toc-widget,
+body[data-theme="ms.vss-web.vsts-theme-dark"] .ado-tosp-widget,
+body[data-theme="ms.vss-web.vsts-theme-dark"] .ado-video-widget,
+body[data-theme="ms.vss-web.vsts-theme-dark"] .ado-mermaid-widget {
+    background-color: #252423;
+    border-color: #3b3a39;
+    box-shadow: 0 1.6px 3.6px 0 rgba(0, 0, 0, 0.4), 
+                0 0.3px 0.9px 0 rgba(0, 0, 0, 0.32);
+}
+
+[data-theme*="dark"] .ado-toc-widget:hover,
+[data-theme*="dark"] .ado-tosp-widget:hover,
+[data-theme*="dark"] .ado-video-widget:hover,
+[data-theme*="dark"] .ado-mermaid-widget:hover,
+body[data-theme="ms.vss-web.vsts-theme-dark"] .ado-toc-widget:hover,
+body[data-theme="ms.vss-web.vsts-theme-dark"] .ado-tosp-widget:hover,
+body[data-theme="ms.vss-web.vsts-theme-dark"] .ado-video-widget:hover,
+body[data-theme="ms.vss-web.vsts-theme-dark"] .ado-mermaid-widget:hover {
+    box-shadow: 0 3.2px 7.2px 0 rgba(0, 0, 0, 0.5), 
+                0 0.6px 1.8px 0 rgba(0, 0, 0, 0.4);
+}
+
+[data-theme*="dark"] .ado-widget-header,
+body[data-theme="ms.vss-web.vsts-theme-dark"] .ado-widget-header {
+    background-color: #1b1a19;
+    border-bottom-color: #3b3a39;
+}
+
+[data-theme*="dark"] .ado-widget-delete:hover,
+body[data-theme="ms.vss-web.vsts-theme-dark"] .ado-widget-delete:hover {
+    background-color: rgba(255, 255, 255, 0.08);
+    color: #f1707b;
+}
+
+[data-theme*="dark"] .ado-toc-list .ado-toc-list,
+body[data-theme="ms.vss-web.vsts-theme-dark"] .ado-toc-list .ado-toc-list {
+    border-left-color: #3b3a39;
+}
+
+[data-theme*="dark"] .ado-toc-link:hover,
+body[data-theme="ms.vss-web.vsts-theme-dark"] .ado-toc-link:hover {
+    background-color: rgba(79, 163, 255, 0.15);
+}
+
+/* Dark theme - Work items and mentions */
+[data-theme*="dark"] .ado-work-item-ref,
+body[data-theme="ms.vss-web.vsts-theme-dark"] .ado-work-item-ref {
+    background-color: rgba(40, 153, 245, 0.15);
+    border-color: rgba(40, 153, 245, 0.35);
+    color: #4fa3ff;
+}
+
+[data-theme*="dark"] .ado-work-item-ref:hover,
+body[data-theme="ms.vss-web.vsts-theme-dark"] .ado-work-item-ref:hover {
+    background-color: rgba(40, 153, 245, 0.25);
+    border-color: rgba(40, 153, 245, 0.5);
+}
+
+[data-theme*="dark"] .ado-mention,
+body[data-theme="ms.vss-web.vsts-theme-dark"] .ado-mention {
+    background-color: rgba(40, 153, 245, 0.15);
+    color: #4fa3ff;
+}
+
+[data-theme*="dark"] .ado-mention:hover,
+body[data-theme="ms.vss-web.vsts-theme-dark"] .ado-mention:hover {
+    background-color: rgba(40, 153, 245, 0.25);
+}
+
+[data-theme*="dark"] .ado-mention-icon,
+body[data-theme="ms.vss-web.vsts-theme-dark"] .ado-mention-icon {
+    color: #a1a09f;
+}
+
+/* =========================================== */
+/* ===== HIGH CONTRAST DARK WIDGETS ===== */
+/* =========================================== */
+
+body[data-theme="ms.vss-web.vsts-theme-hc-dark"] .ado-toc-widget,
+body[data-theme="ms.vss-web.vsts-theme-hc-dark"] .ado-tosp-widget,
+body[data-theme="ms.vss-web.vsts-theme-hc-dark"] .ado-video-widget,
+body[data-theme="ms.vss-web.vsts-theme-hc-dark"] .ado-mermaid-widget {
+    background-color: #000000;
+    border: 2px solid #ffffff;
+    box-shadow: none;
+}
+
+body[data-theme="ms.vss-web.vsts-theme-hc-dark"] .ado-widget-header {
+    background-color: #000000;
+    border-bottom: 2px solid #ffffff;
+}
+
+body[data-theme="ms.vss-web.vsts-theme-hc-dark"] .ado-toc-title,
+body[data-theme="ms.vss-web.vsts-theme-hc-dark"] .ado-tosp-title,
+body[data-theme="ms.vss-web.vsts-theme-hc-dark"] .ado-video-title,
+body[data-theme="ms.vss-web.vsts-theme-hc-dark"] .ado-mermaid-title {
+    color: #ffffff;
+}
+
+body[data-theme="ms.vss-web.vsts-theme-hc-dark"] .ado-widget-delete {
+    opacity: 1;
+    color: #ffffff;
+}
+
+body[data-theme="ms.vss-web.vsts-theme-hc-dark"] .ado-widget-delete:hover {
+    background-color: #ffffff;
+    color: #000000;
+}
+
+body[data-theme="ms.vss-web.vsts-theme-hc-dark"] .ado-toc-list .ado-toc-list {
+    border-left: 2px solid #ffffff;
+}
+
+body[data-theme="ms.vss-web.vsts-theme-hc-dark"] .ado-toc-link {
+    color: #ffff00;
+}
+
+body[data-theme="ms.vss-web.vsts-theme-hc-dark"] .ado-toc-link:hover {
+    background-color: #ffff00;
+    color: #000000;
+}
+
+/* HC Dark - Work items and mentions */
+body[data-theme="ms.vss-web.vsts-theme-hc-dark"] .ado-work-item-ref {
+    background-color: transparent;
+    border: 2px solid #1aebff;
+    color: #1aebff;
+}
+
+body[data-theme="ms.vss-web.vsts-theme-hc-dark"] .ado-work-item-ref:hover {
+    background-color: #1aebff;
+    color: #000000;
+}
+
+body[data-theme="ms.vss-web.vsts-theme-hc-dark"] .ado-mention {
+    background-color: transparent;
+    border: 2px solid #1aebff;
+    color: #1aebff;
+}
+
+body[data-theme="ms.vss-web.vsts-theme-hc-dark"] .ado-mention:hover {
+    background-color: #1aebff;
+    color: #000000;
+}
+
+body[data-theme="ms.vss-web.vsts-theme-hc-dark"] .ado-mention-icon {
+    color: #ffffff;
+}
+
+/* HC Dark - Video and Mermaid */
+body[data-theme="ms.vss-web.vsts-theme-hc-dark"] .ado-video-preview,
+body[data-theme="ms.vss-web.vsts-theme-hc-dark"] .ado-mermaid-preview {
+    background-color: transparent;
+    border-top: 2px solid #ffffff;
+}
+
+body[data-theme="ms.vss-web.vsts-theme-hc-dark"] .ado-video-url,
+body[data-theme="ms.vss-web.vsts-theme-hc-dark"] .ado-mermaid-code {
+    color: #ffffff;
+}
+
+body[data-theme="ms.vss-web.vsts-theme-hc-dark"] .ado-video-icon {
+    color: #ff6b6b;
+}
+
+/* =========================================== */
+/* ===== HIGH CONTRAST LIGHT WIDGETS ===== */
+/* =========================================== */
+
+body[data-theme="ms.vss-web.vsts-theme-hc-light"] .ado-toc-widget,
+body[data-theme="ms.vss-web.vsts-theme-hc-light"] .ado-tosp-widget,
+body[data-theme="ms.vss-web.vsts-theme-hc-light"] .ado-video-widget,
+body[data-theme="ms.vss-web.vsts-theme-hc-light"] .ado-mermaid-widget {
+    background-color: #ffffff;
+    border: 2px solid #000000;
+    box-shadow: none;
+}
+
+body[data-theme="ms.vss-web.vsts-theme-hc-light"] .ado-widget-header {
+    background-color: #ffffff;
+    border-bottom: 2px solid #000000;
+}
+
+body[data-theme="ms.vss-web.vsts-theme-hc-light"] .ado-toc-title,
+body[data-theme="ms.vss-web.vsts-theme-hc-light"] .ado-tosp-title,
+body[data-theme="ms.vss-web.vsts-theme-hc-light"] .ado-video-title,
+body[data-theme="ms.vss-web.vsts-theme-hc-light"] .ado-mermaid-title {
+    color: #000000;
+}
+
+body[data-theme="ms.vss-web.vsts-theme-hc-light"] .ado-widget-delete {
+    opacity: 1;
+    color: #000000;
+}
+
+body[data-theme="ms.vss-web.vsts-theme-hc-light"] .ado-widget-delete:hover {
+    background-color: #000000;
+    color: #ffffff;
+}
+
+body[data-theme="ms.vss-web.vsts-theme-hc-light"] .ado-toc-list .ado-toc-list {
+    border-left: 2px solid #000000;
+}
+
+body[data-theme="ms.vss-web.vsts-theme-hc-light"] .ado-toc-link {
+    color: #0000cd;
+}
+
+body[data-theme="ms.vss-web.vsts-theme-hc-light"] .ado-toc-link:hover {
+    background-color: #0000cd;
+    color: #ffffff;
+}
+
+/* HC Light - Work items and mentions */
+body[data-theme="ms.vss-web.vsts-theme-hc-light"] .ado-work-item-ref {
+    background-color: transparent;
+    border: 2px solid #0000cd;
+    color: #0000cd;
+}
+
+body[data-theme="ms.vss-web.vsts-theme-hc-light"] .ado-work-item-ref:hover {
+    background-color: #0000cd;
+    color: #ffffff;
+}
+
+body[data-theme="ms.vss-web.vsts-theme-hc-light"] .ado-mention {
+    background-color: transparent;
+    border: 2px solid #0000cd;
+    color: #0000cd;
+}
+
+body[data-theme="ms.vss-web.vsts-theme-hc-light"] .ado-mention:hover {
+    background-color: #0000cd;
+    color: #ffffff;
+}
+
+body[data-theme="ms.vss-web.vsts-theme-hc-light"] .ado-mention-icon {
+    color: #000000;
+}
+
+/* HC Light - Video and Mermaid */
+body[data-theme="ms.vss-web.vsts-theme-hc-light"] .ado-video-preview,
+body[data-theme="ms.vss-web.vsts-theme-hc-light"] .ado-mermaid-preview {
+    background-color: transparent;
+    border-top: 2px solid #000000;
+}
+
+body[data-theme="ms.vss-web.vsts-theme-hc-light"] .ado-video-url,
+body[data-theme="ms.vss-web.vsts-theme-hc-light"] .ado-mermaid-code {
+    color: #000000;
+}
+
+body[data-theme="ms.vss-web.vsts-theme-hc-light"] .ado-video-icon {
+    color: #b22222;
+}

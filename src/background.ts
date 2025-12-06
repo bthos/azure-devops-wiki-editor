@@ -16,7 +16,7 @@ async function registerCustomDomainScripts(): Promise<void> {
                     id: scriptId,
                     matches: [`*://${domain}/*/_wiki/*`],
                     js: ['editor-bundle.js', 'main.js'],
-                    css: ['toastui-editor.css', 'custom-styles.css'],
+                    css: ['milkdown-editor.css', 'custom-styles.css'],
                     runAt: 'document_idle'
                 }]);
                 console.log(`Azure DevOps Wiki Editor: Registered script for ${domain}`);
