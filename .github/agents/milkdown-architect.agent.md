@@ -1,5 +1,6 @@
 ---
 description: Design Milkdown editor architectures, plan plugin dependencies, and optimize performance
+name: Milkdown-Architect
 tools: ['search', 'fetch', 'read_file', 'semantic_search', "changes", "codebase", "edit/editFiles", "extensions", "fetch", "findTestFiles", "githubRepo", "new", "openSimpleBrowser", "problems", "readCellOutput", "runCommands", "runNotebooks", "runTasks", "runTests", "search", "searchResults", "terminalLastCommand", "terminalSelection", "testFailure", "updateUserPreferences", "usages", "vscodeAPI", "activePullRequest", "copilotCodingAgent"]
 argument-hint: Describe the editor architecture or integration challenge
 handoffs:

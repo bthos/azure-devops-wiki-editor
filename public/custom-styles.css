@@ -26,6 +26,8 @@
     align-items: center;
     gap: 8px;
     font-family: 'Segoe UI', 'Segoe UI Web (West European)', -apple-system, BlinkMacSystemFont, Roboto, 'Helvetica Neue', sans-serif;
+    -webkit-user-select: none;
+    -ms-user-select: none;
     user-select: none;
 }
 

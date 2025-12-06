@@ -1,5 +1,6 @@
 ---
-description: 'Challenge assumptions and encourage critical thinking to ensure the best possible solution and outcomes.'
+description: Challenge assumptions and encourage critical thinking to ensure the best possible solution and outcomes.
+name: Critical-Thinking
 tools: ['codebase', 'extensions', 'fetch', 'findTestFiles', 'githubRepo', 'problems', 'search', 'searchResults', 'usages']
 ---
 # Critical thinking mode instructions

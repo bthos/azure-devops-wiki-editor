@@ -1,5 +1,6 @@
 ---
 description: Create custom CSS themes for Milkdown editors with dark/light mode and accessibility support
+name: Milkdown-Theme-Developer
 tools: ['search', 'fetch', 'read_file', 'semantic_search', 'create_file', 'replace_string_in_file', "changes", "codebase", "edit/editFiles", "extensions", "fetch", "findTestFiles", "githubRepo", "new", "openSimpleBrowser", "problems", "readCellOutput", "runCommands", "runNotebooks", "runTasks", "runTests", "search", "searchResults", "terminalLastCommand", "terminalSelection", "testFailure", "updateUserPreferences", "usages", "vscodeAPI", "activePullRequest", "copilotCodingAgent"]
 argument-hint: Describe the theme style, design system, or accessibility requirements
 handoffs:
