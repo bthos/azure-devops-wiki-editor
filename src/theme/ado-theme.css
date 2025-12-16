@@ -840,8 +840,8 @@ body[data-theme="ms.vss-web.vsts-theme-hc-dark"] .milkdown li[data-checked="true
     text-decoration: none;
     cursor: pointer;
     display: inline-block;
-    padding: 1px 4px;
-    margin: -1px -4px;
+    padding: 1px 6px 1px 4px;
+    margin: 0;
     border-radius: 2px;
     transition: background-color 0.1s ease, color 0.1s ease;
 }

@@ -5,8 +5,9 @@ azure-devops-wiki-editor*.zip
 
 # IDE files
 .vscode
+.codemie
 .specstory
+.cursorindex*
 
 .inputs
-.cursorindexingignore
 server.log

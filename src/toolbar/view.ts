@@ -394,24 +394,93 @@ function updateToolbarState(ctx: Ctx, toolbar: HTMLElement): void {
     const { from, to } = state.selection;
     const $from = state.doc.resolve(from);
 
-    // Check if cursor is inside a table
-    const inTable = isInTable(state);
+    // Detect context: what block-level node types are we inside?
+    let inTable = false;
+    let inCodeBlock = false;
+    let inHeading = false;
+    let inBlockquote = false;
+    let inList = false;
+    let onImage = false;
     
-    // Block-level actions that should be disabled inside tables
+    // Traverse up the document tree to detect context
+    for (let d = $from.depth; d > 0; d--) {
+      const node = $from.node(d);
+      const nodeTypeName = node.type.name;
+      
+      if (nodeTypeName === 'table') {
+        inTable = true;
+        break; // Tables are isolating, so we can stop here
+      } else if (nodeTypeName === 'code_block') {
+        inCodeBlock = true;
+        break; // Code blocks are atomic/isolating
+      } else if (nodeTypeName === 'heading') {
+        inHeading = true;
+        // Don't break - might be inside a list or blockquote
+      } else if (nodeTypeName === 'blockquote') {
+        inBlockquote = true;
+        // Don't break - might be inside a list
+      } else if (nodeTypeName === 'bullet_list' || nodeTypeName === 'ordered_list') {
+        inList = true;
+        // Don't break - might be inside a blockquote
+      }
+    }
+    
+    // Check if selection is on an image node
+    // Check if we're at a position that contains an image
+    const imageType = state.schema.nodes.image;
+    if (imageType) {
+      state.doc.nodesBetween(from, Math.max(to, from + 1), (node) => {
+        if (node.type === imageType) {
+          onImage = true;
+        }
+      });
+    }
+    
+    // Block-level actions that should be disabled in various contexts
     const blockActions = [
       'heading1', 'heading2', 'heading3',
       'bullet-list', 'ordered-list', 'task-list',
       'code-block', 'hr', 'quote', 'table-insert-menu', 'html-block'
     ];
     
-    // Update disabled state for block-level buttons
+    // Disable buttons based on context
     blockActions.forEach((action) => {
       const button = toolbar.querySelector<HTMLButtonElement>(`button[data-action="${action}"]`);
       if (button) {
-        button.disabled = inTable;
-        button.classList.toggle('disabled', inTable);
+        let shouldDisable = false;
+        
+        // Disable in tables
+        if (inTable) {
+          shouldDisable = true;
+        }
+        // Disable in code blocks
+        else if (inCodeBlock) {
+          shouldDisable = true;
+        }
+        // Disable block-level elements in headings
+        else if (inHeading && ['table-insert-menu', 'code-block', 'hr', 'quote', 'bullet-list', 'ordered-list', 'task-list', 'html-block'].includes(action)) {
+          shouldDisable = true;
+        }
+        // Disable tables in blockquotes (quote button stays enabled for toggling)
+        else if (inBlockquote && ['table-insert-menu'].includes(action)) {
+          shouldDisable = true;
+        }
+        // Disable block-level elements in lists
+        else if (inList && ['table-insert-menu', 'code-block', 'hr', 'quote', 'html-block'].includes(action)) {
+          shouldDisable = true;
+        }
+        
+        button.disabled = shouldDisable;
+        button.classList.toggle('disabled', shouldDisable);
       }
     });
+    
+    // Table menu should only be enabled when inside a table
+    const tableMenuButton = toolbar.querySelector<HTMLButtonElement>('button[data-action="table-menu"]');
+    if (tableMenuButton) {
+      tableMenuButton.disabled = !inTable;
+      tableMenuButton.classList.toggle('disabled', !inTable);
+    }
 
     // Check each mark type and update button state
     const markButtons = toolbar.querySelectorAll<HTMLButtonElement>('button[data-mark]');
@@ -433,13 +502,14 @@ function updateToolbarState(ctx: Ctx, toolbar: HTMLElement): void {
     const headingType = state.schema.nodes.heading;
     const currentHeadingLevel = (currentNode.type === headingType) ? currentNode.attrs.level : 0;
     
-    // Update heading buttons
+    // Update heading buttons (only active if not in restricted contexts)
+    const canUseHeadings = !inTable && !inCodeBlock;
     for (let level = 1; level <= 3; level++) {
       const headingButton = toolbar.querySelector<HTMLButtonElement>(`button[data-action="heading${level}"]`);
       if (headingButton) {
-        const isActive = currentHeadingLevel === level;
-        headingButton.classList.toggle('active', isActive && !inTable);
-        headingButton.setAttribute('aria-pressed', String(isActive && !inTable));
+        const isActive = currentHeadingLevel === level && canUseHeadings;
+        headingButton.classList.toggle('active', isActive);
+        headingButton.setAttribute('aria-pressed', String(isActive));
       }
     }
     
@@ -471,23 +541,49 @@ function updateToolbarState(ctx: Ctx, toolbar: HTMLElement): void {
       }
     }
     
-    // Update list buttons (only show active if not in table)
+    // Update list buttons (only show active if not in restricted contexts)
+    const canUseLists = !inTable && !inCodeBlock && !inHeading;
     const bulletListButton = toolbar.querySelector<HTMLButtonElement>('button[data-action="bullet-list"]');
     if (bulletListButton) {
-      bulletListButton.classList.toggle('active', inBulletList && !inTable);
-      bulletListButton.setAttribute('aria-pressed', String(inBulletList && !inTable));
+      bulletListButton.classList.toggle('active', inBulletList && canUseLists);
+      bulletListButton.setAttribute('aria-pressed', String(inBulletList && canUseLists));
     }
     
     const orderedListButton = toolbar.querySelector<HTMLButtonElement>('button[data-action="ordered-list"]');
     if (orderedListButton) {
-      orderedListButton.classList.toggle('active', inOrderedList && !inTable);
-      orderedListButton.setAttribute('aria-pressed', String(inOrderedList && !inTable));
+      orderedListButton.classList.toggle('active', inOrderedList && canUseLists);
+      orderedListButton.setAttribute('aria-pressed', String(inOrderedList && canUseLists));
     }
     
     const taskListButton = toolbar.querySelector<HTMLButtonElement>('button[data-action="task-list"]');
     if (taskListButton) {
-      taskListButton.classList.toggle('active', inTaskList && !inTable);
-      taskListButton.setAttribute('aria-pressed', String(inTaskList && !inTable));
+      taskListButton.classList.toggle('active', inTaskList && canUseLists);
+      taskListButton.setAttribute('aria-pressed', String(inTaskList && canUseLists));
+    }
+    
+    // Update blockquote button active state
+    const blockquoteType = state.schema.nodes.blockquote;
+    const quoteButton = toolbar.querySelector<HTMLButtonElement>('button[data-action="quote"]');
+    if (quoteButton) {
+      const isActive = isBlockActive(state, blockquoteType) && !inTable && !inCodeBlock && !inHeading && !inList;
+      quoteButton.classList.toggle('active', isActive);
+      quoteButton.setAttribute('aria-pressed', String(isActive));
+    }
+    
+    // Update code block button active state
+    const codeBlockType = state.schema.nodes.code_block;
+    const codeBlockButton = toolbar.querySelector<HTMLButtonElement>('button[data-action="code-block"]');
+    if (codeBlockButton) {
+      const isActive = isBlockActive(state, codeBlockType) && !inTable && !inHeading && !inList;
+      codeBlockButton.classList.toggle('active', isActive);
+      codeBlockButton.setAttribute('aria-pressed', String(isActive));
+    }
+    
+    // Update image button active state
+    const imageButton = toolbar.querySelector<HTMLButtonElement>('button[data-action="image"]');
+    if (imageButton) {
+      imageButton.classList.toggle('active', onImage);
+      imageButton.setAttribute('aria-pressed', String(onImage));
     }
   } catch {
     // Ignore errors during state updates
@@ -523,6 +619,37 @@ function isMarkActive(
     });
   }
   
+  return active;
+}
+
+/**
+ * Check if a node type is active in the current selection (for block nodes like headings, lists, blockquotes)
+ */
+function isBlockActive(
+  state: import('@milkdown/kit/prose/state').EditorState,
+  nodeType: import('@milkdown/kit/prose/model').NodeType,
+  attrs: Record<string, any> = {}
+): boolean {
+  const { $from, to } = state.selection;
+  let active = false;
+
+  state.doc.nodesBetween($from.pos, to, (node, pos) => {
+    if (node.type === nodeType) {
+      let attrsMatch = true;
+      for (const key in attrs) {
+        if (node.attrs[key] !== attrs[key]) {
+          attrsMatch = false;
+          break;
+        }
+      }
+      if (attrsMatch) {
+        active = true;
+        return false; // Stop searching
+      }
+    }
+    return true; // Continue searching
+  });
+
   return active;
 }
 
