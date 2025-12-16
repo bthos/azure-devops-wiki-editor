@@ -16,6 +16,7 @@ robot/screenshots/
 !robot/resources/*.robot
 
 # Environment configuration (contains secrets)
+.env
 robot/.env
 
 # Test data with credentials

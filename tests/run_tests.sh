@@ -8,6 +8,7 @@ set -e
 
 # Change to robot directory
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 cd "$SCRIPT_DIR/robot"
 
 # Colors for output
@@ -15,6 +16,31 @@ RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 NC='\033[0m' # No Color
+
+# Ensure the extension build artifacts exist (playground.html loads dist/*.js).
+ensure_dist_build() {
+    if [ -f "$PROJECT_ROOT/dist/main.js" ] && [ -f "$PROJECT_ROOT/dist/editor-bundle.js" ]; then
+        return
+    fi
+
+    echo -e "${YELLOW}dist/ build artifacts not found; building extension...${NC}"
+
+    if ! command -v npm &> /dev/null; then
+        echo -e "${RED}Error: npm is required to build dist/ (install Node.js + npm)${NC}"
+        exit 1
+    fi
+
+    if [ ! -d "$PROJECT_ROOT/node_modules" ]; then
+        (cd "$PROJECT_ROOT" && npm install)
+    fi
+
+    (cd "$PROJECT_ROOT" && npm run dev-build)
+
+    if [ ! -f "$PROJECT_ROOT/dist/main.js" ]; then
+        echo -e "${RED}Error: build completed but dist/main.js is still missing${NC}"
+        exit 1
+    fi
+}
 
 # Default values
 OUTPUT_DIR="reports"
@@ -47,10 +73,16 @@ check_venv() {
         echo -e "${YELLOW}Warning: Virtual environment not activated${NC}"
         echo "Attempting to activate venv..."
         
+        # setup.sh creates the venv in tests/robot/venv.
+        # Keep fallback to ../venv in case the layout changes.
         if [ -f "venv/bin/activate" ]; then
             source venv/bin/activate
         elif [ -f "venv/Scripts/activate" ]; then
             source venv/Scripts/activate
+        elif [ -f "../venv/bin/activate" ]; then
+            source ../venv/bin/activate
+        elif [ -f "../venv/Scripts/activate" ]; then
+            source ../venv/Scripts/activate
         else
             echo -e "${RED}Error: venv not found. Please run setup.sh first${NC}"
             exit 1
@@ -61,17 +93,24 @@ check_venv() {
 
 # Check if .env file exists
 check_env() {
-    if [ ! -f ".env" ]; then
-        echo -e "${YELLOW}Warning: .env file not found${NC}"
-        echo "Please create .env file from .env.example and configure your settings"
-        read -p "Do you want to copy .env.example to .env now? (y/n) " -n 1 -r
-        echo
-        if [[ $REPLY =~ ^[Yy]$ ]]; then
-            cp .env.example .env
-            echo -e "${GREEN}.env file created. Please edit it with your configuration.${NC}"
-            exit 0
-        fi
+    if [ -f ".env" ]; then
+        return
     fi
+
+    # Prefer reusing tests/.env (created by setup.sh)
+    if [ -f "../.env" ]; then
+        cp "../.env" ".env"
+        echo -e "${GREEN}✓ Copied ../.env to tests/robot/.env${NC}"
+        return
+    fi
+
+    if [ -f ".env.example" ]; then
+        cp .env.example .env
+        echo -e "${YELLOW}Warning: .env was missing; created from .env.example. Please update values if needed.${NC}"
+        return
+    fi
+
+    echo -e "${YELLOW}Warning: .env file not found (and no .env.example). Continuing with environment defaults.${NC}"
 }
 
 # Parse command line arguments
@@ -114,6 +153,7 @@ done
 # Check prerequisites
 check_venv
 check_env
+ensure_dist_build
 
 # Create output directory
 mkdir -p "${OUTPUT_DIR}"

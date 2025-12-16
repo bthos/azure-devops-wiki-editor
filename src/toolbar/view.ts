@@ -4,6 +4,8 @@ import type { EditorView } from '@milkdown/kit/prose/view';
 import type { Ctx } from '@milkdown/kit/ctx';
 import { commandsCtx, editorViewCtx } from '@milkdown/kit/core';
 import { wrapIn } from '@milkdown/kit/prose/commands';
+import { uploadConfig } from '@milkdown/kit/plugin/upload';
+import { attachmentServiceCtx } from '../services/attachment-service';
 
 // Commonmark commands
 import {
@@ -142,10 +144,8 @@ function createToolbar(ctx: Ctx, view: EditorView): HTMLElement {
           <path d="M14 6C16.2091 6 18 7.79086 18 10C18 12.1422 16.316 13.8911 14.1996 13.9951L14 14H12C11.5858 14 11.25 13.6642 11.25 13.25C11.25 12.8703 11.5322 12.5565 11.8982 12.5068L12 12.5H14C15.3807 12.5 16.5 11.3807 16.5 10C16.5 8.67452 15.4685 7.58996 14.1644 7.50532L14 7.5H12C11.5858 7.5 11.25 7.16421 11.25 6.75C11.25 6.3703 11.5322 6.05651 11.8982 6.00685L12 6H14ZM8 6C8.41421 6 8.75 6.33579 8.75 6.75C8.75 7.1297 8.46785 7.44349 8.10177 7.49315L8 7.5H6C4.61929 7.5 3.5 8.61929 3.5 10C3.5 11.3255 4.53154 12.41 5.83562 12.4947L6 12.5H8C8.41421 12.5 8.75 12.8358 8.75 13.25C8.75 13.6297 8.46785 13.9435 8.10177 13.9932L8 14H6C3.79086 14 2 12.2091 2 10C2 7.8578 3.68397 6.10892 5.80036 6.0049L6 6H8ZM6.25 9.25H13.75C14.1642 9.25 14.5 9.58579 14.5 10C14.5 10.3797 14.2178 10.6935 13.8518 10.7432L13.75 10.75H6.25C5.83579 10.75 5.5 10.4142 5.5 10C5.5 9.6203 5.78215 9.30651 6.14823 9.25685L6.25 9.25H13.75H6.25Z"/>
         </svg>
       </button>
-      <button class="toolbar-button" data-action="image" title="Insert Image" aria-label="Insert Image">
-        <svg viewBox="0 0 16 16" width="16" height="16" fill="currentColor">
-          <path d="M2 3a1 1 0 011-1h10a1 1 0 011 1v10a1 1 0 01-1 1H3a1 1 0 01-1-1V3zm11 9V3H3v7l3-3 2 2 4-4 1 1v6zm-4-7a1 1 0 11-2 0 1 1 0 012 0z"/>
-        </svg>
+      <button class="toolbar-button" data-action="image" title="Insert Attachment" aria-label="Insert Attachment">
+        <svg font-size="20" aria-hidden="true" class="fui-Icon-regular exp-app-simpl-icon ___12fm75w f1w7gpdv fez10in fg4l7m0" fill="currentColor" width="1em" height="1em" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path d="m4.83 10.48 5.65-5.65a3 3 0 0 1 4.25 4.24L8 15.8a1.5 1.5 0 0 1-2.12-2.12l6-6.01a.5.5 0 1 0-.7-.71l-6 6.01a2.5 2.5 0 0 0 3.53 3.54l6.71-6.72a4 4 0 1 0-5.65-5.66L4.12 9.78a.5.5 0 0 0 .7.7Z" fill="currentColor"></path></svg>
       </button>
       <button class="toolbar-button" data-action="code" data-mark="inlineCode" title="Inline Code" aria-label="Inline Code">
         <svg viewBox="0 0 16 16" width="16" height="16" fill="currentColor">
@@ -713,7 +713,46 @@ function handleToolbarAction(ctx: Ctx, action: string, editorView?: EditorView):
       commands.call(toggleLinkCommand.key, { href: '' });
       break;
     case 'image':
-      commands.call(insertImageCommand.key, { src: '', alt: '' });
+      const attachmentService = ctx.get(attachmentServiceCtx);
+      if (!attachmentService) {
+        // Fallback if service is not available
+        commands.call(insertImageCommand.key, { src: '', alt: '' });
+        break;
+      }
+
+      const input = document.createElement('input');
+      input.type = 'file';
+      input.style.display = 'none';
+      
+      input.onchange = async () => {
+        const file = input.files?.[0];
+        if (!file) return;
+
+        try {
+          const url = await attachmentService.uploadAttachment(file);
+          const { schema } = view.state;
+          const tr = view.state.tr;
+
+          if (file.type.startsWith('image/')) {
+            const node = schema.nodes.image.createAndFill({ src: url, alt: file.name });
+            if (node) tr.replaceSelectionWith(node);
+          } else {
+            const node = schema.text(file.name, [
+              schema.marks.link.create({ href: url, title: file.name })
+            ]);
+            tr.replaceSelectionWith(node);
+          }
+          view.dispatch(tr);
+        } catch (e) {
+          console.error('Upload failed', e);
+          alert(`Upload failed: ${e instanceof Error ? e.message : 'Unknown error'}`);
+        } finally {
+          input.remove();
+        }
+      };
+      
+      document.body.appendChild(input);
+      input.click();
       break;
     case 'table':
       // Don't insert table if already inside one

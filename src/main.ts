@@ -16,8 +16,14 @@ import {
     adoTheme,
     isDarkTheme,
     adoSyntaxPlugin,
-    toolbarPlugin
+    toolbarPlugin,
+    upload,
+    AdoAttachmentService,
+    attachmentServiceCtx,
+    configureAttachmentUpload
 } from './editor-bundle';
+
+import { getWikiInfoFromUrl } from './ado-wiki-api';
 
 // Define global types
 declare global {
@@ -248,6 +254,17 @@ async function initializeEditor(textarea: HTMLTextAreaElement, editorDiv: HTMLEl
     // Detect current theme
     const useDarkTheme = isDarkTheme();
     
+    // Initialize attachment service
+    const wikiInfo = getWikiInfoFromUrl();
+    let attachmentService: AdoAttachmentService | null = null;
+    if (wikiInfo) {
+        attachmentService = new AdoAttachmentService({
+            projectId: wikiInfo.projectId,
+            wikiId: wikiInfo.wikiIdentifier,
+            wikiVersion: wikiInfo.version
+        });
+    }
+
     try {
         // Create Milkdown Core editor with plugins
         const editor = await Editor.make()
@@ -258,6 +275,14 @@ async function initializeEditor(textarea: HTMLTextAreaElement, editorDiv: HTMLEl
                 
                 // Set default content (already preprocessed)
                 ctx.set(defaultValueCtx, content);
+                
+                // Inject attachment service for toolbar access
+                ctx.inject(attachmentServiceCtx, attachmentService);
+
+                // Configure upload plugin if service is available
+                if (attachmentService) {
+                    configureAttachmentUpload(ctx, attachmentService);
+                }
                 
                 // Configure markdown serializer to use '-' for bullet lists (Azure DevOps standard)
                 ctx.set(remarkStringifyOptionsCtx, {
@@ -280,6 +305,7 @@ async function initializeEditor(textarea: HTMLTextAreaElement, editorDiv: HTMLEl
             .use(history)
             .use(listener)
             .use(clipboard)
+            .use(upload)
             .use(adoSyntaxPlugin)
             .use(toolbarPlugin)
             .create();

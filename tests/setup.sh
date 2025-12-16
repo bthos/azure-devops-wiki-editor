@@ -24,23 +24,35 @@ echo ""
 echo -e "${YELLOW}Checking Python version...${NC}"
 PYTHON_CMD=""
 
-if command -v python3.10 &> /dev/null; then
-    PYTHON_CMD="python3.10"
-elif command -v python3.11 &> /dev/null; then
-    PYTHON_CMD="python3.11"
-elif command -v python3.12 &> /dev/null; then
-    PYTHON_CMD="python3.12"
-elif command -v python3 &> /dev/null; then
-    PYTHON_CMD_CHECK=$(python3 -c "import sys; print('ok' if sys.version_info >= (3, 10) else 'no')" 2>/dev/null || echo "no")
-    if [ "$PYTHON_CMD_CHECK" = "ok" ]; then
-        PYTHON_CMD="python3"
+is_working_python() {
+    local candidate="$1"
+    local bin="${candidate%% *}"
+
+    if ! command -v "$bin" &> /dev/null; then
+        return 1
     fi
-elif command -v python &> /dev/null; then
-    PYTHON_CMD_CHECK=$(python -c "import sys; print('ok' if sys.version_info >= (3, 10) else 'no')" 2>/dev/null || echo "no")
-    if [ "$PYTHON_CMD_CHECK" = "ok" ]; then
-        PYTHON_CMD="python"
+
+    # Some Windows environments expose stubs like python3.12 that exist but fail to execute.
+    # Validate by actually running the interpreter and verifying version >= 3.10.
+    eval "$candidate -c \"import sys; sys.exit(0 if sys.version_info >= (3, 10) else 1)\"" >/dev/null 2>&1
+}
+
+for candidate in \
+    "python3.12" \
+    "python3.11" \
+    "python3.10" \
+    "python3" \
+    "python" \
+    "py -3.12" \
+    "py -3.11" \
+    "py -3.10" \
+    "py -3" \
+    "py"; do
+    if is_working_python "$candidate"; then
+        PYTHON_CMD="$candidate"
+        break
     fi
-fi
+done
 
 if [ -z "$PYTHON_CMD" ]; then
     echo -e "${RED}Error: Python 3.10 or higher is required${NC}"
@@ -48,7 +60,7 @@ if [ -z "$PYTHON_CMD" ]; then
     exit 1
 fi
 
-PYTHON_VERSION=$($PYTHON_CMD --version)
+PYTHON_VERSION=$(eval "$PYTHON_CMD --version" 2>&1)
 echo -e "${GREEN}✓ Found: $PYTHON_VERSION${NC}"
 echo ""
 
@@ -68,25 +80,30 @@ echo ""
 echo -e "${YELLOW}Creating virtual environment...${NC}"
 if [ -d "venv" ]; then
     echo "Virtual environment already exists"
-    read -p "Do you want to recreate it? (y/n) " -n 1 -r
-    echo
-    if [[ $REPLY =~ ^[Yy]$ ]]; then
+    # Avoid interactive prompts (works better in CI and tool-driven shells).
+    # Set RECREATE_VENV=1 to force re-creation.
+    if [[ "${RECREATE_VENV:-0}" == "1" ]]; then
         rm -rf venv
-        $PYTHON_CMD -m venv venv
+        eval "$PYTHON_CMD -m venv venv"
         echo -e "${GREEN}✓ Virtual environment recreated${NC}"
+    else
+        echo "Keeping existing venv (set RECREATE_VENV=1 to recreate)"
     fi
 else
-    $PYTHON_CMD -m venv venv
+    eval "$PYTHON_CMD -m venv venv"
     echo -e "${GREEN}✓ Virtual environment created${NC}"
 fi
 echo ""
 
 # Activate virtual environment
 echo -e "${YELLOW}Activating virtual environment...${NC}"
-if [[ "$OSTYPE" == "msys" ]] || [[ "$OSTYPE" == "win32" ]]; then
+if [ -f "venv/Scripts/activate" ]; then
     source venv/Scripts/activate
-else
+elif [ -f "venv/bin/activate" ]; then
     source venv/bin/activate
+else
+    echo -e "${RED}Error: Could not find venv activation script${NC}"
+    exit 1
 fi
 echo -e "${GREEN}✓ Virtual environment activated${NC}"
 echo ""
@@ -111,13 +128,32 @@ echo ""
 
 # Create .env file in tests/ root
 echo -e "${YELLOW}Setting up environment configuration...${NC}"
+# Ensure tests/.env exists
 if [ ! -f "$SCRIPT_DIR/.env" ]; then
     cp "$SCRIPT_DIR/.env.example" "$SCRIPT_DIR/.env"
     echo -e "${GREEN}✓ .env file created from template in tests/${NC}"
     echo ""
-    echo -e "${YELLOW}IMPORTANT: Please edit tests/.env file with your credentials${NC}"
+    echo -e "${YELLOW}IMPORTANT: Please edit tests/.env file with your configuration${NC}"
 else
     echo ".env file already exists in tests/"
+
+    # Warn if LOCAL_TEST_URL is set to something Playwright can't navigate to.
+    # Common pitfall: relative paths like ../playground.html (must be file://... or http(s)://...)
+    if grep -q '^LOCAL_TEST_URL=' "$SCRIPT_DIR/.env"; then
+        LOCAL_TEST_URL_VALUE=$(grep '^LOCAL_TEST_URL=' "$SCRIPT_DIR/.env" | head -n 1 | cut -d '=' -f2-)
+        if [[ -n "$LOCAL_TEST_URL_VALUE" ]] && [[ ! "$LOCAL_TEST_URL_VALUE" =~ ^(https?://|file://) ]]; then
+            echo -e "${YELLOW}Warning: tests/.env sets LOCAL_TEST_URL to '$LOCAL_TEST_URL_VALUE'.${NC}"
+            echo -e "${YELLOW}Playwright requires http(s)://... or file://... URLs. Consider removing LOCAL_TEST_URL to use the default, or set it to e.g. http://localhost:8080/playground.html.${NC}"
+        fi
+    fi
+fi
+
+# Ensure tests/robot/.env exists (run_tests.sh expects this)
+if [ ! -f ".env" ]; then
+    cp "$SCRIPT_DIR/.env" ".env"
+    echo -e "${GREEN}✓ .env file created in tests/robot/ from tests/.env${NC}"
+else
+    echo ".env file already exists in tests/robot/"
 fi
 echo ""
 
@@ -135,7 +171,7 @@ echo ""
 echo "Next steps:"
 echo "1. Edit .env file with your configuration:"
 echo "   - ADO_ORG_URL (your Azure DevOps URL)"
-echo "   - LOCAL_TEST_URL (path to playground.html)"
+echo "   - LOCAL_TEST_URL (optional; http(s)://... or file://... URL)"
 echo ""
 echo "2. Run the tests:"
 echo "   robot --outputdir reports test_editor_basic.robot"

@@ -21,6 +21,11 @@ import { adoSyntaxPlugin } from './syntax';
 // Import toolbar plugin
 import { toolbarPlugin } from './toolbar';
 
+// Import upload plugin and attachment service
+import { upload } from '@milkdown/kit/plugin/upload';
+import { AdoAttachmentService, IWikiContext, attachmentServiceCtx } from './services/attachment-service';
+import { configureAttachmentUpload } from './plugins/attachment-upload';
+
 // Export core classes and utilities for use in main.ts
 export { 
     Editor, 
@@ -28,26 +33,32 @@ export {
     defaultValueCtx, 
     editorViewCtx, 
     serializerCtx, 
-    editorViewOptionsCtx,
+    editorViewOptionsCtx, 
     remarkStringifyOptionsCtx,
-    commonmark,
-    gfm,
-    history,
-    listener,
-    listenerCtx,
-    clipboard,
-    getMarkdown,
-    replaceAll,
+    commonmark, 
+    gfm, 
+    history, 
+    listener, 
+    listenerCtx, 
+    clipboard, 
+    getMarkdown, 
+    replaceAll, 
     // Theme exports
-    adoTheme,
-    detectAdoTheme,
-    isDarkTheme,
-    applyDarkTheme,
-    removeDarkTheme,
+    adoTheme, 
+    detectAdoTheme, 
+    isDarkTheme, 
+    applyDarkTheme, 
+    removeDarkTheme, 
     // ADO Syntax exports
-    adoSyntaxPlugin,
+    adoSyntaxPlugin, 
     // Toolbar exports
-    toolbarPlugin
+    toolbarPlugin,
+    // Upload exports
+    upload,
+    AdoAttachmentService,
+    IWikiContext,
+    attachmentServiceCtx,
+    configureAttachmentUpload
 };
 
 // Also attach to window for global access
