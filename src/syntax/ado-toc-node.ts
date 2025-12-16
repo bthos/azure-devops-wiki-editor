@@ -207,6 +207,23 @@ function escapeHtml(text: string): string {
 }
 
 /**
+ * Generate anchor ID from heading text.
+ * Matches Azure DevOps Wiki behavior:
+ * - Convert to lowercase
+ * - Keep letters, numbers, dots, hyphens, underscores
+ * - Replace whitespace with hyphens
+ * - Remove other special characters
+ */
+function generateAnchorId(text: string): string {
+  return text
+    .toLowerCase()
+    .replace(/\s+/g, '-')           // Replace whitespace with hyphens
+    .replace(/[^\w.-]/g, '')        // Keep word chars (letters, digits, underscore), dots, hyphens
+    .replace(/-+/g, '-')            // Collapse multiple hyphens
+    .replace(/^-|-$/g, '');         // Trim leading/trailing hyphens
+}
+
+/**
  * Custom node view for TOC with live heading preview
  */
 export const adoTocView = $view(adoTocNode, () => {
@@ -225,18 +242,60 @@ export const adoTocView = $view(adoTocNode, () => {
     title.textContent = 'Contents';
     header.appendChild(title);
     
+    const buttonGroup = document.createElement('div');
+    buttonGroup.className = 'ado-widget-buttons';
+    
+    // Refresh button
+    const refreshBtn = document.createElement('button');
+    refreshBtn.className = 'ado-widget-refresh';
+    refreshBtn.innerHTML = `<svg viewBox="0 0 16 16" width="16" height="16" fill="currentColor">
+      <path fill-rule="evenodd" d="M8 3a5 5 0 1 0 4.546 2.914.5.5 0 0 1 .908-.417A6 6 0 1 1 8 2v1z"/>
+      <path d="M8 4.466V.534a.25.25 0 0 1 .41-.192l2.36 1.966c.12.1.12.284 0 .384L8.41 4.658A.25.25 0 0 1 8 4.466z"/>
+    </svg>`;
+    refreshBtn.title = 'Refresh Table of Contents';
+    refreshBtn.type = 'button';
+    refreshBtn.setAttribute('aria-label', 'Refresh Table of Contents');
+    buttonGroup.appendChild(refreshBtn);
+    
+    // Delete button
     const deleteBtn = document.createElement('button');
     deleteBtn.className = 'ado-widget-delete';
-    deleteBtn.innerHTML = '🗑️';
+    deleteBtn.innerHTML = `<svg viewBox="0 0 16 16" width="16" height="16" fill="currentColor">
+      <path d="M5.5 5.5A.5.5 0 016 6v6a.5.5 0 01-1 0V6a.5.5 0 01.5-.5zm2.5 0a.5.5 0 01.5.5v6a.5.5 0 01-1 0V6a.5.5 0 01.5-.5zm3 .5a.5.5 0 00-1 0v6a.5.5 0 001 0V6z"/>
+      <path fill-rule="evenodd" d="M14.5 3a1 1 0 01-1 1H13v9a2 2 0 01-2 2H5a2 2 0 01-2-2V4h-.5a1 1 0 01-1-1V2a1 1 0 011-1H6a1 1 0 011-1h2a1 1 0 011 1h3.5a1 1 0 011 1v1zM4.118 4L4 4.059V13a1 1 0 001 1h6a1 1 0 001-1V4.059L11.882 4H4.118zM2.5 3V2h11v1h-11z"/>
+    </svg>`;
     deleteBtn.title = 'Remove Table of Contents';
     deleteBtn.type = 'button';
-    header.appendChild(deleteBtn);
+    deleteBtn.setAttribute('aria-label', 'Remove Table of Contents');
+    buttonGroup.appendChild(deleteBtn);
     
+    header.appendChild(buttonGroup);
     dom.appendChild(header);
     
     const content = document.createElement('div');
     content.className = 'ado-toc-content';
     dom.appendChild(content);
+    
+    const updateHeadings = () => {
+      const headings: HeadingInfo[] = [];
+      view.state.doc.descendants((node) => {
+        if (node.type.name === 'heading') {
+          const text = node.textContent;
+          headings.push({
+            level: node.attrs.level as number,
+            text,
+            id: generateAnchorId(text),
+          });
+        }
+      });
+      content.innerHTML = buildTocHtml(headings);
+    };
+    
+    refreshBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      updateHeadings();
+    });
     
     deleteBtn.addEventListener('click', (e) => {
       e.preventDefault();
@@ -248,21 +307,6 @@ export const adoTocView = $view(adoTocNode, () => {
         view.focus();
       }
     });
-    
-    const updateHeadings = () => {
-      const headings: HeadingInfo[] = [];
-      view.state.doc.descendants((node) => {
-        if (node.type.name === 'heading') {
-          const text = node.textContent;
-          headings.push({
-            level: node.attrs.level as number,
-            text,
-            id: text.toLowerCase().replace(/[^\w\s-]/g, '').replace(/\s+/g, '-').trim(),
-          });
-        }
-      });
-      content.innerHTML = buildTocHtml(headings);
-    };
     
     updateHeadings();
     

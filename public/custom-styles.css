@@ -2,24 +2,109 @@
 /* UI Components and Layout - NOT editor content styling */
 /* Editor content styling is in src/theme/ado-theme.css */
 
-/* ===== Custom Toggle Switch (Fabric UI Style) ===== */
-#wysiwyg-toggle-container {
-    padding: 8px 12px;
-    background-color: #faf9f8;
-    border-bottom: 1px solid #edebe9;
-    display: flex;
-    justify-content: flex-end; /* Default: right */
+/* ==============================================
+   TOGGLE SWITCH TOKENS
+   ============================================== */
+
+:root {
+    /* Toggle-specific tokens (extend ado-theme tokens) */
+    --toggle-track-bg: #ffffff;
+    --toggle-track-border: #8a8886;
+    --toggle-thumb-bg: #323130;
+    --toggle-track-hover-border: #323130;
+    --toggle-thumb-hover-bg: #201f1e;
+    --toggle-checked-bg: #0078d4;
+    --toggle-checked-hover-bg: #106ebe;
+    --toggle-label-color: #605e5c;
+    --toggle-label-active-color: #323130;
+    --toggle-container-bg: #faf9f8;
+    --toggle-container-border: #edebe9;
+    --toggle-focus-ring: #605e5c;
+    --toggle-focus-bg: #ffffff;
 }
 
-/* Toggle position: left */
+/* Dark theme toggle tokens */
+:is(
+    [data-theme*="dark"],
+    body[data-theme="ms.vss-web.vsts-theme-dark"]
+) {
+    --toggle-track-bg: #323130;
+    --toggle-track-border: #323130;
+    --toggle-thumb-bg: #ffffff;
+    --toggle-track-hover-border: #484644;
+    --toggle-thumb-hover-bg: #ffffff;
+    --toggle-label-color: #a19f9d;
+    --toggle-label-active-color: #f3f2f1;
+    --toggle-container-bg: #1b1a19;
+    --toggle-container-border: #3b3a39;
+    --toggle-focus-ring: #ffffff;
+    --toggle-focus-bg: #1b1a19;
+}
+
+/* High Contrast Dark toggle tokens */
+body[data-theme="ms.vss-web.vsts-theme-hc-dark"] {
+    --toggle-track-bg: #000000;
+    --toggle-track-border: #ffffff;
+    --toggle-thumb-bg: #ffffff;
+    --toggle-track-hover-border: #1aebff;
+    --toggle-checked-bg: #1aebff;
+    --toggle-checked-hover-bg: #1aebff;
+    --toggle-label-color: #ffffff;
+    --toggle-label-active-color: #ffff00;
+    --toggle-container-bg: #000000;
+    --toggle-container-border: #ffffff;
+    --toggle-focus-ring: #ffffff;
+    --toggle-focus-bg: #000000;
+}
+
+/* High Contrast Light toggle tokens */
+body[data-theme="ms.vss-web.vsts-theme-hc-light"] {
+    --toggle-track-bg: #ffffff;
+    --toggle-track-border: #000000;
+    --toggle-thumb-bg: #000000;
+    --toggle-track-hover-border: #0078d4;
+    --toggle-label-color: #000000;
+    --toggle-label-active-color: #000000;
+    --toggle-container-bg: #ffffff;
+    --toggle-container-border: #000000;
+    --toggle-focus-ring: #000000;
+    --toggle-focus-bg: #ffffff;
+}
+
+/* ==============================================
+   TOGGLE CONTAINER
+   ============================================== */
+
+#wysiwyg-toggle-container {
+    padding: 8px 12px;
+    background-color: var(--toggle-container-bg);
+    border-bottom: 1px solid var(--toggle-container-border);
+    display: flex;
+    justify-content: flex-end;
+    flex-shrink: 0;
+    position: relative;
+    z-index: 10;
+}
+
 #wysiwyg-toggle-container[data-position="left"] {
     justify-content: flex-start;
 }
 
-/* Toggle position: right (explicit) */
 #wysiwyg-toggle-container[data-position="right"] {
     justify-content: flex-end;
 }
+
+/* HC border width */
+:is(
+    body[data-theme="ms.vss-web.vsts-theme-hc-dark"],
+    body[data-theme="ms.vss-web.vsts-theme-hc-light"]
+) #wysiwyg-toggle-container {
+    border-bottom-width: 2px;
+}
+
+/* ==============================================
+   TOGGLE SWITCH
+   ============================================== */
 
 .wysiwyg-toggle {
     display: flex;
@@ -34,21 +119,26 @@
 .toggle-label {
     font-size: 14px;
     font-weight: 400;
-    color: #605e5c;
+    color: var(--toggle-label-color);
     transition: color 0.1s ease;
     cursor: pointer;
 }
 
 .toggle-label.active {
-    color: #323130;
+    color: var(--toggle-label-active-color);
     font-weight: 600;
 }
 
 .toggle-label:hover {
-    color: #323130;
+    color: var(--toggle-label-active-color);
 }
 
-/* Fabric UI Toggle Switch */
+/* HC Light active underline */
+body[data-theme="ms.vss-web.vsts-theme-hc-light"] .toggle-label.active {
+    text-decoration: underline;
+}
+
+/* Switch Container */
 .toggle-switch {
     position: relative;
     display: inline-flex;
@@ -58,7 +148,6 @@
     cursor: pointer;
 }
 
-/* Hide default checkbox */
 .toggle-switch input {
     opacity: 0;
     width: 0;
@@ -66,20 +155,28 @@
     position: absolute;
 }
 
-/* The pill/track - Fabric UI style */
+/* Track */
 .toggle-slider {
     position: absolute;
     top: 0;
     left: 0;
     right: 0;
     bottom: 0;
-    background-color: #ffffff;
-    border: 1px solid #8a8886;
+    background-color: var(--toggle-track-bg);
+    border: 1px solid var(--toggle-track-border);
     border-radius: 10px;
     transition: all 0.1s ease;
 }
 
-/* The circle/thumb */
+/* HC border width */
+:is(
+    body[data-theme="ms.vss-web.vsts-theme-hc-dark"],
+    body[data-theme="ms.vss-web.vsts-theme-hc-light"]
+) .toggle-slider {
+    border-width: 2px;
+}
+
+/* Thumb */
 .toggle-slider:before {
     position: absolute;
     content: "";
@@ -88,24 +185,24 @@
     left: 3px;
     top: 50%;
     transform: translateY(-50%);
-    background-color: #323130;
+    background-color: var(--toggle-thumb-bg);
     border-radius: 50%;
     transition: all 0.1s ease;
 }
 
 /* Hover state - unchecked */
 .toggle-switch:hover .toggle-slider {
-    border-color: #323130;
+    border-color: var(--toggle-track-hover-border);
 }
 
 .toggle-switch:hover .toggle-slider:before {
-    background-color: #201f1e;
+    background-color: var(--toggle-thumb-hover-bg);
 }
 
-/* Checked state - Fabric UI blue */
+/* Checked state */
 .toggle-switch input:checked + .toggle-slider {
-    background-color: #0078d4;
-    border-color: #0078d4;
+    background-color: var(--toggle-checked-bg);
+    border-color: var(--toggle-checked-bg);
 }
 
 .toggle-switch input:checked + .toggle-slider:before {
@@ -113,16 +210,21 @@
     left: calc(100% - 15px);
 }
 
-/* Hover state - checked */
-.toggle-switch:hover input:checked + .toggle-slider {
-    background-color: #106ebe;
-    border-color: #106ebe;
+/* HC Dark checked thumb is black */
+body[data-theme="ms.vss-web.vsts-theme-hc-dark"] .toggle-switch input:checked + .toggle-slider:before {
+    background-color: #000000;
 }
 
-/* Focus state - Fabric UI focus ring */
+/* Hover state - checked */
+.toggle-switch:hover input:checked + .toggle-slider {
+    background-color: var(--toggle-checked-hover-bg);
+    border-color: var(--toggle-checked-hover-bg);
+}
+
+/* Focus state */
 .toggle-switch input:focus-visible + .toggle-slider {
     outline: none;
-    box-shadow: 0 0 0 2px #ffffff, 0 0 0 4px #605e5c;
+    box-shadow: 0 0 0 2px var(--toggle-focus-bg), 0 0 0 4px var(--toggle-focus-ring);
 }
 
 /* Disabled state */
@@ -141,33 +243,30 @@
     width: 14px;
 }
 
-/* ===== Editor Container Layout ===== */
+/* ==============================================
+   EDITOR CONTAINER LAYOUT
+   ============================================== */
 
-/* Make editor blend with Azure DevOps UI */
 #milkdown-editor {
     margin-top: 0;
     border: none;
-    /* Use flex to fill available space without causing page scroll */
     flex: 1;
     min-height: 200px;
     overflow: hidden;
     display: flex;
     flex-direction: column;
-    /* Ensure editor has a bounded height for scrolling */
-    height: 0; /* This forces flex: 1 to actually work */
+    height: 0;
 }
 
-/* Milkdown editor - all nested containers */
 #milkdown-editor > div,
 #milkdown-editor .milkdown {
     flex: 1;
     display: flex;
     flex-direction: column;
     overflow: hidden;
-    min-height: 0; /* Important for flex children to shrink */
+    min-height: 0;
 }
 
-/* The actual content area that should scroll */
 #milkdown-editor .ProseMirror {
     flex: 1;
     overflow-y: auto;
@@ -178,7 +277,6 @@
     outline: none;
 }
 
-/* Prevent wiki-editor from breaking scroll context */
 .wiki-editor {
     display: flex;
     flex-direction: column;
@@ -186,14 +284,10 @@
     height: 100%;
 }
 
-/* Ensure the toggle stays with the editor */
-#wysiwyg-toggle-container {
-    flex-shrink: 0;
-    position: relative;
-    z-index: 10;
-}
+/* ==============================================
+   RESPONSIVE
+   ============================================== */
 
-/* ===== Responsive adjustments ===== */
 @media (max-width: 768px) {
     #wysiwyg-toggle-container {
         padding: 6px 10px;
@@ -206,139 +300,4 @@
     .toggle-label {
         font-size: 12px;
     }
-}
-
-/* =========================================== */
-/* ===== THEME VARIANTS FOR TOGGLE ===== */
-/* =========================================== */
-
-/* ===== Dark Theme Toggle ===== */
-body[data-theme="ms.vss-web.vsts-theme-dark"] #wysiwyg-toggle-container {
-    background-color: #1b1a19;
-    border-bottom-color: #3b3a39;
-}
-
-body[data-theme="ms.vss-web.vsts-theme-dark"] .toggle-label {
-    color: #a19f9d;
-}
-
-body[data-theme="ms.vss-web.vsts-theme-dark"] .toggle-label.active {
-    color: #f3f2f1;
-}
-
-body[data-theme="ms.vss-web.vsts-theme-dark"] .toggle-label:hover {
-    color: #f3f2f1;
-}
-
-body[data-theme="ms.vss-web.vsts-theme-dark"] .toggle-slider {
-    background-color: #323130;
-    border-color: #323130;
-}
-
-body[data-theme="ms.vss-web.vsts-theme-dark"] .toggle-slider:before {
-    background-color: #ffffff;
-}
-
-body[data-theme="ms.vss-web.vsts-theme-dark"] .toggle-switch:hover .toggle-slider {
-    background-color: #484644;
-    border-color: #484644;
-}
-
-body[data-theme="ms.vss-web.vsts-theme-dark"] .toggle-switch input:checked + .toggle-slider {
-    background-color: #0078d4;
-    border-color: #0078d4;
-}
-
-body[data-theme="ms.vss-web.vsts-theme-dark"] .toggle-switch input:checked + .toggle-slider:before {
-    background-color: #ffffff;
-}
-
-body[data-theme="ms.vss-web.vsts-theme-dark"] .toggle-switch:hover input:checked + .toggle-slider {
-    background-color: #106ebe;
-    border-color: #106ebe;
-}
-
-body[data-theme="ms.vss-web.vsts-theme-dark"] .toggle-switch input:focus-visible + .toggle-slider {
-    box-shadow: 0 0 0 2px #1b1a19, 0 0 0 4px #ffffff;
-}
-
-/* ===== High Contrast Dark Theme Toggle ===== */
-body[data-theme="ms.vss-web.vsts-theme-hc-dark"] #wysiwyg-toggle-container {
-    background-color: #000000;
-    border-bottom: 1px solid #ffffff;
-}
-
-body[data-theme="ms.vss-web.vsts-theme-hc-dark"] .toggle-label {
-    color: #ffffff;
-}
-
-body[data-theme="ms.vss-web.vsts-theme-hc-dark"] .toggle-label.active {
-    color: #ffff00;
-}
-
-body[data-theme="ms.vss-web.vsts-theme-hc-dark"] .toggle-slider {
-    background-color: #000000;
-    border: 1px solid #ffffff;
-}
-
-body[data-theme="ms.vss-web.vsts-theme-hc-dark"] .toggle-slider:before {
-    background-color: #ffffff;
-}
-
-body[data-theme="ms.vss-web.vsts-theme-hc-dark"] .toggle-switch:hover .toggle-slider {
-    border-color: #1aebff;
-}
-
-body[data-theme="ms.vss-web.vsts-theme-hc-dark"] .toggle-switch input:checked + .toggle-slider {
-    background-color: #1aebff;
-    border-color: #1aebff;
-}
-
-body[data-theme="ms.vss-web.vsts-theme-hc-dark"] .toggle-switch input:checked + .toggle-slider:before {
-    background-color: #000000;
-}
-
-body[data-theme="ms.vss-web.vsts-theme-hc-dark"] .toggle-switch input:focus-visible + .toggle-slider {
-    box-shadow: 0 0 0 2px #000000, 0 0 0 4px #ffffff;
-}
-
-/* ===== High Contrast Light Theme Toggle ===== */
-body[data-theme="ms.vss-web.vsts-theme-hc-light"] #wysiwyg-toggle-container {
-    background-color: #ffffff;
-    border-bottom: 2px solid #000000;
-}
-
-body[data-theme="ms.vss-web.vsts-theme-hc-light"] .toggle-label {
-    color: #000000;
-}
-
-body[data-theme="ms.vss-web.vsts-theme-hc-light"] .toggle-label.active {
-    color: #000000;
-    text-decoration: underline;
-}
-
-body[data-theme="ms.vss-web.vsts-theme-hc-light"] .toggle-slider {
-    background-color: #ffffff;
-    border: 2px solid #000000;
-}
-
-body[data-theme="ms.vss-web.vsts-theme-hc-light"] .toggle-slider:before {
-    background-color: #000000;
-}
-
-body[data-theme="ms.vss-web.vsts-theme-hc-light"] .toggle-switch:hover .toggle-slider {
-    border-color: #0078d4;
-}
-
-body[data-theme="ms.vss-web.vsts-theme-hc-light"] .toggle-switch input:checked + .toggle-slider {
-    background-color: #0078d4;
-    border-color: #0078d4;
-}
-
-body[data-theme="ms.vss-web.vsts-theme-hc-light"] .toggle-switch input:checked + .toggle-slider:before {
-    background-color: #ffffff;
-}
-
-body[data-theme="ms.vss-web.vsts-theme-hc-light"] .toggle-switch input:focus-visible + .toggle-slider {
-    box-shadow: 0 0 0 2px #ffffff, 0 0 0 4px #000000;
 }

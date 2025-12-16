@@ -3,11 +3,6 @@ description: AI rules derived by SpecStory from the project AI interaction histo
 globs: *
 ---
 
----
-description: AI coding instructions for Azure DevOps Wiki Editor
-globs: *
----
-
 # Azure DevOps Wiki Editor - AI Coding Guide
 
 ## Project Overview
@@ -104,6 +99,34 @@ word-wrap: break-word;
 font-variant-ligatures: none;
 ```
 
+## Special Character Handling
+
+When switching between WYSIWYG and Markdown, ensure that `[[_TOC_]]` and `[[_TOSP_]]` are not escaped. To prevent Azure DevOps rendering issues:
+
+- In `src/main.ts`, refine the `postprocessAdoMarkers` function.
+- Add regex replacements to convert the escaped forms `\[\[\_TOC\_]]` and `\[\[\_TOSP\_]]` back to their unescaped counterparts. This ensures these elements render correctly. Additionally, handle cases where underscores within the markers are not escaped (e.g., `\[\[_TOC_]]` and `\[\[_TOSP_]]`). The current regex handles optional escaping for brackets, underscores, and closing brackets.
+
+```typescript
+// src/main.ts
+
+function postprocessAdoMarkers(content: string): string {
+    return content
+        // Restore @‹user› back to @<user>
+        .replace(/@‹([^›]+)›/g, '@<$1>')
+        // Restore escaped angle brackets: \< → <
+        .replace(/\\</g, '<')
+        // Restore TOC and TOSP markers with flexible escaping
+        .replace(/\\?\[\\?\[\\?_TOC\\?_\\?\]\\?\]/g, '[[_TOC_]]')
+        .replace(/\\?\[\\?\[\\?_TOSP\\?_\\?\]\\?\]/g, '[[_TOSP_]]');
+}
+```
+
+## UI Updates
+
+The Quote button icon in `src/toolbar/view.ts` has been updated to use a standard double-quote icon, which is more recognizable.
+
+The "Insert Table" icon in `view.ts` has been updated to be a distinct 2x2 grid icon, differentiating it from the "Table Options" icon which remains as the detailed table icon.
+
 ## Removed Features
 
 Removed due to infinite loops/complexity:
@@ -113,3 +136,22 @@ Removed due to infinite loops/complexity:
 ## Research Resources
 
 Use [awesome-research](https://github.com/bthos/awesome-research) as a source of research results that could be used for implementation guidance.
+
+## Development Server
+
+The local development server can be started by running `npm run server`. This will launch the playground at http://localhost:8080/playground.html.
+
+Before running the Robot Framework tests, ensure the test environment is properly set up by running `tests/setup.sh`. This script creates and activates a virtual environment.
+
+## Playground Test Data
+
+The `playground.html` file has been updated with a comprehensive set of test data, including:
+
+*   **ADO Markers:** Standard `[[_TOC_]]` and `[[_TOSP_]]`, plus various escaped forms (`\[\[_TOC_]]`, `\[\[\_TOC\_]]`, etc.) to verify the regex fix.
+*   **Mentions:** Examples with dots and spaces (`@<user1>`, `@<another.user2>`, `@<another user3>`).
+*   **Work Items:** Examples like `#123456`.
+*   **Tables:** Tables with and without mentions.
+*   **Task Lists:** Checked and unchecked items.
+*   **Code Blocks:** A JavaScript code block.
+*   **Headings:** Nested headings to test TOC structure.
+*   **Toolbar Elements:** Examples of elements that can be inserted or configured from the toolbar.

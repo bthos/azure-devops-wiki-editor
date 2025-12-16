@@ -8,3 +8,5 @@ azure-devops-wiki-editor*.zip
 .specstory
 
 .inputs
+.cursorindexingignore
+server.log

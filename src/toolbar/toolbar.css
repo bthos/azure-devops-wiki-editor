@@ -1,126 +1,271 @@
 /* Milkdown Toolbar Styles - Azure DevOps Design */
+/* Uses design tokens from ado-theme.css */
 
 .milkdown-toolbar {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  padding: 8px 12px;
-  background-color: var(--ado-bg-primary, #ffffff);
-  border-bottom: 1px solid var(--ado-border, #d0d0d0);
-  flex-wrap: wrap;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 8px 12px;
+    background-color: var(--ado-surface-bg, #ffffff);
+    border-bottom: var(--ado-border-width, 1px) solid var(--ado-border-color, #eaeaea);
+    flex-wrap: wrap;
 }
 
 .toolbar-group {
-  display: flex;
-  align-items: center;
-  gap: 2px;
+    display: flex;
+    align-items: center;
+    gap: 2px;
 }
 
 .toolbar-separator {
-  width: 1px;
-  height: 24px;
-  background-color: var(--ado-border, #d0d0d0);
-  margin: 0 4px;
+    width: 1px;
+    height: 24px;
+    background-color: var(--ado-border-color, #eaeaea);
+    margin: 0 4px;
 }
 
 .toolbar-button {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 32px;
-  height: 32px;
-  padding: 0;
-  border: 1px solid transparent;
-  background-color: transparent;
-  color: var(--ado-text-primary, #323130);
-  cursor: pointer;
-  border-radius: 2px;
-  transition: background-color 0.1s ease, border-color 0.1s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    padding: 0;
+    border: 1px solid transparent;
+    background-color: transparent;
+    color: var(--ado-text-primary, rgba(0, 0, 0, 0.9));
+    cursor: pointer;
+    border-radius: 2px;
+    transition: background-color 0.1s ease, border-color 0.1s ease;
 }
 
 .toolbar-button:hover {
-  background-color: var(--ado-bg-hover, #f3f2f1);
-  border-color: var(--ado-border, #d0d0d0);
+    background-color: var(--ado-surface-secondary, #faf9f8);
+    border-color: var(--ado-border-color, #eaeaea);
 }
 
 .toolbar-button:active {
-  background-color: var(--ado-bg-pressed, #edebe9);
+    background-color: var(--ado-code-bg, rgba(0, 0, 0, 0.06));
 }
 
 /* Active state for toggled marks (bold, italic, etc.) */
 .toolbar-button.active {
-  background-color: var(--ado-bg-selected, #deecf9);
-  border-color: var(--ado-primary, #0078d4);
-  color: var(--ado-primary, #0078d4);
+    background-color: var(--ado-accent-bg, rgba(0, 120, 212, 0.08));
+    border-color: var(--ado-accent-color, rgba(0, 120, 212, 1));
+    color: var(--ado-accent-color, rgba(0, 120, 212, 1));
 }
 
 .toolbar-button.active:hover {
-  background-color: var(--ado-bg-selected-hover, #c7dff0);
+    background-color: var(--ado-accent-bg-hover, rgba(0, 120, 212, 0.15));
 }
 
 .toolbar-button:focus-visible {
-  outline: 2px solid var(--ado-focus, #0078d4);
-  outline-offset: -2px;
+    outline: 2px solid var(--ado-accent-color, rgba(0, 120, 212, 1));
+    outline-offset: -2px;
 }
 
 .toolbar-button svg {
-  pointer-events: none;
+    pointer-events: none;
 }
 
 .toolbar-text {
-  font-size: 11px;
-  font-weight: 600;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-  pointer-events: none;
-}
-
-/* Dark theme support */
-@media (prefers-color-scheme: dark) {
-  .milkdown-toolbar {
-    background-color: var(--ado-bg-primary, #1e1e1e);
-    border-bottom-color: var(--ado-border, #3e3e3e);
-  }
-
-  .toolbar-separator {
-    background-color: var(--ado-border, #3e3e3e);
-  }
-
-  .toolbar-button {
-    color: var(--ado-text-primary, #cccccc);
-  }
-
-  .toolbar-button:hover {
-    background-color: var(--ado-bg-hover, #2a2a2a);
-    border-color: var(--ado-border, #3e3e3e);
-  }
-
-  .toolbar-button:active {
-    background-color: var(--ado-bg-pressed, #333333);
-  }
-
-  .toolbar-button.active {
-    background-color: var(--ado-bg-selected, #0d3a58);
-    border-color: var(--ado-primary, #4da6ff);
-    color: var(--ado-primary, #4da6ff);
-  }
-
-  .toolbar-button.active:hover {
-    background-color: var(--ado-bg-selected-hover, #0a4d6e);
-  }
+    font-size: 11px;
+    font-weight: 600;
+    font-family: var(--ado-font-family, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif);
+    pointer-events: none;
 }
 
 /* High contrast theme support */
-@media (prefers-contrast: high) {
-  .milkdown-toolbar {
-    border-bottom-width: 2px;
-  }
+:is(
+    body[data-theme="ms.vss-web.vsts-theme-hc-dark"],
+    body[data-theme="ms.vss-web.vsts-theme-hc-light"]
+) .milkdown-toolbar {
+    border-bottom-width: var(--ado-border-width);
+}
 
-  .toolbar-button {
-    border-width: 2px;
-  }
+:is(
+    body[data-theme="ms.vss-web.vsts-theme-hc-dark"],
+    body[data-theme="ms.vss-web.vsts-theme-hc-light"]
+) .toolbar-button {
+    border-width: var(--ado-border-width);
+}
 
-  .toolbar-button:hover,
-  .toolbar-button:focus-visible {
+:is(
+    body[data-theme="ms.vss-web.vsts-theme-hc-dark"],
+    body[data-theme="ms.vss-web.vsts-theme-hc-light"]
+) .toolbar-button:hover,
+:is(
+    body[data-theme="ms.vss-web.vsts-theme-hc-dark"],
+    body[data-theme="ms.vss-web.vsts-theme-hc-light"]
+) .toolbar-button:focus-visible {
     border-color: currentColor;
-  }
+}
+
+/* ==============================================
+   TOOLBAR DROPDOWN
+   ============================================== */
+
+.toolbar-dropdown {
+    position: relative;
+    display: inline-flex;
+}
+
+.toolbar-dropdown .toolbar-button {
+    width: auto;
+    padding: 0 4px;
+    gap: 2px;
+}
+
+.dropdown-arrow {
+    pointer-events: none;
+    opacity: 0.6;
+}
+
+.toolbar-dropdown-menu {
+    display: none;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    z-index: 1000;
+    min-width: 160px;
+    padding: 4px 0;
+    margin-top: 2px;
+    background-color: var(--ado-surface-bg, #ffffff);
+    border: 1px solid var(--ado-border-color, #eaeaea);
+    border-radius: 4px;
+    box-shadow: var(--ado-shadow-md, 0 4px 8px rgba(0, 0, 0, 0.12));
+}
+
+.toolbar-dropdown-menu.show {
+    display: block;
+}
+
+.toolbar-dropdown-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    padding: 6px 12px;
+    border: none;
+    background: transparent;
+    color: var(--ado-text-primary, rgba(0, 0, 0, 0.9));
+    font-size: 13px;
+    font-family: var(--ado-font-family, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif);
+    text-align: left;
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+.toolbar-dropdown-item:hover {
+    background-color: var(--ado-surface-secondary, #faf9f8);
+}
+
+.toolbar-dropdown-item:active {
+    background-color: var(--ado-code-bg, rgba(0, 0, 0, 0.06));
+}
+
+.toolbar-dropdown-item svg {
+    flex-shrink: 0;
+    opacity: 0.7;
+}
+
+.toolbar-dropdown-item-danger {
+    color: var(--ado-danger-color, #a80000);
+}
+
+.toolbar-dropdown-item-danger:hover {
+    background-color: var(--ado-danger-bg, rgba(168, 0, 0, 0.08));
+}
+
+.toolbar-dropdown-separator {
+    height: 1px;
+    margin: 4px 0;
+    background-color: var(--ado-border-color, #eaeaea);
+}
+
+/* High contrast dropdown support */
+:is(
+    body[data-theme="ms.vss-web.vsts-theme-hc-dark"],
+    body[data-theme="ms.vss-web.vsts-theme-hc-light"]
+) .toolbar-dropdown-menu {
+    border-width: var(--ado-border-width);
+}
+
+:is(
+    body[data-theme="ms.vss-web.vsts-theme-hc-dark"],
+    body[data-theme="ms.vss-web.vsts-theme-hc-light"]
+) .toolbar-dropdown-item:hover,
+:is(
+    body[data-theme="ms.vss-web.vsts-theme-hc-dark"],
+    body[data-theme="ms.vss-web.vsts-theme-hc-light"]
+) .toolbar-dropdown-item:focus-visible {
+    outline: 2px solid currentColor;
+    outline-offset: -2px;
+}
+
+/* ==============================================
+   TABLE GRID PICKER
+   ============================================== */
+
+.table-grid-menu {
+    padding: 8px;
+}
+
+.table-grid-label {
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--ado-text-secondary, rgba(0, 0, 0, 0.55));
+    margin-bottom: 8px;
+    text-align: center;
+}
+
+.table-grid {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 2px;
+    padding: 4px;
+    background-color: var(--ado-surface-secondary, #faf9f8);
+    border-radius: 4px;
+}
+
+.table-grid-cell {
+    width: 18px;
+    height: 18px;
+    border: 1px solid var(--ado-border-color, #eaeaea);
+    background-color: var(--ado-surface-bg, #ffffff);
+    border-radius: 2px;
+    cursor: pointer;
+    transition: background-color 0.1s ease, border-color 0.1s ease;
+}
+
+.table-grid-cell:hover {
+    border-color: var(--ado-accent-color, #0078d4);
+}
+
+.table-grid-cell.highlighted {
+    background-color: var(--ado-accent-bg, rgba(0, 120, 212, 0.15));
+    border-color: var(--ado-accent-color, #0078d4);
+}
+
+.table-grid-size {
+    font-size: 11px;
+    color: var(--ado-text-secondary, rgba(0, 0, 0, 0.55));
+    text-align: center;
+    margin-top: 8px;
+    font-family: var(--ado-font-mono, 'Consolas', 'Monaco', monospace);
+}
+
+/* High contrast table grid */
+:is(
+    body[data-theme="ms.vss-web.vsts-theme-hc-dark"],
+    body[data-theme="ms.vss-web.vsts-theme-hc-light"]
+) .table-grid-cell {
+    border-width: 2px;
+}
+
+:is(
+    body[data-theme="ms.vss-web.vsts-theme-hc-dark"],
+    body[data-theme="ms.vss-web.vsts-theme-hc-light"]
+) .table-grid-cell.highlighted {
+    background-color: var(--ado-accent-color, #0078d4);
 }

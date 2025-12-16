@@ -1,7 +1,7 @@
 // Milkdown Core Editor Bundle for Azure DevOps Wiki Editor
 // Custom editor built on @milkdown/kit with Azure DevOps styling
 
-import { Editor, rootCtx, defaultValueCtx, editorViewCtx, serializerCtx, editorViewOptionsCtx } from '@milkdown/kit/core';
+import { Editor, rootCtx, defaultValueCtx, editorViewCtx, serializerCtx, editorViewOptionsCtx, remarkStringifyOptionsCtx } from '@milkdown/kit/core';
 import { commonmark } from '@milkdown/kit/preset/commonmark';
 import { gfm } from '@milkdown/kit/preset/gfm';
 import { history } from '@milkdown/kit/plugin/history';
@@ -13,7 +13,7 @@ import { getMarkdown, replaceAll } from '@milkdown/kit/utils';
 import '@milkdown/kit/prose/view/style/prosemirror.css';
 
 // Import custom Azure DevOps theme
-import { adoTheme, detectAdoTheme, applyDarkTheme, removeDarkTheme } from './theme/ado-theme';
+import { adoTheme, detectAdoTheme, isDarkTheme, applyDarkTheme, removeDarkTheme } from './theme/ado-theme';
 
 // Import ADO syntax extensions
 import { adoSyntaxPlugin } from './syntax';
@@ -29,6 +29,7 @@ export {
     editorViewCtx, 
     serializerCtx, 
     editorViewOptionsCtx,
+    remarkStringifyOptionsCtx,
     commonmark,
     gfm,
     history,
@@ -40,6 +41,7 @@ export {
     // Theme exports
     adoTheme,
     detectAdoTheme,
+    isDarkTheme,
     applyDarkTheme,
     removeDarkTheme,
     // ADO Syntax exports
@@ -68,6 +70,7 @@ if (typeof window !== 'undefined') {
         replaceAll,
         adoTheme,
         detectAdoTheme,
+        isDarkTheme,
         applyDarkTheme,
         removeDarkTheme,
         adoSyntaxPlugin,

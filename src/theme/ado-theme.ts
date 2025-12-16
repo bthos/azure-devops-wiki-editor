@@ -1,8 +1,11 @@
 /**
  * Azure DevOps Theme for Milkdown
  * 
- * A custom Milkdown theme that matches Azure DevOps Wiki styling.
+ * Custom theme matching Azure DevOps Wiki styling.
  * Supports Light, Dark, High Contrast Dark, and High Contrast Light themes.
+ * 
+ * Theming is handled via CSS custom properties that respond to
+ * the data-theme attribute on the body element.
  */
 
 import type { Ctx } from '@milkdown/kit/ctx';
@@ -10,6 +13,11 @@ import { editorViewOptionsCtx } from '@milkdown/kit/core';
 
 // Import the theme CSS
 import './ado-theme.css';
+
+/**
+ * Theme type representing ADO theme variants
+ */
+export type AdoTheme = 'light' | 'dark' | 'hc-dark' | 'hc-light';
 
 /**
  * Azure DevOps theme configuration for Milkdown
@@ -24,7 +32,7 @@ import './ado-theme.css';
  *   .create();
  * ```
  */
-export const adoTheme = (ctx: Ctx) => {
+export const adoTheme = (ctx: Ctx): void => {
     ctx.update(editorViewOptionsCtx, (prev) => ({
         ...prev,
         attributes: {
@@ -39,17 +47,18 @@ export const adoTheme = (ctx: Ctx) => {
 };
 
 /**
- * Helper to detect and apply the current ADO theme
- * Call this after creating the editor to sync with ADO's theme
+ * Detect the current ADO theme from the body's data-theme attribute
  */
-export function detectAdoTheme(): 'light' | 'dark' | 'hc-dark' | 'hc-light' {
+export function detectAdoTheme(): AdoTheme {
     const bodyTheme = document.body.getAttribute('data-theme') || '';
     
     if (bodyTheme.includes('hc-dark')) {
         return 'hc-dark';
-    } else if (bodyTheme.includes('hc-light')) {
+    }
+    if (bodyTheme.includes('hc-light')) {
         return 'hc-light';
-    } else if (bodyTheme.includes('dark')) {
+    }
+    if (bodyTheme.includes('dark')) {
         return 'dark';
     }
     
@@ -57,7 +66,16 @@ export function detectAdoTheme(): 'light' | 'dark' | 'hc-dark' | 'hc-light' {
 }
 
 /**
+ * Check if the current theme is a dark variant
+ */
+export function isDarkTheme(theme?: AdoTheme): boolean {
+    const currentTheme = theme ?? detectAdoTheme();
+    return currentTheme === 'dark' || currentTheme === 'hc-dark';
+}
+
+/**
  * Apply dark theme class to the editor container
+ * Used for standalone contexts where body doesn't have data-theme
  */
 export function applyDarkTheme(editorElement: HTMLElement): void {
     editorElement.classList.add('milkdown-dark-theme');

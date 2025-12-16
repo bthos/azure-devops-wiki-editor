@@ -5,6 +5,7 @@ import {
     Editor, 
     rootCtx, 
     defaultValueCtx, 
+    remarkStringifyOptionsCtx,
     commonmark,
     gfm,
     history,
@@ -13,7 +14,7 @@ import {
     clipboard,
     getMarkdown,
     adoTheme,
-    detectAdoTheme,
+    isDarkTheme,
     adoSyntaxPlugin,
     toolbarPlugin
 } from './editor-bundle';
@@ -213,14 +214,27 @@ function updateToggleLabels(isWysiwyg: boolean): void {
 }
 
 /**
+ * Preprocess markdown to protect @<user> mentions from HTML parsing
+ * Converts @<user> to @‹user› using angle quotes that won't be interpreted as HTML
+ */
+function preprocessMentions(content: string): string {
+    // Replace @<user> with @‹user› (using U+2039 and U+203A single angle quotation marks)
+    return content.replace(/@<([^>]+)>/g, '@‹$1›');
+}
+
+/**
  * Postprocess markdown to restore escaped characters
- * The new syntax plugins handle TOC/TOSP parsing directly,
- * so we only need to unescape special characters here.
+ * Restores @‹user› back to @<user> and unescapes angle brackets
  */
 function postprocessAdoMarkers(content: string): string {
     return content
+        // Restore @‹user› back to @<user>
+        .replace(/@‹([^›]+)›/g, '@<$1>')
         // Restore escaped angle brackets: \< → <
-        .replace(/\\</g, '<');
+        .replace(/\\</g, '<')
+        // Restore TOC and TOSP markers
+        .replace(/\\?\[\\?\[\\?_TOC\\?_\\?\]\\?\]/g, '[[_TOC_]]')
+        .replace(/\\?\[\\?\[\\?_TOSP\\?_\\?\]\\?\]/g, '[[_TOSP_]]');
 }
 
 /**
@@ -228,11 +242,11 @@ function postprocessAdoMarkers(content: string): string {
  */
 async function initializeEditor(textarea: HTMLTextAreaElement, editorDiv: HTMLElement): Promise<void> {
     const form = findClosest(textarea, 'form');
-    const content = textarea.value;
+    // Preprocess content to protect @<user> mentions from HTML parsing
+    const content = preprocessMentions(textarea.value);
     
     // Detect current theme
-    const currentTheme = detectAdoTheme();
-    const isDarkTheme = currentTheme === 'dark' || currentTheme === 'hc-dark';
+    const useDarkTheme = isDarkTheme();
     
     try {
         // Create Milkdown Core editor with plugins
@@ -242,8 +256,14 @@ async function initializeEditor(textarea: HTMLTextAreaElement, editorDiv: HTMLEl
                 // Set the root element
                 ctx.set(rootCtx, editorDiv);
                 
-                // Set default content
+                // Set default content (already preprocessed)
                 ctx.set(defaultValueCtx, content);
+                
+                // Configure markdown serializer to use '-' for bullet lists (Azure DevOps standard)
+                ctx.set(remarkStringifyOptionsCtx, {
+                    bullet: '-',
+                    bulletOther: '*',
+                });
                 
                 // Add markdown listener for syncing to textarea
                 ctx.get(listenerCtx).markdownUpdated((_ctx, markdown, _prevMarkdown) => {
@@ -268,7 +288,7 @@ async function initializeEditor(textarea: HTMLTextAreaElement, editorDiv: HTMLEl
         window.wikiEditorInstance = editor;
         
         // Apply dark theme class if needed
-        if (isDarkTheme) {
+        if (useDarkTheme) {
             editorDiv.classList.add('milkdown-dark-theme');
         }
         

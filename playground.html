@@ -334,40 +334,70 @@
             
             <div class="we-ta-container">
                 <textarea placeholder="Enter markdown content here...">
-# Test Document
+# 🧪 Azure DevOps Wiki Editor Playground
 
 [[_TOC_]]
 
-## Section 1
-More content here.
+## 📌 ADO Markers
+Here are the special Azure DevOps markers supported by the editor.
+
+### Table of Contents
+The `[[_TOC_]]` marker above generates the table of contents.
+
+### Table of Sub-Pages
+The `[[_TOSP_]]` marker generates a list of sub-pages (rendered as a placeholder here).
 
 [[_TOSP_]]
 
-## Section 2
-Hello @<user1>, this is a test.
-Testing @<another.user2> and some content.
-And @<another user3>
+### Escaped Markers (Edge Cases)
+These should render as text, not widgets, or be handled correctly by the parser/serializer.
+1. Escaped brackets: \[\[_TOC_]]
+2. Fully escaped: \[\[\_TOC\_]]
+3. Mixed escaping: \[\[_TOSP_]]
 
-Testing tables with @
+## 👥 Mentions & Work Items
+- **User Mention:** Hello @<user1>, and @<Jane Doe>!
+- **Work Item:** working on #123456 and #789.
+
+## 📊 Tables
+### With Mentions
 | Name | Role | Status |
 |------|------|--------|
-| @<johndoe> | Developer | Active |
-| @<jane.smith> | Designer | Active |
+| @<johndoe> | Developer | 🟢 Active |
+| @<jane.smith> | Designer | 🟡 Away |
 
-## Section 3
-### Section 3.1
-- [ ] Task 1
-- [x] Task 2 (completed)
-- [ ] Task 3
+### Standard
+| ID | Category | Value |
+|----|----------|-------|
+| 1  | A        | 100   |
+| 2  | B        | 200   |
 
-### Section 3.2
-```javascript
-console.log("Hello World!");
+## ✅ Task Lists
+- [x] Completed task
+- [ ] Pending task
+- [ ] Another pending task
+
+## 💻 Code
+Inline code: `const x = 1;`
+
+Block code:
+```typescript
+function hello(name: string) {
+    console.log(`Hello, ${name}!`);
+}
 ```
 
-### Section 3.3
-#### Section 3.3.1
+## 🎨 Formatting & Media
+**Bold**, *Italic*, ~~Strikethrough~~
 
+> 💡 **Note:** This is a blockquote useful for calling out information.
+
+---
+
+### Links & Images
+[Google](https://google.com)
+
+![Placeholder](https://via.placeholder.com/150x50)
                 </textarea>
             </div>
         </form>

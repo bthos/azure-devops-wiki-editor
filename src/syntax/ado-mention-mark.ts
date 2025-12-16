@@ -1,8 +1,11 @@
 /**
  * ADO User Mention Mark
  * 
- * Parses @<user name> and renders as a styled mention.
- * Serializes back to @<user name> in markdown.
+ * Parses @‹user name› (preprocessed from @<user name>) and renders as a styled mention.
+ * Serializes back to @‹user name› in markdown (postprocessed to @<user name>).
+ * 
+ * Note: We use ‹ (U+2039) and › (U+203A) single angle quotation marks internally
+ * because < and > are treated as HTML by the markdown parser.
  */
 
 import { $mark, $remark, $inputRule } from '@milkdown/kit/utils';
@@ -10,7 +13,7 @@ import { InputRule } from '@milkdown/kit/prose/inputrules';
 import type { Mark } from '@milkdown/kit/prose/model';
 
 /**
- * Remark plugin to parse @<user> mentions
+ * Remark plugin to parse @‹user› mentions (preprocessed format)
  */
 export const remarkMention = $remark('remarkMention', () => {
   return () => {
@@ -18,7 +21,8 @@ export const remarkMention = $remark('remarkMention', () => {
       visitTextNodes(tree, (node: any, index: number, parent: any) => {
         if (!parent || index === undefined || !node.value) return;
         
-        const regex = /@<([^>]+)>/g;
+        // Match @‹user› format (preprocessed from @<user>)
+        const regex = /@‹([^›]+)›/g;
         const value = node.value;
         const matches: any[] = [];
         let lastIndex = 0;
@@ -100,22 +104,25 @@ export const mentionMark = $mark('userMention', () => ({
   
   toMarkdown: {
     match: (mark: Mark) => mark.type.name === 'userMention',
-    runner: (state: any, mark: Mark) => {
-      state.withMark(mark, 'text');
+    runner: (state: any, mark: Mark, node: any) => {
+      // The text content already contains @‹user›, just pass it through
+      // Return true to indicate we handled this mark (prevents default handling)
     },
   },
 }));
 
 /**
- * Input rule: typing @<name> followed by space creates mention
+ * Input rule: typing @<name> or @‹name› followed by space creates mention
+ * Converts to internal @‹name› format
  */
 export const mentionInputRule = $inputRule((ctx) => {
   return new InputRule(
-    /@<([^>]+)>(\s)$/,
+    /@[<‹]([^>›]+)[>›](\s)$/,
     (state, match, start, end) => {
       const userName = match[1];
       const markType = mentionMark.type(ctx);
-      const fullText = `@<${userName}>`;
+      // Use internal format with angle quotes
+      const fullText = `@‹${userName}›`;
       
       const tr = state.tr
         .delete(start, end)
