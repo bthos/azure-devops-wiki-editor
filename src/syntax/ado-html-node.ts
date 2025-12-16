@@ -14,6 +14,7 @@ import { $inputRule } from '@milkdown/kit/utils';
  * Remark plugin to parse HTML blocks during markdown parsing
  * 
  * Detects raw HTML blocks in the markdown content and converts them to adoHtml nodes.
+ * Only converts HTML that is in a block context (direct child of root or other block containers).
  */
 export const remarkAdoHtml = $remark('remarkAdoHtml', () => {
   return () => {
@@ -21,6 +22,14 @@ export const remarkAdoHtml = $remark('remarkAdoHtml', () => {
       visitNodes(tree, (node: any, index: number, parent: any) => {
         // Match standalone HTML nodes
         if (node.type === 'html' && parent && index !== undefined) {
+          // Only convert HTML that's in a block context (not inside paragraphs or other inline contexts)
+          // Block contexts: root, blockquote, listItem, etc.
+          const blockParentTypes = ['root', 'blockquote', 'listItem', 'tableCell', 'footnoteDefinition'];
+          if (!blockParentTypes.includes(parent.type)) {
+            // Parent is not a block context (e.g., it's a paragraph), skip conversion
+            return;
+          }
+          
           const htmlContent = node.value || '';
           // Only convert block-level HTML (not inline fragments)
           if (htmlContent.trim().startsWith('<') && !isInlineHtml(htmlContent)) {

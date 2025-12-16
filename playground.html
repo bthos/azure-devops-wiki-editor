@@ -1,339 +1,577 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Editor Test - Milkdown</title>
+    <title>Azure DevOps Wiki Editor - Playground</title>
     <!-- Milkdown CSS -->
     <link rel="stylesheet" href="dist/custom-styles.css" />
     <link rel="stylesheet" href="dist/milkdown-editor.css" />
     <style>
+        /* Reset and base */
         html, body {
             height: 100%;
             margin: 0;
-            overflow: hidden; /* Prevent page scroll */
+            overflow: hidden;
         }
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            padding: 20px;
+            font-family: 'Segoe UI', 'Segoe UI Web (West European)', -apple-system, BlinkMacSystemFont, Roboto, 'Helvetica Neue', sans-serif;
             background: #f5f5f5;
+            color: rgba(0, 0, 0, 0.9);
             transition: background-color 0.3s, color 0.3s;
+        }
+        
+        /* === Azure DevOps Layout Structure === */
+        
+        /* Full page container */
+        .ado-page {
             display: flex;
             flex-direction: column;
-            box-sizing: border-box;
-        }
-        h1 {
-            color: #323130;
-            margin-bottom: 20px;
+            height: 100%;
         }
         
-        /* Theme switcher */
-        .theme-switcher {
+        /* Top navigation bar (like Azure DevOps header) */
+        .ado-header {
+            flex-shrink: 0;
+            height: 48px;
+            background: #0078d4;
             display: flex;
             align-items: center;
+            padding: 0 16px;
             gap: 12px;
-            margin-bottom: 20px;
-            padding: 12px 16px;
-            background: white;
-            border-radius: 8px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-        }
-        .theme-switcher label {
-            font-weight: 600;
-            color: #323130;
-        }
-        .theme-switcher select {
-            padding: 8px 12px;
-            border: 1px solid #8a8886;
-            border-radius: 4px;
-            font-size: 14px;
-            cursor: pointer;
-            background: white;
-        }
-        .theme-switcher select:focus {
-            outline: none;
-            border-color: #0078d4;
         }
         
-        /* Dark theme page styles */
+        .ado-header .logo {
+            color: white;
+            font-weight: 600;
+            font-size: 16px;
+        }
+        
+        .ado-header .breadcrumb {
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 14px;
+        }
+        
+        /* Theme switcher in header */
+        .theme-switcher {
+            margin-left: auto;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .theme-switcher label {
+            color: white;
+            font-size: 13px;
+        }
+        
+        .theme-switcher select {
+            padding: 4px 8px;
+            border: 1px solid #0078d4;
+            border-radius: 4px;
+            font-size: 13px;
+            cursor: pointer;
+            background: #ffffff;
+            color: #323130;
+        }
+        
+        .theme-switcher select:focus {
+            outline: none;
+            border-color: #005a9e;
+        }
+        
+        .theme-switcher select option {
+            background: #ffffff;
+            color: #323130;
+        }
+        
+        /* Content area with splitter */
+        .ado-content {
+            flex: 1;
+            display: flex;
+            min-height: 0;
+        }
+        
+        /* Left navigation pane */
+        .ado-nav-pane {
+            width: 240px;
+            flex-shrink: 0;
+            background: #ffffff;
+            border-right: 1px solid #edebe9;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .nav-header {
+            padding: 12px 16px;
+            border-bottom: 1px solid #edebe9;
+            font-weight: 600;
+            font-size: 14px;
+            color: #323130;
+        }
+        
+        .nav-tree {
+            padding: 8px;
+            flex: 1;
+            overflow-y: auto;
+        }
+        
+        .nav-item {
+            display: flex;
+            align-items: center;
+            padding: 6px 12px;
+            border-radius: 4px;
+            font-size: 14px;
+            color: #323130;
+            cursor: pointer;
+            margin-bottom: 2px;
+        }
+        
+        .nav-item:hover {
+            background: #f3f2f1;
+        }
+        
+        .nav-item.active {
+            background: #e5f1fb;
+            color: #0078d4;
+        }
+        
+        .nav-icon {
+            margin-right: 8px;
+            opacity: 0.8;
+        }
+        
+        /* Flexible pane (mimics vss-Splitter--pane-flexible) */
+        .vss-Splitter--pane-flexible {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            position: relative;
+        }
+        
+        /* Wiki editor container */
+        .wiki-editor {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            min-height: 0;
+            overflow: hidden;
+            background: #ffffff;
+        }
+        
+        /* Page header with title and buttons */
+        .bolt-header-with-commandbar {
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            padding: 8px 16px;
+            background: #ffffff;
+            border-bottom: 1px solid #edebe9;
+        }
+        
+        .bolt-header-title {
+            flex: 1;
+            display: flex;
+            align-items: center;
+        }
+        
+        .we-pagename-input {
+            font-size: 18px;
+            font-weight: 600;
+            border: 1px solid transparent;
+            padding: 4px 8px;
+            border-radius: 4px;
+            background: transparent;
+            width: 300px;
+        }
+        
+        .we-pagename-input:focus {
+            outline: none;
+            border-color: #0078d4;
+            background: #ffffff;
+        }
+        
+        .bolt-header-commandbar {
+            display: flex;
+            gap: 8px;
+        }
+        
+        .we-close-btn {
+            padding: 6px 16px;
+            border: 1px solid #8a8886;
+            border-radius: 2px;
+            background: #ffffff;
+            color: #323130;
+            font-size: 14px;
+            cursor: pointer;
+        }
+        
+        .we-close-btn:hover {
+            background: #f3f2f1;
+        }
+        
+        .we-save-btn {
+            padding: 6px 16px;
+            border: 1px solid #0078d4;
+            border-radius: 2px;
+            background: #0078d4;
+            color: #ffffff;
+            font-size: 14px;
+            cursor: pointer;
+        }
+        
+        .we-save-btn:hover {
+            background: #106ebe;
+        }
+        
+        /* Markdown toolbar */
+        .wiki-markdown-toolbar {
+            flex-shrink: 0;
+            padding: 8px 12px;
+            background: #f3f2f1;
+            border-bottom: 1px solid #edebe9;
+            display: flex;
+            gap: 4px;
+            align-items: center;
+        }
+        
+        .wiki-markdown-toolbar .toolbar-btn {
+            padding: 6px 10px;
+            border: 1px solid transparent;
+            border-radius: 2px;
+            background: transparent;
+            color: #323130;
+            font-size: 13px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        
+        .wiki-markdown-toolbar .toolbar-btn:hover {
+            background: #ffffff;
+            border-color: #c8c6c4;
+        }
+        
+        .wiki-markdown-toolbar .separator {
+            width: 1px;
+            height: 24px;
+            background: #c8c6c4;
+            margin: 0 4px;
+        }
+        
+        /* Text area and preview container */
+        .we-text-preview-container {
+            flex: 1;
+            display: flex;
+            min-height: 0;
+            overflow: hidden;
+        }
+        
+        .we-ta-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            min-height: 0;
+            overflow: hidden;
+        }
+        
+        .we-ta-container textarea {
+            flex: 1;
+            padding: 16px;
+            font-family: Menlo, Consolas, 'Courier New', monospace;
+            font-size: 14px;
+            border: none;
+            resize: none;
+            outline: none;
+            min-height: 0;
+        }
+        
+        /* === Dark Theme === */
         body[data-theme="ms.vss-web.vsts-theme-dark"] {
             background: #1b1a19;
             color: #f3f2f1;
         }
-        body[data-theme="ms.vss-web.vsts-theme-dark"] h1 {
-            color: #f3f2f1;
-        }
-        body[data-theme="ms.vss-web.vsts-theme-dark"] .theme-switcher {
+        
+        body[data-theme="ms.vss-web.vsts-theme-dark"] .ado-header {
             background: #252423;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
         }
-        body[data-theme="ms.vss-web.vsts-theme-dark"] .theme-switcher label {
+        
+        body[data-theme="ms.vss-web.vsts-theme-dark"] .ado-nav-pane {
+            background: #252423;
+            border-color: #3b3a39;
+        }
+        
+        body[data-theme="ms.vss-web.vsts-theme-dark"] .nav-header {
+            border-color: #3b3a39;
             color: #f3f2f1;
         }
-        body[data-theme="ms.vss-web.vsts-theme-dark"] .theme-switcher select {
+        
+        body[data-theme="ms.vss-web.vsts-theme-dark"] .nav-item {
+            color: #f3f2f1;
+        }
+        
+        body[data-theme="ms.vss-web.vsts-theme-dark"] .nav-item:hover {
+            background: #323130;
+        }
+        
+        body[data-theme="ms.vss-web.vsts-theme-dark"] .nav-item.active {
+            background: #2b3e50;
+            color: #4fa3ff;
+        }
+        
+        body[data-theme="ms.vss-web.vsts-theme-dark"] .wiki-editor {
+            background: #252423;
+        }
+        
+        body[data-theme="ms.vss-web.vsts-theme-dark"] .bolt-header-with-commandbar {
+            background: #252423;
+            border-color: #3b3a39;
+        }
+        
+        body[data-theme="ms.vss-web.vsts-theme-dark"] .we-pagename-input {
+            color: #f3f2f1;
+        }
+        
+        body[data-theme="ms.vss-web.vsts-theme-dark"] .we-pagename-input:focus {
             background: #1b1a19;
+        }
+        
+        body[data-theme="ms.vss-web.vsts-theme-dark"] .we-close-btn {
+            background: #252423;
             border-color: #605e5c;
             color: #f3f2f1;
         }
-        body[data-theme="ms.vss-web.vsts-theme-dark"] .wiki-editor {
-            background: #252423;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
-        }
-        body[data-theme="ms.vss-web.vsts-theme-dark"] .we-toolbar-container {
+        
+        body[data-theme="ms.vss-web.vsts-theme-dark"] .wiki-markdown-toolbar {
             background: #323130;
             border-color: #3b3a39;
         }
-        body[data-theme="ms.vss-web.vsts-theme-dark"] .we-toolbar-container button {
-            background: #252423;
-            border-color: #605e5c;
+        
+        body[data-theme="ms.vss-web.vsts-theme-dark"] .wiki-markdown-toolbar .toolbar-btn {
             color: #f3f2f1;
-        }
-        body[data-theme="ms.vss-web.vsts-theme-dark"] .we-ta-container textarea {
-            background: #1b1a19;
-            border-color: #605e5c;
-            color: #f3f2f1;
-        }
-        body[data-theme="ms.vss-web.vsts-theme-dark"] .we-text-preview-container {
-            background: #1b1a19;
-            border-color: #3b3a39;
-            color: #a19f9d;
-        }
-        body[data-theme="ms.vss-web.vsts-theme-dark"] .instructions {
-            background: #3d3225;
-            border-color: #c19c00;
-            color: #f3f2f1;
-        }
-        body[data-theme="ms.vss-web.vsts-theme-dark"] .instructions h3 {
-            color: #ffb900;
         }
         
-        /* High Contrast Dark theme page styles */
+        body[data-theme="ms.vss-web.vsts-theme-dark"] .wiki-markdown-toolbar .toolbar-btn:hover {
+            background: #252423;
+            border-color: #605e5c;
+        }
+        
+        body[data-theme="ms.vss-web.vsts-theme-dark"] .wiki-markdown-toolbar .separator {
+            background: #605e5c;
+        }
+        
+        body[data-theme="ms.vss-web.vsts-theme-dark"] .we-ta-container textarea {
+            background: #1b1a19;
+            color: #f3f2f1;
+        }
+        
+        body[data-theme="ms.vss-web.vsts-theme-dark"] .theme-switcher select {
+            background: #323130;
+            color: #f3f2f1;
+            border-color: #605e5c;
+        }
+        
+        body[data-theme="ms.vss-web.vsts-theme-dark"] .theme-switcher select option {
+            background: #323130;
+            color: #f3f2f1;
+        }
+        
+        /* === High Contrast Dark Theme === */
         body[data-theme="ms.vss-web.vsts-theme-hc-dark"] {
             background: #000000;
             color: #ffffff;
         }
-        body[data-theme="ms.vss-web.vsts-theme-hc-dark"] h1 {
-            color: #ffffff;
-        }
-        body[data-theme="ms.vss-web.vsts-theme-hc-dark"] .theme-switcher {
+        
+        body[data-theme="ms.vss-web.vsts-theme-hc-dark"] .ado-header {
             background: #000000;
-            border: 2px solid #ffffff;
-            box-shadow: none;
+            border-bottom: 2px solid #ffffff;
         }
+        
+        body[data-theme="ms.vss-web.vsts-theme-hc-dark"] .ado-nav-pane {
+            background: #000000;
+            border-color: #ffffff;
+            border-width: 2px;
+        }
+        
+        body[data-theme="ms.vss-web.vsts-theme-hc-dark"] .wiki-editor {
+            background: #000000;
+        }
+        
+        body[data-theme="ms.vss-web.vsts-theme-hc-dark"] .bolt-header-with-commandbar {
+            background: #000000;
+            border-color: #ffffff;
+            border-width: 2px;
+        }
+        
+        body[data-theme="ms.vss-web.vsts-theme-hc-dark"] .we-pagename-input {
+            color: #ffffff;
+            border-color: #ffffff;
+            border-width: 2px;
+        }
+        
+        body[data-theme="ms.vss-web.vsts-theme-hc-dark"] .we-close-btn,
+        body[data-theme="ms.vss-web.vsts-theme-hc-dark"] .we-save-btn {
+            border-width: 2px;
+        }
+        
+        body[data-theme="ms.vss-web.vsts-theme-hc-dark"] .wiki-markdown-toolbar {
+            background: #000000;
+            border-color: #ffffff;
+            border-width: 2px;
+        }
+        
+        body[data-theme="ms.vss-web.vsts-theme-hc-dark"] .we-ta-container textarea {
+            background: #000000;
+            color: #ffffff;
+            border: 2px solid #ffffff;
+        }
+        
         body[data-theme="ms.vss-web.vsts-theme-hc-dark"] .theme-switcher label {
             color: #ffffff;
         }
+        
         body[data-theme="ms.vss-web.vsts-theme-hc-dark"] .theme-switcher select {
             background: #000000;
-            border: 2px solid #ffffff;
             color: #ffffff;
-        }
-        body[data-theme="ms.vss-web.vsts-theme-hc-dark"] .wiki-editor {
-            background: #000000;
             border: 2px solid #ffffff;
-            box-shadow: none;
-        }
-        body[data-theme="ms.vss-web.vsts-theme-hc-dark"] .we-toolbar-container {
-            background: #000000;
-            border-color: #ffffff;
-        }
-        body[data-theme="ms.vss-web.vsts-theme-hc-dark"] .we-toolbar-container button {
-            background: #000000;
-            border: 2px solid #ffffff;
-            color: #ffffff;
-        }
-        body[data-theme="ms.vss-web.vsts-theme-hc-dark"] .we-ta-container textarea {
-            background: #000000;
-            border: 2px solid #ffffff;
-            color: #ffffff;
-        }
-        body[data-theme="ms.vss-web.vsts-theme-hc-dark"] .we-text-preview-container {
-            background: #000000;
-            border: 2px solid #ffffff;
-            color: #ffffff;
-        }
-        body[data-theme="ms.vss-web.vsts-theme-hc-dark"] .instructions {
-            background: #000000;
-            border: 2px solid #1aebff;
-            color: #ffffff;
-        }
-        body[data-theme="ms.vss-web.vsts-theme-hc-dark"] .instructions h3 {
-            color: #1aebff;
         }
         
-        /* High Contrast Light theme page styles */
+        body[data-theme="ms.vss-web.vsts-theme-hc-dark"] .theme-switcher select option {
+            background: #000000;
+            color: #ffffff;
+        }
+        
+        /* === High Contrast Light Theme === */
         body[data-theme="ms.vss-web.vsts-theme-hc-light"] {
             background: #ffffff;
             color: #000000;
         }
-        body[data-theme="ms.vss-web.vsts-theme-hc-light"] h1 {
+        
+        body[data-theme="ms.vss-web.vsts-theme-hc-light"] .ado-header {
+            background: #ffffff;
+            border-bottom: 2px solid #000000;
+        }
+        
+        body[data-theme="ms.vss-web.vsts-theme-hc-light"] .ado-header .logo,
+        body[data-theme="ms.vss-web.vsts-theme-hc-light"] .ado-header .breadcrumb {
             color: #000000;
         }
-        body[data-theme="ms.vss-web.vsts-theme-hc-light"] .theme-switcher {
-            background: #ffffff;
-            border: 2px solid #000000;
-            box-shadow: none;
-        }
+        
         body[data-theme="ms.vss-web.vsts-theme-hc-light"] .theme-switcher label {
             color: #000000;
         }
+        
         body[data-theme="ms.vss-web.vsts-theme-hc-light"] .theme-switcher select {
             background: #ffffff;
-            border: 2px solid #000000;
             color: #000000;
+            border-color: #000000;
+            border-width: 2px;
         }
-        body[data-theme="ms.vss-web.vsts-theme-hc-light"] .wiki-editor {
-            background: #ffffff;
-            border: 2px solid #000000;
-            box-shadow: none;
+        
+        body[data-theme="ms.vss-web.vsts-theme-hc-light"] .ado-nav-pane {
+            border-color: #000000;
+            border-width: 2px;
         }
-        body[data-theme="ms.vss-web.vsts-theme-hc-light"] .we-toolbar-container {
+        
+        body[data-theme="ms.vss-web.vsts-theme-hc-light"] .bolt-header-with-commandbar {
+            border-color: #000000;
+            border-width: 2px;
+        }
+        
+        body[data-theme="ms.vss-web.vsts-theme-hc-light"] .wiki-markdown-toolbar {
             background: #ffffff;
             border-color: #000000;
+            border-width: 2px;
         }
-        body[data-theme="ms.vss-web.vsts-theme-hc-light"] .we-toolbar-container button {
-            background: #ffffff;
-            border: 2px solid #000000;
-            color: #000000;
-        }
+        
         body[data-theme="ms.vss-web.vsts-theme-hc-light"] .we-ta-container textarea {
-            background: #ffffff;
             border: 2px solid #000000;
-            color: #000000;
-        }
-        body[data-theme="ms.vss-web.vsts-theme-hc-light"] .we-text-preview-container {
-            background: #ffffff;
-            border: 2px solid #000000;
-            color: #000000;
-        }
-        
-        .wiki-editor {
-            background: white;
-            border-radius: 8px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-            overflow: hidden;
-            /* Flex to fill remaining space */
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            min-height: 0; /* Allow shrinking */
-        }
-        
-        /* When WYSIWYG mode is active, hide textarea container and form elements */
-        .wiki-editor:has(#milkdown-editor[style*="display: block"]) .we-ta-container {
-            display: none !important;
-        }
-        .wiki-editor:has(#milkdown-editor[style*="display: block"]) .we-toolbar-container {
-            display: none !important;
-        }
-        .wiki-editor:has(#milkdown-editor[style*="display: block"]) form {
-            display: none !important;
-        }
-        
-        /* Ensure form fills the wiki-editor */
-        .wiki-editor form {
-            display: flex;
-            flex-direction: column;
-            flex: 1;
-            min-height: 0;
-            overflow: hidden;
-        }
-        
-        /* Page header elements - don't flex */
-        h1, .theme-switcher {
-            flex-shrink: 0;
-        }
-        /* Simulate ADO toolbar */
-        .we-toolbar-container {
-            padding: 10px;
-            background: #f3f2f1;
-            border-bottom: 1px solid #e1e1e1;
-            display: flex;
-            gap: 8px;
-            align-items: center;
-        }
-        .we-toolbar-container button {
-            padding: 6px 12px;
-            background: white;
-            border: 1px solid #c8c6c4;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 13px;
-        }
-        .we-toolbar-container button:hover {
-            background: #f3f2f1;
-        }
-        .we-toolbar-container button[type="submit"] {
-            margin-left: auto;
-            background: #0078d4;
-            color: white;
-            border-color: #0078d4;
-        }
-        .we-toolbar-container button[type="submit"]:hover {
-            background: #106ebe;
-        }
-        .we-ta-container {
-            padding: 10px;
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            min-height: 0;
-            overflow: auto;
-        }
-        .we-ta-container textarea {
-            width: 100%;
-            flex: 1;
-            padding: 12px;
-            font-family: 'Consolas', 'Monaco', monospace;
-            font-size: 14px;
-            border: 1px solid #c8c6c4;
-            border-radius: 4px;
-            resize: none;
-            box-sizing: border-box;
-        }
-        /* Milkdown editor container - occupies same space as textarea */
-        #milkdown-editor {
-            flex: 1;
-            min-height: 0;
-            overflow: auto;
-            display: none; /* Hidden by default, shown via JS */
-        }
-        #milkdown-editor .milkdown {
-            height: 100%;
-            display: flex;
-            flex-direction: column;
-        }
-        #milkdown-editor .milkdown .editor {
-            flex: 1;
-            overflow: auto;
         }
     </style>
 </head>
 <body>
-    <h1>🖊️ Azure DevOps Wiki Editor Test (Milkdown)</h1>
-    
-    <div class="theme-switcher">
-        <label for="themeSelect">🎨 Theme:</label>
-        <select id="themeSelect">
-            <option value="">Light (default)</option>
-            <option value="ms.vss-web.vsts-theme-dark">Dark</option>
-            <option value="ms.vss-web.vsts-theme-hc-dark">High Contrast Dark</option>
-            <option value="ms.vss-web.vsts-theme-hc-light">High Contrast Light</option>
-        </select>
-    </div>
-
-    <div class="wiki-editor">
-        <form id="wikiForm" onsubmit="event.preventDefault(); alert('Form content:\n\n' + document.querySelector('.we-ta-container textarea').value);">
-            <!-- Simulated ADO toolbar -->
-            <div class="we-toolbar-container">
-                <button type="button">Bold</button>
-                <button type="button">Italic</button>
-                <button type="button">Link</button>
-                <button type="button">Image</button>
-                <button type="button">Code</button>
-                <button type="submit">Save Changes</button>
+    <!-- Azure DevOps Page Structure -->
+    <div class="ado-page">
+        <!-- Top Navigation Bar -->
+        <div class="ado-header">
+            <span class="logo">Azure DevOps</span>
+            <span class="breadcrumb">MyOrg / MyProject / Overview / Wiki / Page 1</span>
+            
+            <div class="theme-switcher">
+                <label for="themeSelect">Theme:</label>
+                <select id="themeSelect">
+                    <option value="">Light (default)</option>
+                    <option value="ms.vss-web.vsts-theme-dark">Dark</option>
+                    <option value="ms.vss-web.vsts-theme-hc-dark">High Contrast Dark</option>
+                    <option value="ms.vss-web.vsts-theme-hc-light">High Contrast Light</option>
+                </select>
+            </div>
+        </div>
+        
+        <!-- Content Area with Splitter -->
+        <div class="ado-content">
+            <!-- Left Navigation Pane -->
+            <div class="ado-nav-pane">
+                <div class="nav-header">📚 Wiki Pages</div>
+                <div class="nav-tree">
+                    <div class="nav-item active">
+                        <span class="nav-icon">🏠</span>
+                        <span>Page 1</span>
+                    </div>
+                    <div class="nav-item">
+                        <span class="nav-icon">📄</span>
+                        <span>Page 2</span>
+                    </div>
+                    <div class="nav-item">
+                        <span class="nav-icon">📄</span>
+                        <span>Getting Started</span>
+                    </div>
+                    <div class="nav-item">
+                        <span class="nav-icon">📁</span>
+                        <span>Documentation</span>
+                    </div>
+                </div>
             </div>
             
-            <div class="we-ta-container">
-                <textarea placeholder="Enter markdown content here...">
+            <!-- Flexible Pane (mimics vss-Splitter--pane-flexible) -->
+            <div class="vss-Splitter--pane-flexible relative">
+                <!-- Wiki Editor Container -->
+                <div class="wiki-editor">
+                    <!-- Toggle will be injected here by main.js -->
+                    
+                    <!-- Page Header -->
+                    <div class="bolt-header-with-commandbar bolt-header">
+                        <div class="bolt-header-title">
+                            <input type="text" class="we-pagename-input" value="Page 1" placeholder="Page title" aria-label="Page title">
+                        </div>
+                        <div class="bolt-header-commandbar">
+                            <button class="we-close-btn">Close</button>
+                            <button class="we-save-btn">Save</button>
+                        </div>
+                    </div>
+                    
+                    <!-- Markdown Toolbar (visible in markdown mode) -->
+                    <div class="wiki-markdown-toolbar we-toolbar">
+                        <button class="toolbar-btn"><b>B</b></button>
+                        <button class="toolbar-btn"><i>I</i></button>
+                        <button class="toolbar-btn">🔗</button>
+                        <span class="separator"></span>
+                        <button class="toolbar-btn">H1</button>
+                        <button class="toolbar-btn">H2</button>
+                        <button class="toolbar-btn">H3</button>
+                        <span class="separator"></span>
+                        <button class="toolbar-btn">• List</button>
+                        <button class="toolbar-btn">1. List</button>
+                        <button class="toolbar-btn">☑ Task</button>
+                        <span class="separator"></span>
+                        <button class="toolbar-btn">📊 Table</button>
+                        <button class="toolbar-btn">&lt;/&gt; Code</button>
+                    </div>
+                    
+                    <!-- Text Area Container (visible in markdown mode) -->
+                    <div class="we-text-preview-container">
+                        <div class="we-ta-container">
+                            <textarea placeholder="Enter markdown content here...">
 # 🧪 Azure DevOps Wiki Editor Playground
 
 [[_TOC_]]
@@ -398,9 +636,12 @@ function hello(name: string) {
 [Google](https://google.com)
 
 ![Placeholder](https://via.placeholder.com/150x50)
-                </textarea>
+                            </textarea>
+                        </div>
+                    </div>
+                </div>
             </div>
-        </form>
+        </div>
     </div>
     
     <script>

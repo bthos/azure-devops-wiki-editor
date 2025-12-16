@@ -59,6 +59,20 @@
     background-color: var(--ado-accent-bg-hover, rgba(0, 120, 212, 0.15));
 }
 
+/* Disabled state for buttons that cannot be used in current context */
+.toolbar-button:disabled,
+.toolbar-button.disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+    pointer-events: none;
+}
+
+.toolbar-button:disabled:hover,
+.toolbar-button.disabled:hover {
+    background-color: transparent;
+    border-color: transparent;
+}
+
 .toolbar-button:focus-visible {
     outline: 2px solid var(--ado-accent-color, rgba(0, 120, 212, 1));
     outline-offset: -2px;

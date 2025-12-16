@@ -244,44 +244,79 @@ body[data-theme="ms.vss-web.vsts-theme-hc-dark"] .toggle-switch input:checked + 
 }
 
 /* ==============================================
-   EDITOR CONTAINER LAYOUT
+   EDITOR CONTAINER LAYOUT (Azure DevOps Integration)
    ============================================== */
 
-#milkdown-editor {
-    margin-top: 0;
-    border: none;
-    flex: 1;
-    min-height: 200px;
-    overflow: hidden;
-    display: flex;
-    flex-direction: column;
-    height: 0;
-}
-
-#milkdown-editor > div,
-#milkdown-editor .milkdown {
-    flex: 1;
+/* Parent container of .wiki-editor in Azure DevOps
+   This is the flexible pane in the splitter that contains the editor */
+.vss-Splitter--pane-flexible:has(.wiki-editor) {
     display: flex;
     flex-direction: column;
     overflow: hidden;
-    min-height: 0;
 }
 
-#milkdown-editor .ProseMirror {
-    flex: 1;
-    overflow-y: auto;
-    overflow-x: hidden;
-    min-height: 0;
-    max-height: 100%;
-    padding: 16px;
-    outline: none;
-}
-
+/* The wiki-editor container - main flex container for the editing area */
 .wiki-editor {
     display: flex;
     flex-direction: column;
     overflow: hidden;
     height: 100%;
+    min-height: 0;
+    flex: 1;
+}
+
+/* Fixed header elements - should NOT scroll */
+.wiki-editor #wysiwyg-toggle-container,
+.wiki-editor .save-in-progress,
+.wiki-editor .bolt-header-with-commandbar,
+.wiki-editor .bolt-header,
+.wiki-editor .wiki-markdown-toolbar {
+    flex-shrink: 0;
+}
+
+/* Milkdown editor container - takes remaining space */
+#milkdown-editor {
+    margin-top: 0;
+    border: none;
+    flex: 1 1 0;
+    min-height: 0;
+    height: 0; /* Critical for flex scroll */
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+#milkdown-editor > div,
+#milkdown-editor .milkdown {
+    flex: 1 1 0;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    min-height: 0;
+    height: 100%;
+}
+
+/* The milkdown toolbar should also be fixed */
+#milkdown-editor .milkdown-toolbar {
+    flex-shrink: 0;
+}
+
+/* ProseMirror editor - the actual scrollable content area */
+#milkdown-editor .ProseMirror {
+    flex: 1 1 0;
+    overflow-y: auto;
+    overflow-x: hidden;
+    min-height: 0;
+    height: 0; /* Critical for flex scroll */
+    padding: 16px;
+    outline: none;
+}
+
+/* Ensure the text preview container (markdown mode) also fits properly */
+.wiki-editor .we-text-preview-container {
+    flex: 1;
+    min-height: 0;
+    overflow: hidden;
 }
 
 /* ==============================================
