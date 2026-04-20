@@ -52,7 +52,8 @@
   ],
   "host_permissions": [
     "*://dev.azure.com/*",
-    "*://*.visualstudio.com/*"
+    "*://*.visualstudio.com/*",
+    "https://vssps.dev.azure.com/*"
   ],
   "optional_host_permissions": [
     "*://*/*"

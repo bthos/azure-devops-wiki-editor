@@ -26,6 +26,7 @@ import {
 
 import { getWikiInfoFromUrl } from './ado-wiki-api';
 import { adoHeadingAnchorPlugin } from './plugins/ado-heading-anchor-plugin';
+import { setupMentionProfileCard } from './plugins/mention-profile-card';
 
 // Define global types
 declare global {
@@ -337,6 +338,8 @@ async function initializeEditor(textarea: HTMLTextAreaElement, editorDiv: HTMLEl
         
         // Store the editor instance
         window.wikiEditorInstance = editor;
+
+        setupMentionProfileCard(editorDiv, mentionService);
         
         // Apply dark theme class if needed
         if (useDarkTheme) {
