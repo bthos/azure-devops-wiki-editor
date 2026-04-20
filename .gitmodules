@@ -1,0 +1,3 @@
+[submodule ".agentic-kit"]
+	path = .agentic-kit
+	url = https://github.com/bthos/agentic-kit
