@@ -17,6 +17,7 @@ export interface WikiPage {
 }
 
 export interface WikiInfo {
+    org: string;
     projectId: string;
     wikiIdentifier: string;
     pagePath: string;
@@ -26,7 +27,59 @@ export interface WikiInfo {
 export interface TocEntry {
     level: number;
     text: string;
+    /** Encoded URL fragment for `href="#..."` (see {@link encodeAdoWikiHeadingFragment}). */
     anchor: string;
+}
+
+const utf8Encoder = new TextEncoder();
+
+/**
+ * Azure DevOps Wiki heading anchors follow Markdown All in One’s Azure DevOps slugify
+ * (see https://markdown-all-in-one.github.io/docs/specs/slugify/azure-devops.html),
+ * aligned with vscode-markdown’s implementation and tests.
+ *
+ * Steps on the raw heading text:
+ * 1. `trim`, Unicode `toLowerCase`
+ * 2. Replace every character in Unicode category **Zs** (space separator) with `-`
+ *
+ * That string is the **intermediate** form used as the DOM `id` (decoded identifier).
+ */
+export function normalizeAdoWikiHeadingIntermediate(text: string): string {
+    return text.trim().toLowerCase().replace(/\p{Zs}/gu, '-');
+}
+
+/**
+ * Encodes the intermediate string for the `#fragment` in wiki links.
+ * - If the intermediate starts with a digit: UTF-8 percent-encode **every** byte as `%XX` (uppercase hex),
+ *   matching ADO / vscode-markdown so headings are not mistaken for work-item `#123` links.
+ * - Otherwise: `encodeURIComponent` (comma → `%2C`, `>` → `%3E`, `\` → `%5C`, `:` → `%3A`; `!~*'()` stay unescaped per ECMA-262).
+ */
+export function encodeAdoWikiHeadingFragment(intermediate: string): string {
+    if (/^\d/.test(intermediate)) {
+        return Array.from(utf8Encoder.encode(intermediate), (b) => {
+            const h = b.toString(16).toUpperCase().padStart(2, '0');
+            return `%${h}`;
+        }).join('');
+    }
+    return encodeURIComponent(intermediate);
+}
+
+export interface AdoWikiHeadingAnchorParts {
+    /** DOM `id` value (decoded; matches fragment after browser percent-decoding). */
+    intermediate: string;
+    /** Value for `href="#..."` in TOC links. */
+    fragment: string;
+}
+
+/** Maps each heading plain text to intermediate + encoded fragment (ADO duplicate headings share the same values). */
+export function adoWikiHeadingAnchorsFromPlainTexts(headingPlainTexts: string[]): AdoWikiHeadingAnchorParts[] {
+    return headingPlainTexts.map((text) => {
+        const intermediate = normalizeAdoWikiHeadingIntermediate(text);
+        return {
+            intermediate,
+            fragment: encodeAdoWikiHeadingFragment(intermediate),
+        };
+    });
 }
 
 /**
@@ -60,6 +113,7 @@ export function getWikiInfoFromUrl(): WikiInfo | null {
     const version = urlObj.searchParams.get('wikiVersion') || undefined;
     
     return {
+        org,
         projectId: project,
         wikiIdentifier: decodeURIComponent(wikiIdentifier),
         pagePath: pagePath || '/',
@@ -125,26 +179,24 @@ export async function fetchChildPages(wikiInfo: WikiInfo): Promise<WikiPage[]> {
  */
 export function extractTocFromDocument(container: HTMLElement): TocEntry[] {
     const headings = container.querySelectorAll('h1, h2, h3, h4, h5, h6');
-    const toc: TocEntry[] = [];
-    
+    const texts: string[] = [];
+    const levels: number[] = [];
+
     headings.forEach((heading) => {
         const level = parseInt(heading.tagName.charAt(1), 10);
         const text = heading.textContent?.trim() || '';
-        
-        // Generate anchor from heading text (similar to ADO's method)
-        const anchor = text
-            .toLowerCase()
-            .replace(/[^\w\s-]/g, '') // Remove special chars
-            .replace(/\s+/g, '-')     // Replace spaces with hyphens
-            .replace(/-+/g, '-')      // Remove consecutive hyphens
-            .trim();
-        
         if (text) {
-            toc.push({ level, text, anchor });
+            texts.push(text);
+            levels.push(level);
         }
     });
-    
-    return toc;
+
+    const parts = adoWikiHeadingAnchorsFromPlainTexts(texts);
+    return texts.map((text, i) => ({
+        level: levels[i],
+        text,
+        anchor: parts[i].fragment,
+    }));
 }
 
 /**

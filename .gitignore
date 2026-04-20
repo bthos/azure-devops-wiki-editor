@@ -4,10 +4,17 @@ azure-devops-wiki-editor*.zip
 *.pem
 
 # IDE files
-.vscode
+.artefacts
+.claude
 .codemie
+.cursor
+.github
+!.github/workflows
 .specstory
-.cursorindex*
+.vscode
+AGENTS.md
+CLAUDE.md
+PROJECT.md
 
 .inputs
 server.log

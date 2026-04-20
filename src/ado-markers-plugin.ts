@@ -18,6 +18,7 @@ import { Decoration, DecorationSet } from '@milkdown/kit/prose/view';
 import type { Node as ProseMirrorNode } from '@milkdown/kit/prose/model';
 import type { EditorView } from '@milkdown/kit/prose/view';
 import { $prose } from '@milkdown/kit/utils';
+import { adoWikiHeadingAnchorsFromPlainTexts } from './ado-wiki-api';
 
 // Plugin key for the ADO markers decoration plugin
 const adoMarkersPluginKey = new PluginKey('ado-markers-decoration');
@@ -45,34 +46,42 @@ let currentEditorView: EditorView | null = null;
 interface HeadingInfo {
     level: number;
     text: string;
-    id: string;
+    fragment: string;
 }
 
 /**
  * Extract all headings from the document
  */
+function escapeHeadingTextForToc(text: string): string {
+    return text
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+}
+
 function extractHeadings(doc: ProseMirrorNode): HeadingInfo[] {
-    const headings: HeadingInfo[] = [];
-    
+    const levels: number[] = [];
+    const texts: string[] = [];
+
     doc.descendants((node) => {
         if (node.type.name === 'heading') {
             const level = node.attrs.level as number;
             const text = node.textContent;
-            // Create a slug-like ID from the heading text
-            const id = text
-                .toLowerCase()
-                .replace(/[^\w\s-]/g, '')
-                .replace(/\s+/g, '-')
-                .trim();
-            
             if (text.trim()) {
-                headings.push({ level, text, id });
+                levels.push(level);
+                texts.push(text);
             }
         }
         return true;
     });
-    
-    return headings;
+
+    const parts = adoWikiHeadingAnchorsFromPlainTexts(texts);
+    return levels.map((level, i) => ({
+        level,
+        text: texts[i],
+        fragment: parts[i].fragment,
+    }));
 }
 
 /**
@@ -110,7 +119,7 @@ function buildTocHtml(headings: HeadingInfo[]): string {
         }
         
         // Create the list item without numbering prefix
-        html += `<li><a href="#${heading.id}" class="ado-toc-link">${heading.text}</a>`;
+        html += `<li><a href="#${heading.fragment}" class="ado-toc-link">${escapeHeadingTextForToc(heading.text)}</a>`;
         
         // Check if next heading is at same or higher level to close the li
         const nextHeading = headings[index + 1];

@@ -312,6 +312,26 @@ body[data-theme="ms.vss-web.vsts-theme-hc-dark"] .toggle-switch input:checked + 
     outline: none;
 }
 
+/* Allow code blocks to scroll horizontally even when parent has overflow-x: hidden */
+/* Note: overflow-y cannot be 'visible' when overflow-x is 'auto' per CSS spec */
+/* Instead, we ensure height expands automatically so no vertical scrollbar appears */
+#milkdown-editor .ProseMirror pre {
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+    height: auto !important;
+    max-height: none !important;
+    min-height: auto !important;
+    /* Ensure code blocks can scroll independently and expand naturally */
+    position: relative;
+    z-index: 1;
+    /* Force block display to ensure proper height calculation */
+    display: block !important;
+    /* Prevent flex constraints from parent */
+    flex-shrink: 0 !important;
+    flex-grow: 0 !important;
+    flex-basis: auto !important;
+}
+
 /* Ensure the text preview container (markdown mode) also fits properly */
 .wiki-editor .we-text-preview-container {
     flex: 1;

@@ -19,11 +19,13 @@ import {
     toolbarPlugin,
     upload,
     AdoAttachmentService,
+    AdoMentionService,
     attachmentServiceCtx,
     configureAttachmentUpload
 } from './editor-bundle';
 
 import { getWikiInfoFromUrl } from './ado-wiki-api';
+import { adoHeadingAnchorPlugin } from './plugins/ado-heading-anchor-plugin';
 
 // Define global types
 declare global {
@@ -42,6 +44,7 @@ let retryCount = 0;
 let timeoutId: number | null = null;
 let editorReady = false;
 let isWysiwygMode = false;
+let mentionService: AdoMentionService | null = null;
 
 /**
  * Helper function to check if an element is visible
@@ -96,6 +99,11 @@ function syncEditorToTextarea(textarea: HTMLTextAreaElement): void {
         // Restore ADO markers to original format
         content = postprocessAdoMarkers(content);
         
+        // Restore mentions to storage format (@<GUID>)
+        if (mentionService) {
+            content = mentionService.restoreMentions(content);
+        }
+
         textarea.value = content;
         textarea.dispatchEvent(new Event('input', { bubbles: true }));
         textarea.dispatchEvent(new Event('change', { bubbles: true }));
@@ -248,23 +256,33 @@ function postprocessAdoMarkers(content: string): string {
  */
 async function initializeEditor(textarea: HTMLTextAreaElement, editorDiv: HTMLElement): Promise<void> {
     const form = findClosest(textarea, 'form');
-    // Preprocess content to protect @<user> mentions from HTML parsing
-    const content = preprocessMentions(textarea.value);
     
     // Detect current theme
     const useDarkTheme = isDarkTheme();
     
-    // Initialize attachment service
+    // Initialize services
     const wikiInfo = getWikiInfoFromUrl();
     let attachmentService: AdoAttachmentService | null = null;
+    
     if (wikiInfo) {
-        attachmentService = new AdoAttachmentService({
+        const wikiContext = {
+            org: wikiInfo.org,
             projectId: wikiInfo.projectId,
             wikiId: wikiInfo.wikiIdentifier,
             wikiVersion: wikiInfo.version
-        });
+        };
+        
+        attachmentService = new AdoAttachmentService(wikiContext);
+        mentionService = new AdoMentionService(wikiContext);
     }
 
+    // Resolve mentions (GUID -> Name) and then preprocess
+    let content = textarea.value;
+    if (mentionService) {
+        content = await mentionService.resolveMentions(content);
+    }
+    content = preprocessMentions(content);
+    
     try {
         // Create Milkdown Core editor with plugins
         const editor = await Editor.make()
@@ -295,6 +313,12 @@ async function initializeEditor(textarea: HTMLTextAreaElement, editorDiv: HTMLEl
                     if (isWysiwygMode) {
                         // Restore ADO markers to original format
                         let processedContent = postprocessAdoMarkers(markdown);
+                        
+                        // Restore mentions to storage format (@<GUID>)
+                        if (mentionService) {
+                            processedContent = mentionService.restoreMentions(processedContent);
+                        }
+
                         textarea.value = processedContent;
                         textarea.dispatchEvent(new Event('input', { bubbles: true }));
                     }
@@ -308,6 +332,7 @@ async function initializeEditor(textarea: HTMLTextAreaElement, editorDiv: HTMLEl
             .use(upload)
             .use(adoSyntaxPlugin)
             .use(toolbarPlugin)
+            .use(adoHeadingAnchorPlugin)
             .create();
         
         // Store the editor instance
@@ -323,6 +348,44 @@ async function initializeEditor(textarea: HTMLTextAreaElement, editorDiv: HTMLEl
             form.addEventListener('submit', function() {
                 syncEditorToTextarea(textarea);
             });
+        }
+        
+        // Auto-scroll code blocks to cursor position
+        const proseMirror = editorDiv.querySelector('.ProseMirror');
+        if (proseMirror) {
+            const scrollCodeBlockToCursor = () => {
+                const selection = window.getSelection();
+                if (!selection || selection.rangeCount === 0) return;
+                
+                const range = selection.getRangeAt(0);
+                const cursorNode = range.startContainer;
+                const cursorPre = cursorNode.nodeType === Node.TEXT_NODE 
+                    ? cursorNode.parentElement?.closest('pre')
+                    : cursorNode.nodeType === Node.ELEMENT_NODE
+                    ? (cursorNode as Element).closest('pre')
+                    : null;
+                
+                if (cursorPre) {
+                    const cursorRect = range.getBoundingClientRect();
+                    const preRect = cursorPre.getBoundingClientRect();
+                    const pre = cursorPre as HTMLElement;
+                    
+                    // Calculate cursor position relative to pre block
+                    const cursorLeft = cursorRect.left - preRect.left + pre.scrollLeft;
+                    
+                    // Scroll horizontally if cursor is outside visible area
+                    if (cursorLeft < pre.scrollLeft) {
+                        pre.scrollLeft = Math.max(0, cursorLeft - 20); // 20px padding
+                    } else if (cursorLeft > pre.scrollLeft + pre.clientWidth - 20) {
+                        pre.scrollLeft = cursorLeft - pre.clientWidth + 20; // 20px padding
+                    }
+                }
+            };
+            
+            // Monitor on input and selection change
+            proseMirror.addEventListener('input', () => setTimeout(scrollCodeBlockToCursor, 50));
+            proseMirror.addEventListener('selectionchange', () => setTimeout(scrollCodeBlockToCursor, 50));
+            document.addEventListener('selectionchange', () => setTimeout(scrollCodeBlockToCursor, 50));
         }
         
         console.log('Milkdown Core editor initialized successfully');

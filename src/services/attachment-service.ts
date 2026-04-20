@@ -8,6 +8,7 @@ export interface IAttachment {
 }
 
 export interface IWikiContext {
+    org?: string;
     projectId: string;
     wikiId: string;
     wikiVersion?: string;

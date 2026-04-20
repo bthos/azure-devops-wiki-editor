@@ -6,7 +6,6 @@
  * This script ensures that version numbers are consistent across:
  * 1. package.json
  * 2. manifest.json
- * 3. version.txt
  */
 
 const fs = require('fs');
@@ -37,10 +36,5 @@ try {
 manifest.version = version;
 fs.writeFileSync(manifestPath, JSON.stringify(manifest, null, 2));
 console.log(`- Updated manifest.json to version ${version}`);
-
-// Update version.txt
-const versionTxtPath = path.join(__dirname, '..', 'version.txt');
-fs.writeFileSync(versionTxtPath, version);
-console.log(`- Updated version.txt to ${version}`);
 
 console.log('Version sync complete!');

@@ -318,19 +318,25 @@ body[data-theme="ms.vss-web.vsts-theme-hc-light"] {
     position: relative;
     font-family: var(--ado-font-mono);
     font-size: 0.75rem;
-    line-height: 1.5;
+    line-height: 1.6;
     white-space: pre;
     word-wrap: normal;
     background-color: var(--ado-code-bg);
     border-radius: 2px;
-    padding: 12px 16px;
+    padding: 14px 16px;
     margin: 0 0 16px 0;
     overflow-x: auto;
-    overflow-y: visible;
+    overflow-y: hidden;
+    height: auto;
+    max-height: none;
+    min-height: auto;
+    /* Allow horizontal scrolling even if parent has overflow-x: hidden */
+    min-width: 0;
+    max-width: 100%;
 }
 
 .milkdown pre[data-language] {
-    padding-top: 28px;
+    padding-top: 34px;
 }
 
 .milkdown pre[data-language]::before {
@@ -350,7 +356,7 @@ body[data-theme="ms.vss-web.vsts-theme-hc-light"] {
     display: block;
     font-family: inherit;
     font-size: inherit;
-    line-height: inherit;
+    line-height: 1.6;
     background-color: transparent;
     color: var(--ado-text-primary);
     padding: 0;
@@ -811,7 +817,7 @@ body[data-theme="ms.vss-web.vsts-theme-hc-dark"] .milkdown li[data-checked="true
 /* TOC Content */
 .ado-toc-content {
     display: block;
-    padding: 0;
+    padding: 4px 8px 8px 8px;
     margin: 0;
 }
 
@@ -832,6 +838,8 @@ body[data-theme="ms.vss-web.vsts-theme-hc-dark"] .milkdown li[data-checked="true
     margin: 0;
     padding: 3px 0;
     line-height: 1.4;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
 }
 
 .ado-toc-link {
@@ -839,11 +847,16 @@ body[data-theme="ms.vss-web.vsts-theme-hc-dark"] .milkdown li[data-checked="true
     color: var(--ado-link-color);
     text-decoration: none;
     cursor: pointer;
-    display: inline-block;
+    display: block;
     padding: 1px 6px 1px 4px;
     margin: 0;
     border-radius: 2px;
     transition: background-color 0.1s ease, color 0.1s ease;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    max-width: 100%;
+    box-sizing: border-box;
+    width: 100%;
 }
 
 .ado-toc-link:hover {

@@ -24,6 +24,7 @@ import { toolbarPlugin } from './toolbar';
 // Import upload plugin and attachment service
 import { upload } from '@milkdown/kit/plugin/upload';
 import { AdoAttachmentService, IWikiContext, attachmentServiceCtx } from './services/attachment-service';
+import { AdoMentionService } from './services/mention-service';
 import { configureAttachmentUpload } from './plugins/attachment-upload';
 
 // Export core classes and utilities for use in main.ts
@@ -56,6 +57,7 @@ export {
     // Upload exports
     upload,
     AdoAttachmentService,
+    AdoMentionService,
     IWikiContext,
     attachmentServiceCtx,
     configureAttachmentUpload

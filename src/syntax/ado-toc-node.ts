@@ -7,11 +7,13 @@
 
 import { $node, $remark, $view } from '@milkdown/kit/utils';
 import type { Node } from '@milkdown/kit/prose/model';
+import { adoWikiHeadingAnchorsFromPlainTexts } from '../ado-wiki-api';
 
 interface HeadingInfo {
   level: number;
   text: string;
-  id: string;
+  /** Encoded fragment for `href="#..."` */
+  fragment: string;
 }
 
 /**
@@ -150,7 +152,7 @@ function buildNestedTocHtml(headings: HeadingInfo[]): string {
     
     if (levelStack.length === 0) {
       // First heading
-      result.push(`<li><a href="#${heading.id}" class="ado-toc-link">${escapeHtml(heading.text)}</a>`);
+      result.push(`<li><a href="#${heading.fragment}" class="ado-toc-link">${escapeHtml(heading.text)}</a>`);
       levelStack.push(level);
     } else {
       const prevLevel = levelStack[levelStack.length - 1];
@@ -158,7 +160,7 @@ function buildNestedTocHtml(headings: HeadingInfo[]): string {
       if (level > prevLevel) {
         // Going deeper - open nested <ul> inside current <li> (don't close <li> yet)
         result.push('<ul class="ado-toc-list">');
-        result.push(`<li><a href="#${heading.id}" class="ado-toc-link">${escapeHtml(heading.text)}</a>`);
+        result.push(`<li><a href="#${heading.fragment}" class="ado-toc-link">${escapeHtml(heading.text)}</a>`);
         levelStack.push(level);
       } else if (level < prevLevel) {
         // Going up - close items until we reach the right level
@@ -172,13 +174,13 @@ function buildNestedTocHtml(headings: HeadingInfo[]): string {
           result.push('</li>');
           levelStack.pop();
         }
-        result.push(`<li><a href="#${heading.id}" class="ado-toc-link">${escapeHtml(heading.text)}</a>`);
+        result.push(`<li><a href="#${heading.fragment}" class="ado-toc-link">${escapeHtml(heading.text)}</a>`);
         levelStack.push(level);
       } else {
         // Same level - close previous <li> and start new one
         result.push('</li>');
         levelStack.pop();
-        result.push(`<li><a href="#${heading.id}" class="ado-toc-link">${escapeHtml(heading.text)}</a>`);
+        result.push(`<li><a href="#${heading.fragment}" class="ado-toc-link">${escapeHtml(heading.text)}</a>`);
         levelStack.push(level);
       }
     }
@@ -204,23 +206,6 @@ function escapeHtml(text: string): string {
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;');
-}
-
-/**
- * Generate anchor ID from heading text.
- * Matches Azure DevOps Wiki behavior:
- * - Convert to lowercase
- * - Keep letters, numbers, dots, hyphens, underscores
- * - Replace whitespace with hyphens
- * - Remove other special characters
- */
-function generateAnchorId(text: string): string {
-  return text
-    .toLowerCase()
-    .replace(/\s+/g, '-')           // Replace whitespace with hyphens
-    .replace(/[^\w.-]/g, '')        // Keep word chars (letters, digits, underscore), dots, hyphens
-    .replace(/-+/g, '-')            // Collapse multiple hyphens
-    .replace(/^-|-$/g, '');         // Trim leading/trailing hyphens
 }
 
 /**
@@ -277,17 +262,21 @@ export const adoTocView = $view(adoTocNode, () => {
     dom.appendChild(content);
     
     const updateHeadings = () => {
-      const headings: HeadingInfo[] = [];
+      const levels: number[] = [];
+      const texts: string[] = [];
       view.state.doc.descendants((node) => {
         if (node.type.name === 'heading') {
           const text = node.textContent;
-          headings.push({
-            level: node.attrs.level as number,
-            text,
-            id: generateAnchorId(text),
-          });
+          levels.push(node.attrs.level as number);
+          texts.push(text);
         }
       });
+      const parts = adoWikiHeadingAnchorsFromPlainTexts(texts);
+      const headings: HeadingInfo[] = levels.map((level, i) => ({
+        level,
+        text: texts[i],
+        fragment: parts[i].fragment,
+      }));
       content.innerHTML = buildTocHtml(headings);
     };
     

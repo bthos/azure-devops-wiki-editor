@@ -184,4 +184,4 @@ If you encounter any issues:
 - `dev-build`: Builds development version with source maps
 - `build`: Builds production version with optimizations and creates ZIP file
 - `server`: Starts a local development server
-- `version`: Updates version.txt file and adds it to git
+- `version`: Synchronizes version from package.json to manifest.json
