@@ -26,7 +26,9 @@ import {
 
 import { getWikiInfoFromUrl } from './ado-wiki-api';
 import { adoHeadingAnchorPlugin } from './plugins/ado-heading-anchor-plugin';
+import { attachmentImageResolvePlugin } from './plugins/attachment-image-resolve';
 import { setupMentionProfileCard } from './plugins/mention-profile-card';
+import { adoWikiAttachmentImageHandler, adoWikiAttachmentLinkHandler } from './syntax/ado-wiki-attachment-stringify';
 
 // Define global types
 declare global {
@@ -46,6 +48,8 @@ let timeoutId: number | null = null;
 let editorReady = false;
 let isWysiwygMode = false;
 let mentionService: AdoMentionService | null = null;
+/** Set in {@link initializeEditor} for {@link syncEditorToTextarea} (attachment URL round-trip). */
+let attachmentServiceInstance: AdoAttachmentService | null = null;
 
 /**
  * Helper function to check if an element is visible
@@ -99,7 +103,11 @@ function syncEditorToTextarea(textarea: HTMLTextAreaElement): void {
         
         // Restore ADO markers to original format
         content = postprocessAdoMarkers(content);
-        
+
+        if (attachmentServiceInstance) {
+            content = attachmentServiceInstance.markdownRestoreRelativeAttachmentPaths(content);
+        }
+
         // Restore mentions to storage format (@<GUID>)
         if (mentionService) {
             content = mentionService.restoreMentions(content);
@@ -264,7 +272,8 @@ async function initializeEditor(textarea: HTMLTextAreaElement, editorDiv: HTMLEl
     // Initialize services
     const wikiInfo = getWikiInfoFromUrl();
     let attachmentService: AdoAttachmentService | null = null;
-    
+    attachmentServiceInstance = null;
+
     if (wikiInfo) {
         const wikiContext = {
             org: wikiInfo.org,
@@ -272,8 +281,9 @@ async function initializeEditor(textarea: HTMLTextAreaElement, editorDiv: HTMLEl
             wikiId: wikiInfo.wikiIdentifier,
             wikiVersion: wikiInfo.version
         };
-        
+
         attachmentService = new AdoAttachmentService(wikiContext);
+        attachmentServiceInstance = attachmentService;
         mentionService = new AdoMentionService(wikiContext);
     }
 
@@ -283,7 +293,11 @@ async function initializeEditor(textarea: HTMLTextAreaElement, editorDiv: HTMLEl
         content = await mentionService.resolveMentions(content);
     }
     content = preprocessMentions(content);
-    
+    if (attachmentService) {
+        await attachmentService.hydrateRepositoryId();
+        content = attachmentService.rewriteMarkdownToDisplayUrls(content);
+    }
+
     try {
         // Create Milkdown Core editor with plugins
         const editor = await Editor.make()
@@ -303,10 +317,17 @@ async function initializeEditor(textarea: HTMLTextAreaElement, editorDiv: HTMLEl
                     configureAttachmentUpload(ctx, attachmentService);
                 }
                 
-                // Configure markdown serializer to use '-' for bullet lists (Azure DevOps standard)
+                // Configure remark-stringify: ADO list style + safe attachment URLs (angle brackets; avoids `\)` from destinationRaw)
+                const stringifyOpts = ctx.get(remarkStringifyOptionsCtx);
                 ctx.set(remarkStringifyOptionsCtx, {
+                    ...stringifyOpts,
                     bullet: '-',
                     bulletOther: '*',
+                    handlers: {
+                        ...stringifyOpts.handlers,
+                        image: adoWikiAttachmentImageHandler,
+                        link: adoWikiAttachmentLinkHandler,
+                    },
                 });
                 
                 // Add markdown listener for syncing to textarea
@@ -314,7 +335,11 @@ async function initializeEditor(textarea: HTMLTextAreaElement, editorDiv: HTMLEl
                     if (isWysiwygMode) {
                         // Restore ADO markers to original format
                         let processedContent = postprocessAdoMarkers(markdown);
-                        
+
+                        if (attachmentService) {
+                            processedContent = attachmentService.markdownRestoreRelativeAttachmentPaths(processedContent);
+                        }
+
                         // Restore mentions to storage format (@<GUID>)
                         if (mentionService) {
                             processedContent = mentionService.restoreMentions(processedContent);
@@ -334,6 +359,7 @@ async function initializeEditor(textarea: HTMLTextAreaElement, editorDiv: HTMLEl
             .use(adoSyntaxPlugin)
             .use(toolbarPlugin)
             .use(adoHeadingAnchorPlugin)
+            .use(attachmentImageResolvePlugin)
             .create();
         
         // Store the editor instance

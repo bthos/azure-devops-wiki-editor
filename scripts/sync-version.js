@@ -2,16 +2,18 @@
 
 /**
  * Version synchronization script
- * 
- * This script ensures that version numbers are consistent across:
+ *
+ * Ensures version numbers are consistent across:
  * 1. package.json
  * 2. manifest.json
  */
 
-const fs = require('fs');
-const path = require('path');
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
 
-// Read the version from package.json
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+
 const packageJsonPath = path.join(__dirname, '..', 'package.json');
 let packageJson;
 try {
@@ -24,7 +26,6 @@ const version = packageJson.version;
 
 console.log(`Synchronizing version ${version} across project files...`);
 
-// Update manifest.json
 const manifestPath = path.join(__dirname, '..', 'public', 'manifest.json');
 let manifest;
 try {

@@ -179,8 +179,8 @@ function registerContentScript(domain) {
     chrome.scripting.registerContentScripts([{
         id: scriptId,
         matches: [`*://${domain}/*/_wiki/*`],
-        js: ['editor-bundle.js', 'main.js'],
-        css: ['toastui-editor.css', 'custom-styles.css'],
+        js: ['content.js'],
+        css: ['content.css', 'custom-styles.css'],
         runAt: 'document_idle'
     }]).catch(function(err) {
         // Script might already be registered, ignore error

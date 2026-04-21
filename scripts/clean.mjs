@@ -1,9 +1,9 @@
-const fs = require('fs');
-const path = require('path');
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
 
-/**
- * Recursively remove a directory or file
- */
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+
 function removeRecursive(targetPath) {
     if (!fs.existsSync(targetPath)) {
         return;
@@ -11,10 +11,10 @@ function removeRecursive(targetPath) {
 
     const stats = fs.statSync(targetPath);
     if (stats.isDirectory()) {
-        fs.readdirSync(targetPath).forEach(file => {
+        for (const file of fs.readdirSync(targetPath)) {
             removeRecursive(path.join(targetPath, file));
-        });
-        fs.rmdirSync(targetPath);
+        }
+        fs.rmSync(targetPath, { recursive: true });
         console.log(`Removed directory: ${targetPath}`);
     } else {
         fs.unlinkSync(targetPath);
@@ -22,16 +22,13 @@ function removeRecursive(targetPath) {
     }
 }
 
-// Remove dist directory
-removeRecursive(path.join(__dirname, '..', 'dist'));
-
-// Remove zip files matching pattern azure-devops-wiki-editor*.zip
 const rootDir = path.join(__dirname, '..');
-fs.readdirSync(rootDir)
-    .filter(file => file.startsWith('azure-devops-wiki-editor') && file.endsWith('.zip'))
-    .forEach(file => {
+removeRecursive(path.join(rootDir, 'dist'));
+
+for (const file of fs.readdirSync(rootDir)) {
+    if (file.startsWith('azure-devops-wiki-editor') && file.endsWith('.zip')) {
         removeRecursive(path.join(rootDir, file));
-    });
+    }
+}
 
 console.log('Clean completed.');
-

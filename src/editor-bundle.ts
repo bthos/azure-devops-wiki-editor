@@ -26,6 +26,7 @@ import { upload } from '@milkdown/kit/plugin/upload';
 import { AdoAttachmentService, IWikiContext, attachmentServiceCtx } from './services/attachment-service';
 import { AdoMentionService } from './services/mention-service';
 import { configureAttachmentUpload } from './plugins/attachment-upload';
+import { attachmentImageResolvePlugin } from './plugins/attachment-image-resolve';
 
 // Export core classes and utilities for use in main.ts
 export { 
@@ -60,7 +61,8 @@ export {
     AdoMentionService,
     IWikiContext,
     attachmentServiceCtx,
-    configureAttachmentUpload
+    configureAttachmentUpload,
+    attachmentImageResolvePlugin
 };
 
 // Also attach to window for global access

@@ -19,7 +19,7 @@ NC='\033[0m' # No Color
 
 # Ensure the extension build artifacts exist (playground.html loads dist/*.js).
 ensure_dist_build() {
-    if [ -f "$PROJECT_ROOT/dist/main.js" ] && [ -f "$PROJECT_ROOT/dist/editor-bundle.js" ]; then
+    if [ -f "$PROJECT_ROOT/dist/content.js" ] && [ -f "$PROJECT_ROOT/dist/background.js" ]; then
         return
     fi
 
@@ -36,8 +36,8 @@ ensure_dist_build() {
 
     (cd "$PROJECT_ROOT" && npm run dev-build)
 
-    if [ ! -f "$PROJECT_ROOT/dist/main.js" ]; then
-        echo -e "${RED}Error: build completed but dist/main.js is still missing${NC}"
+    if [ ! -f "$PROJECT_ROOT/dist/content.js" ]; then
+        echo -e "${RED}Error: build completed but dist/content.js is still missing${NC}"
         exit 1
     fi
 }

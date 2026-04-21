@@ -4,7 +4,7 @@
     <title>Azure DevOps Wiki Editor - Playground</title>
     <!-- Milkdown CSS -->
     <link rel="stylesheet" href="dist/custom-styles.css" />
-    <link rel="stylesheet" href="dist/milkdown-editor.css" />
+    <link rel="stylesheet" href="dist/content.css" />
     <style>
         /* Reset and base */
         html, body {
@@ -670,23 +670,15 @@ function hello(name: string) {
             return false;
         };
         
-        // Load editor-bundle.js first and wait for it to complete
-        const editorScript = document.createElement('script');
-        editorScript.src = 'dist/editor-bundle.js';
-        editorScript.onload = function() {
-            console.log('Editor bundle loaded successfully');
-            // Only load main.js after editor-bundle.js is loaded
-            const mainScript = document.createElement('script');
-            mainScript.src = 'dist/main.js';
-            mainScript.onload = function() {
-                console.log('Main script loaded successfully');
-            };
-            document.body.appendChild(mainScript);
+        const contentScript = document.createElement('script');
+        contentScript.src = 'dist/content.js';
+        contentScript.onload = function() {
+            console.log('Content script loaded successfully');
         };
-        editorScript.onerror = function() {
-            console.error('Failed to load editor-bundle.js');
+        contentScript.onerror = function() {
+            console.error('Failed to load content.js');
         };
-        document.body.appendChild(editorScript);
+        document.body.appendChild(contentScript);
     </script>
 </body>
 </html>

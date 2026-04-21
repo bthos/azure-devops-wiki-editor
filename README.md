@@ -2,7 +2,7 @@
 
 # Azure DevOps Wiki Editor
 
-Chrome Extension enables WYSIWYG editor in Azure DevOps markdown wiki. Based on great work of [Toast UI Editor](https://github.com/nhn/tui.editor).
+Chrome Extension that replaces the default Azure DevOps wiki markdown editor with a WYSIWYG experience. Built with [Milkdown](https://milkdown.dev) ([`@milkdown/kit`](https://github.com/Milkdown/milkdown)) on top of ProseMirror.
 
 ## 🚀 Prerequisites
 
@@ -119,6 +119,10 @@ If the editor doesn't appear:
 - Split screen mode (editor/preview)
 - Full screen editing mode
 
+## 📚 Developer documentation
+
+- **[Wiki attachments (Azure DevOps REST)](docs/wiki-attachments.md)** — REST contract, Base64 body behavior, and debugging notes for upload (`attachment-service.ts`).
+
 ## ⌨️ Keyboard Shortcuts
 
 | Action | Windows/Linux | macOS |
@@ -161,26 +165,25 @@ If you encounter any issues:
 
 ## 📦 Dependencies
 
-- `@toast-ui/editor`: ^3.2.2 - The core WYSIWYG editor component
+- `@milkdown/kit` — Milkdown editor framework (ProseMirror-based WYSIWYG and markdown pipeline)
 
 ## 🛠️ DevDependencies
 
-- `@types/chrome`: ^0.0.239 - TypeScript definitions for Chrome extension APIs
-- `copy-webpack-plugin`: ^11.0.0 - Copies static assets during build
-- `cross-env`: ^7.0.3 - Sets environment variables across platforms
-- `css-minimizer-webpack-plugin`: ^7.0.2 - Minimizes CSS files
-- `http-server`: ^14.1.1 - Simple HTTP server for development
-- `terser-webpack-plugin`: ^5.3.14 - JavaScript minification
-- `ts-loader`: ^9.4.4 - TypeScript loader for webpack
-- `typescript`: ^5.1.6 - TypeScript compiler
-- `webpack`: ^5.88.1 - Module bundler
-- `webpack-cli`: ^5.1.4 - Webpack command line interface
-- `zip-webpack-plugin`: ^4.0.3 - Creates ZIP file for production builds
+Key tooling (see `package.json` for exact versions):
+
+- `esbuild` — Bundling the extension
+- `typescript` — Type checking and authoring
+- `vitest`, `happy-dom`, `@vitest/coverage-v8` — Unit tests
+- `@types/chrome` — Chrome extension TypeScript types
+- `http-server` — Local playground server (`npm run server`)
+- `cross-env` — Cross-platform env in build scripts
+- `archiver` — ZIP output for releases
+- `standard-version`, `commitizen`, `@commitlint/*`, `cz-conventional-changelog` — Versioning and commits
 
 ## 📜 Scripts
 
 - `clean`: Removes the dist directory and zip files
-- `test`: Currently just a placeholder (exits with code 0)
+- `test`: Runs the Vitest unit test suite (`vitest run`)
 - `dev-build`: Builds development version with source maps
 - `build`: Builds production version with optimizations and creates ZIP file
 - `server`: Starts a local development server

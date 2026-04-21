@@ -888,7 +888,57 @@ body[data-theme="ms.vss-web.vsts-theme-hc-dark"] .ado-toc-link:hover {
 }
 
 /* TOSP Content */
+.ado-tosp-content {
+    display: block;
+    padding: 4px 8px 8px 8px;
+    margin: 0;
+}
+
 .ado-tosp-placeholder {
+    padding: 0;
+    margin: 0;
+    font-size: 13px;
+    color: var(--ado-text-secondary);
+    font-style: italic;
+}
+
+.ado-tosp-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.ado-tosp-list li {
+    margin: 0;
+    padding: 3px 0;
+    line-height: 1.4;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+}
+
+.ado-tosp-link {
+    font-size: 13px;
+    color: var(--ado-link-color);
+    text-decoration: none;
+    cursor: pointer;
+    display: block;
+    padding: 1px 6px 1px 4px;
+    margin: 0;
+    border-radius: 2px;
+    transition: background-color 0.1s ease, color 0.1s ease;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    max-width: 100%;
+    box-sizing: border-box;
+}
+
+.ado-tosp-link:hover {
+    color: var(--ado-link-hover);
+    background-color: var(--ado-accent-bg);
+    text-decoration: none;
+}
+
+.ado-tosp-empty {
     padding: 0;
     margin: 0;
     font-size: 13px;

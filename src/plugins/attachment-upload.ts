@@ -1,8 +1,7 @@
 
 import { upload, uploadConfig, Uploader } from '@milkdown/kit/plugin/upload';
 import { Ctx } from '@milkdown/kit/ctx';
-import { AdoAttachmentService, IWikiContext } from '../services/attachment-service';
-import { imageSchema } from '@milkdown/kit/preset/commonmark';
+import { AdoAttachmentService } from '../services/attachment-service';
 
 // Note: We might need to adjust imports if image-block/inline-image are not available or used differently
 // For now, we focus on the upload plugin which handles drag & drop and paste
@@ -49,17 +48,4 @@ export function configureAttachmentUpload(ctx: Ctx, attachmentService: AdoAttach
         ...prev,
         uploader,
     }));
-}
-
-export function transformToGitUrl(attachmentPath: string, wikiContext: IWikiContext): string {
-    // Transform relative attachment path to full Git file URL
-    // This is needed for preview/display in the editor if we want to show the image immediately
-    // However, ADO might handle relative paths if the base is set correctly.
-    // But for the editor preview, we might need the full URL.
-    
-    const { projectId, wikiId, wikiVersion } = wikiContext;
-    const encodedPath = encodeURIComponent(attachmentPath);
-    // Note: This URL format is for retrieving file content via REST API
-    // It might need adjustment based on exact ADO version/API
-    return `https://dev.azure.com/${projectId}/_apis/git/repositories/${wikiId}/items?path=${encodedPath}&versionDescriptor=${wikiVersion}`;
 }

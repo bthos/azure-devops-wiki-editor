@@ -7,6 +7,7 @@
 
 import { $node, $remark, $view } from '@milkdown/kit/utils';
 import type { Node } from '@milkdown/kit/prose/model';
+import { fetchChildPages, getWikiInfoFromUrl, renderTospChildListHtml } from '../ado-wiki-api';
 
 /**
  * Remark plugin to parse [[_TOSP_]] during markdown parsing
@@ -139,12 +140,30 @@ export const adoTospView = $view(adoTospNode, () => {
     header.appendChild(deleteBtn);
     
     dom.appendChild(header);
-    
+
+    const body = document.createElement('div');
+    body.className = 'ado-tosp-content';
     const placeholder = document.createElement('div');
     placeholder.className = 'ado-tosp-placeholder';
-    placeholder.textContent = 'Sub-pages will appear here';
-    dom.appendChild(placeholder);
-    
+    placeholder.textContent = 'Loading child pages…';
+    body.appendChild(placeholder);
+    dom.appendChild(body);
+
+    const ac = new AbortController();
+    const wikiInfo = getWikiInfoFromUrl();
+    if (!wikiInfo) {
+      placeholder.textContent = 'Child pages are available only on wiki pages.';
+    } else {
+      fetchChildPages(wikiInfo, ac.signal)
+        .then((pages) => {
+          body.innerHTML = renderTospChildListHtml(pages, wikiInfo);
+        })
+        .catch((err) => {
+          if ((err as Error)?.name === 'AbortError') return;
+          placeholder.textContent = 'Could not load child pages.';
+        });
+    }
+
     deleteBtn.addEventListener('click', (e) => {
       e.preventDefault();
       e.stopPropagation();
@@ -159,7 +178,9 @@ export const adoTospView = $view(adoTospNode, () => {
     return {
       dom,
       update: (updatedNode) => updatedNode.type.name === 'adoTosp',
-      destroy: () => {},
+      destroy: () => {
+        ac.abort();
+      },
       ignoreMutation: () => true,
     };
   };
