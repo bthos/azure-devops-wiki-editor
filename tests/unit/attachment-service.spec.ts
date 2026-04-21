@@ -293,7 +293,11 @@ describe('AdoAttachmentService.uploadAttachment', () => {
         const asUtf8 =
             typeof raw === 'string'
                 ? raw
-                : new TextDecoder().decode(raw instanceof ArrayBuffer ? raw : new Uint8Array(raw as ArrayBuffer));
+                : raw instanceof Uint8Array
+                  ? new TextDecoder().decode(raw)
+                  : raw instanceof ArrayBuffer
+                    ? new TextDecoder().decode(raw)
+                    : '';
         expect(asUtf8).toBe('Zm9v');
         expect(new Headers(init.headers).get('Content-Type')).toBe('application/octet-stream');
     });

@@ -737,9 +737,10 @@ function handleToolbarAction(ctx: Ctx, action: string, editorView?: EditorView):
             const node = schema.nodes.image.createAndFill({ src: url, alt: file.name });
             if (node) tr.replaceSelectionWith(node);
           } else {
-            const node = schema.text(file.name, [
-              schema.marks.link.create({ href: url, title: file.name })
-            ]);
+            // Inline text + link must live in a block; bare `schema.text` is invalid and drops the link.
+            const linkMark = schema.marks.link.create({ href: url, title: file.name });
+            const textNode = schema.text(file.name, [linkMark]);
+            const node = schema.nodes.paragraph.create({}, [textNode]);
             tr.replaceSelectionWith(node);
           }
           view.dispatch(tr);
