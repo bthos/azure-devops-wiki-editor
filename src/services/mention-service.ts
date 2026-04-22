@@ -1,4 +1,5 @@
 import { IWikiContext } from './attachment-service';
+import { getIdentityServiceCandidateOrigins, isHostedDevAzureCloud, isLegacyVisualStudioHost } from '../utils/ado-hosts';
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -15,6 +16,8 @@ export class AdoMentionService {
     private cache: Map<string, IIdentity> = new Map();
     private nameToId: Map<string, string> = new Map();
     private mangledNames: Map<string, string> = new Map();
+    /** First IMS/Graph origin that returned HTTP 2xx for this service instance (vanity vs vssps). */
+    private identityServiceBaseResolved: string | null = null;
 
     constructor(public wikiContext: IWikiContext) {}
 
@@ -126,13 +129,130 @@ export class AdoMentionService {
         return mangled;
     }
 
-    private async adoFetch(url: string): Promise<Response> {
+    private async adoFetch(url: string, signal?: AbortSignal): Promise<Response> {
         return fetch(url, {
             credentials: 'include',
-            headers: {
-                Accept: 'application/json',
-            },
+            headers: { Accept: 'application/json' },
+            signal,
         });
+    }
+
+    private orgSegmentEncoded(): string | null {
+        const org = this.getOrgName();
+        return org ? encodeURIComponent(org) : null;
+    }
+
+    /**
+     * GET `/{org}/{pathAfterOrg}` on {@link getIdentityServiceCandidateOrigins} until 2xx or non-404.
+     */
+    private async adoFetchWithIdentityHost(pathAfterOrg: string, signal?: AbortSignal): Promise<Response> {
+        const seg = this.orgSegmentEncoded();
+        if (!seg || typeof window === 'undefined') {
+            return new Response(null, { status: 400, statusText: 'Missing organization' });
+        }
+        const bases = this.identityServiceBaseResolved
+            ? [this.identityServiceBaseResolved]
+            : getIdentityServiceCandidateOrigins();
+        let last: Response | undefined;
+        for (const base of bases) {
+            const url = `${base}/${seg}/${pathAfterOrg}`;
+            const res = await this.adoFetch(url, signal);
+            last = res;
+            if (res.ok) {
+                this.identityServiceBaseResolved = base;
+                return res;
+            }
+            if (res.status !== 404) {
+                return res;
+            }
+        }
+        return last ?? new Response(null, { status: 404 });
+    }
+
+    /**
+     * Lists distinct project members across all teams via Core REST (same session cookie as ADO web).
+     * Uses organization-scoped Core URLs (`/{org}/_apis/projects/{project}/…`), not `/{org}/{project}/_apis/…`
+     * (the latter is not a valid route for these endpoints and returns 404 on hosted Azure DevOps).
+     * @see https://learn.microsoft.com/en-us/rest/api/azure/devops/core/teams/get-teams
+     * @see https://learn.microsoft.com/en-us/rest/api/azure/devops/core/teams/get-team-members-with-extended-properties
+     */
+    async fetchProjectTeamMembers(options?: { signal?: AbortSignal; maxTeams?: number }): Promise<IIdentity[]> {
+        const org = this.wikiContext.org ?? this.getOrgName();
+        const project = this.wikiContext.projectId?.trim();
+        if (!org || !project || typeof window === 'undefined') {
+            return [];
+        }
+        const origin = window.location.origin;
+        const orgApiRoot = `${origin}/${encodeURIComponent(org)}`;
+        const projectEnc = encodeURIComponent(project);
+        const teamsUrl = `${orgApiRoot}/_apis/projects/${projectEnc}/teams?api-version=7.1`;
+        const res = await this.adoFetch(teamsUrl, options?.signal);
+        if (!res.ok) {
+            console.warn('AdoMentionService: list teams failed', res.status, res.statusText);
+            return [];
+        }
+        const teamsJson = (await res.json()) as { value?: { id: string; name?: string }[] };
+        const teams = teamsJson.value ?? [];
+        const maxTeams = options?.maxTeams ?? 25;
+        const byId = new Map<string, IIdentity>();
+
+        for (const team of teams.slice(0, maxTeams)) {
+            if (!team?.id) continue;
+            const membersUrl = `${orgApiRoot}/_apis/projects/${projectEnc}/teams/${encodeURIComponent(
+                team.id,
+            )}/members?api-version=7.1`;
+            const mr = await this.adoFetch(membersUrl, options?.signal);
+            if (!mr.ok) continue;
+            const membersJson = (await mr.json()) as { value?: { identity?: Record<string, unknown> }[] };
+            for (const row of membersJson.value ?? []) {
+                const parsed = this.parseTeamMemberIdentity(row?.identity);
+                if (parsed && this.isGuid(parsed.id)) {
+                    const prev = byId.get(parsed.id);
+                    byId.set(parsed.id, prev ? this.mergeIdentity(prev, parsed) : parsed);
+                }
+            }
+        }
+
+        return Array.from(byId.values()).sort((a, b) => a.displayName.localeCompare(b.displayName, undefined, { sensitivity: 'base' }));
+    }
+
+    /**
+     * After picking a member from {@link fetchProjectTeamMembers}, register maps so {@link restoreMentions} writes `@<GUID>`.
+     * @returns Display label to insert in the editor (may be disambiguated if names collide).
+     */
+    prepareMentionFromTeamMember(identity: IIdentity): string | null {
+        if (!this.isGuid(identity.id)) {
+            return null;
+        }
+        const prev = this.cache.get(identity.id);
+        const merged = this.mergeIdentity(prev, identity);
+        this.cache.set(identity.id, merged);
+        return this.getMangledName(merged);
+    }
+
+    private parseTeamMemberIdentity(identity: Record<string, unknown> | undefined): IIdentity | null {
+        if (!identity) return null;
+        const id = identity.id as string | undefined;
+        const displayName = String(identity.displayName ?? '').trim();
+        if (!id || !displayName) return null;
+
+        let imageUrl: string | undefined;
+        const directImg = identity.imageUrl as string | undefined;
+        if (typeof directImg === 'string' && directImg.startsWith('http')) {
+            imageUrl = directImg;
+        }
+
+        const uniqueName = typeof identity.uniqueName === 'string' ? identity.uniqueName.trim() : undefined;
+        const mailCandidate = uniqueName && this.isLikelyEmail(uniqueName) ? uniqueName : undefined;
+
+        return {
+            id,
+            displayName,
+            uniqueName,
+            imageUrl,
+            mailAddress: mailCandidate,
+            principalName: uniqueName,
+        };
     }
 
     private readProp(item: Record<string, unknown>, key: string): string | undefined {
@@ -265,10 +385,10 @@ export class AdoMentionService {
         const path = window.location.pathname;
         const parts = path.split('/').filter((p) => p);
 
-        if (host.includes('dev.azure.com') && parts.length >= 1) {
+        if (isHostedDevAzureCloud(host) && parts.length >= 1) {
             return parts[0];
         }
-        if (host.includes('visualstudio.com')) {
+        if (isLegacyVisualStudioHost(host)) {
             const sub = host.split('.')[0];
             if (sub && sub !== 'www') {
                 return sub;
@@ -277,21 +397,14 @@ export class AdoMentionService {
         return '';
     }
 
-    private getOrgUrl(): string {
-        const name = this.getOrgName();
-        return name ? `/${name}` : '';
-    }
-
     /**
      * Resolve storage key (VSID) → Graph subject descriptor (vssps).
      */
     private async fetchGraphDescriptor(storageKey: string): Promise<string | null> {
         const org = this.getOrgName();
         if (!org) return null;
-        const url = `https://vssps.dev.azure.com/${encodeURIComponent(
-            org
-        )}/_apis/graph/descriptors/${encodeURIComponent(storageKey)}?api-version=7.1`;
-        const res = await this.adoFetch(url);
+        const path = `_apis/graph/descriptors/${encodeURIComponent(storageKey)}?api-version=7.1`;
+        const res = await this.adoFetchWithIdentityHost(path);
         if (!res.ok) {
             return null;
         }
@@ -311,10 +424,8 @@ export class AdoMentionService {
     private async fetchGraphUser(descriptor: string): Promise<IIdentity | null> {
         const org = this.getOrgName();
         if (!org) return null;
-        const url = `https://vssps.dev.azure.com/${encodeURIComponent(org)}/_apis/graph/users/${encodeURIComponent(
-            descriptor
-        )}?api-version=7.1-preview.1`;
-        const res = await this.adoFetch(url);
+        const path = `_apis/graph/users/${encodeURIComponent(descriptor)}?api-version=7.1-preview.1`;
+        const res = await this.adoFetchWithIdentityHost(path);
         if (!res.ok) {
             return null;
         }
@@ -362,17 +473,28 @@ export class AdoMentionService {
         }
     }
 
+    /**
+     * Batch-read IMS identities (Graph uses the same candidate origins — see {@link getIdentityServiceCandidateOrigins}).
+     * @see https://learn.microsoft.com/en-us/rest/api/azure/devops/ims/identities/read-identities
+     */
     private async fetchIdentities(guids: string[]): Promise<void> {
-        const orgUrl = this.getOrgUrl();
-        const url = `${orgUrl}/_apis/identities?api-version=6.0`;
+        const org = this.getOrgName();
+        if (!org || typeof window === 'undefined') {
+            return;
+        }
 
         try {
             const chunks = this.chunkArray(guids, 20);
 
             for (const chunk of chunks) {
-                const queryUrl = `${url}&identityIds=${chunk.join(',')}`;
+                const params = new URLSearchParams({
+                    'api-version': '7.1',
+                    identityIds: chunk.join(','),
+                    queryMembership: 'None',
+                });
+                const path = `_apis/identities?${params.toString()}`;
 
-                const response = await this.adoFetch(queryUrl);
+                const response = await this.adoFetchWithIdentityHost(path);
                 if (!response.ok) {
                     console.warn(`Failed to fetch identities: ${response.status} ${response.statusText}`);
                     continue;

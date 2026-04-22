@@ -6,6 +6,7 @@ import { commandsCtx, editorViewCtx } from '@milkdown/kit/core';
 import { wrapIn } from '@milkdown/kit/prose/commands';
 import { uploadConfig } from '@milkdown/kit/plugin/upload';
 import { attachmentServiceCtx } from '../services/attachment-service';
+import { WIKI_EDITOR_TOOLBAR_CLASS } from '../editor/wiki-editor-dom';
 
 // Commonmark commands
 import {
@@ -82,7 +83,7 @@ function createToolbar(ctx: Ctx, view: EditorView): HTMLElement {
   if (!container) throw new Error('Editor container not found');
 
   const toolbar = document.createElement('div');
-  toolbar.className = 'milkdown-toolbar';
+  toolbar.className = WIKI_EDITOR_TOOLBAR_CLASS;
   toolbar.innerHTML = `
     <div class="toolbar-group">
       <button class="toolbar-button" data-action="bold" data-mark="strong" title="Bold (Ctrl+B)" aria-label="Bold">

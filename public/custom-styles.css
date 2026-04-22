@@ -274,8 +274,8 @@ body[data-theme="ms.vss-web.vsts-theme-hc-dark"] .toggle-switch input:checked + 
     flex-shrink: 0;
 }
 
-/* Milkdown editor container - takes remaining space */
-#milkdown-editor {
+/* WYSIWYG wiki editor root — takes remaining flex space */
+#wiki-editor-root {
     margin-top: 0;
     border: none;
     flex: 1 1 0;
@@ -286,8 +286,8 @@ body[data-theme="ms.vss-web.vsts-theme-hc-dark"] .toggle-switch input:checked + 
     flex-direction: column;
 }
 
-#milkdown-editor > div,
-#milkdown-editor .milkdown {
+#wiki-editor-root > div,
+#wiki-editor-root .wiki-editor-shell {
     flex: 1 1 0;
     display: flex;
     flex-direction: column;
@@ -296,13 +296,22 @@ body[data-theme="ms.vss-web.vsts-theme-hc-dark"] .toggle-switch input:checked + 
     height: 100%;
 }
 
-/* The milkdown toolbar should also be fixed */
-#milkdown-editor .milkdown-toolbar {
+/* ProseMirror wiki path: `.editor` wraps the view (same inner layout as legacy bundle). */
+#wiki-editor-root .wiki-editor-shell .editor {
+    flex: 1 1 0;
+    min-height: 0;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Toolbar row should not shrink (fixed height band) */
+#wiki-editor-root .wiki-editor-toolbar {
     flex-shrink: 0;
 }
 
 /* ProseMirror editor - the actual scrollable content area */
-#milkdown-editor .ProseMirror {
+#wiki-editor-root .ProseMirror {
     flex: 1 1 0;
     overflow-y: auto;
     overflow-x: hidden;
@@ -312,10 +321,29 @@ body[data-theme="ms.vss-web.vsts-theme-hc-dark"] .toggle-switch input:checked + 
     outline: none;
 }
 
+/*
+ * Azure DevOps / wiki host CSS sometimes adds heading anchor affordances as
+ * pseudo-elements; those sit above the editable text and steal pointer events.
+ */
+#wiki-editor-root .ProseMirror h1::before,
+#wiki-editor-root .ProseMirror h1::after,
+#wiki-editor-root .ProseMirror h2::before,
+#wiki-editor-root .ProseMirror h2::after,
+#wiki-editor-root .ProseMirror h3::before,
+#wiki-editor-root .ProseMirror h3::after,
+#wiki-editor-root .ProseMirror h4::before,
+#wiki-editor-root .ProseMirror h4::after,
+#wiki-editor-root .ProseMirror h5::before,
+#wiki-editor-root .ProseMirror h5::after,
+#wiki-editor-root .ProseMirror h6::before,
+#wiki-editor-root .ProseMirror h6::after {
+    pointer-events: none;
+}
+
 /* Allow code blocks to scroll horizontally even when parent has overflow-x: hidden */
 /* Note: overflow-y cannot be 'visible' when overflow-x is 'auto' per CSS spec */
 /* Instead, we ensure height expands automatically so no vertical scrollbar appears */
-#milkdown-editor .ProseMirror pre {
+#wiki-editor-root .ProseMirror pre {
     overflow-x: auto !important;
     overflow-y: hidden !important;
     height: auto !important;

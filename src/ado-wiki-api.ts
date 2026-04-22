@@ -113,9 +113,8 @@ export function adoWikiHeadingAnchorsFromPlainTexts(headingPlainTexts: string[])
 export function getWikiInfoFromUrl(): WikiInfo | null {
     const url = window.location.href;
     
-    // Match patterns like:
-    // https://dev.azure.com/{org}/{project}/_wiki/wikis/{wikiName}/{pageId}/{pagePath}
-    // https://dev.azure.com/{org}/{project}/_wiki/wikis/{wikiName}?pagePath={path}
+    // Match hosted wiki paths: `/{org}/{project}/_wiki/wikis/{wikiName}/{pageId}/{pagePath}`
+    // or `/{org}/{project}/_wiki/wikis/{wikiName}?pagePath=...`
     
     const wikiMatch = url.match(/https?:\/\/[^/]+\/([^/]+)\/([^/]+)\/_wiki\/wikis\/([^/?]+)/);
     if (!wikiMatch) return null;
@@ -164,24 +163,36 @@ export function getWikiPageIdFromUrl(): number | null {
 }
 
 /**
- * Wiki pages API lives under `/{organization}/{project}/_apis/...` (dev.azure.com and *.visualstudio.com).
+ * Wiki pages API lives under `/{organization}/{project}/_apis/...` on the current origin (hosted or on-prem).
  */
 function wikiApiBasePath(wikiInfo: WikiInfo): string {
     const origin = window.location.origin;
     return `${origin}/${encodeURIComponent(wikiInfo.org)}/${encodeURIComponent(wikiInfo.projectId)}`;
 }
 
+function mapWikiPageNode(page: Record<string, unknown>): WikiPage {
+    const id = page.id as number;
+    const path = String(page.path ?? '');
+    const order = (page.order as number) ?? 0;
+    const remoteUrl = typeof page.remoteUrl === 'string' ? page.remoteUrl : '';
+    const gitItemPath = typeof page.gitItemPath === 'string' ? page.gitItemPath : undefined;
+    const childRaw = extractSubPagesPayload(
+        page as Record<string, unknown> & { subPages?: unknown[]; SubPages?: unknown[] },
+    );
+    const subPages =
+        childRaw.length > 0 ? childRaw.map((c) => mapWikiPageNode(c as Record<string, unknown>)) : undefined;
+    return {
+        id,
+        path,
+        order,
+        remoteUrl,
+        gitItemPath,
+        ...(subPages && subPages.length > 0 ? { subPages } : {}),
+    };
+}
+
 function mapWikiPageRows(raw: unknown[]): WikiPage[] {
-    return raw.map((page) => {
-        const p = page as Record<string, unknown>;
-        return {
-            id: p.id as number,
-            path: String(p.path ?? ''),
-            order: (p.order as number) ?? 0,
-            remoteUrl: typeof p.remoteUrl === 'string' ? p.remoteUrl : '',
-            gitItemPath: typeof p.gitItemPath === 'string' ? p.gitItemPath : undefined,
-        };
-    });
+    return raw.map((page) => mapWikiPageNode(page as Record<string, unknown>));
 }
 
 function extractSubPagesPayload(data: Record<string, unknown> & { subPages?: unknown[]; SubPages?: unknown[] }): unknown[] {
@@ -191,7 +202,7 @@ function extractSubPagesPayload(data: Record<string, unknown> & { subPages?: unk
 }
 
 /**
- * Fetch child pages for a wiki page (for TOSP).
+ * Fetch child pages for a wiki page (for TOSP), including nested descendants (`recursionLevel=full`).
  * Uses page id from the URL when present (`.../wikis/{wiki}/{id}/`) — path-only queries can return empty subPages.
  */
 export async function fetchChildPages(wikiInfo: WikiInfo, signal?: AbortSignal): Promise<WikiPage[]> {
@@ -201,8 +212,8 @@ export async function fetchChildPages(wikiInfo: WikiInfo, signal?: AbortSignal):
 
         const buildParams = (includeVersion: boolean): URLSearchParams => {
             const params = new URLSearchParams({
-                // VersionControlRecursionType.OneLevel — required for subPages
-                recursionLevel: '1',
+                // VersionControlRecursionType.Full — nested subPages for all descendant levels (TOSP)
+                recursionLevel: 'full',
                 'api-version': '7.1',
             });
             if (includeVersion && wikiInfo.version) {
@@ -313,7 +324,7 @@ export function getPageNameFromPath(path: string): string {
 }
 
 /**
- * Build the wiki page URL for a child page (matches dev.azure.com / visualstudio.com routing).
+ * Build the wiki page URL for a child page (same origin as the current wiki session).
  */
 export function buildWikiPageUrl(wikiInfo: WikiInfo, childPath: string): string {
     const baseUrl = window.location.origin;
@@ -343,22 +354,33 @@ export function renderTocHtml(entries: TocEntry[]): string {
     return html;
 }
 
+function renderTospSubtree(pages: WikiPage[], wikiInfo: WikiInfo, nested: boolean): string {
+    const sorted = [...pages].sort((a, b) => a.order - b.order);
+    const openUl = nested ? '<ul>' : '<ul class="ado-tosp-list">';
+    let html = openUl;
+    for (const page of sorted) {
+        const name = getPageNameFromPath(page.path);
+        const url = page.remoteUrl || buildWikiPageUrl(wikiInfo, page.path);
+        html += '<li>';
+        html += `<a class="ado-tosp-link" href="${escapeHtmlAttr(url)}">${escapeHtml(name)}</a>`;
+        if (page.subPages?.length) {
+            html += renderTospSubtree(page.subPages, wikiInfo, true);
+        }
+        html += '</li>';
+    }
+    html += '</ul>';
+    return html;
+}
+
 /**
  * List markup for TOSP body (used inside the editor widget; header is separate).
+ * Renders nested lists for {@link WikiPage.subPages} when the API returns a full subtree.
  */
 export function renderTospChildListHtml(pages: WikiPage[], wikiInfo: WikiInfo): string {
     if (pages.length === 0) {
         return '<div class="ado-tosp-empty">No child pages</div>';
     }
-    const sortedPages = [...pages].sort((a, b) => a.order - b.order);
-    let html = '<ul class="ado-tosp-list">';
-    sortedPages.forEach((page) => {
-        const name = getPageNameFromPath(page.path);
-        const url = page.remoteUrl || buildWikiPageUrl(wikiInfo, page.path);
-        html += `<li><a class="ado-tosp-link" href="${escapeHtmlAttr(url)}">${escapeHtml(name)}</a></li>`;
-    });
-    html += '</ul>';
-    return html;
+    return renderTospSubtree(pages, wikiInfo, false);
 }
 
 /**

@@ -28,6 +28,9 @@ import { AdoMentionService } from './services/mention-service';
 import { configureAttachmentUpload } from './plugins/attachment-upload';
 import { attachmentImageResolvePlugin } from './plugins/attachment-image-resolve';
 
+// Next-gen ProseMirror editor (migration path; not wired into main.ts yet)
+import { WikiEditor, type WikiEditorOptions } from './editor/wiki-editor';
+
 // Export core classes and utilities for use in main.ts
 export { 
     Editor, 
@@ -62,12 +65,15 @@ export {
     IWikiContext,
     attachmentServiceCtx,
     configureAttachmentUpload,
-    attachmentImageResolvePlugin
+    attachmentImageResolvePlugin,
+    WikiEditor,
+    type WikiEditorOptions,
 };
 
 // Also attach to window for global access
 if (typeof window !== 'undefined') {
     (window as any).MilkdownEditor = Editor;
+    (window as any).WikiEditor = WikiEditor;
     (window as any).MilkdownCore = {
         Editor,
         rootCtx,

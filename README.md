@@ -2,7 +2,7 @@
 
 # Azure DevOps Wiki Editor
 
-Chrome Extension that replaces the default Azure DevOps wiki markdown editor with a WYSIWYG experience. Built with [Milkdown](https://milkdown.dev) ([`@milkdown/kit`](https://github.com/Milkdown/milkdown)) on top of ProseMirror.
+Chrome Extension that replaces the default Azure DevOps wiki markdown editor with a WYSIWYG experience. The **default** surface is a **ProseMirror** wiki editor (`WikiEditor`); an optional [Milkdown](https://milkdown.dev) ([`@milkdown/kit`](https://github.com/Milkdown/milkdown)) bundle remains for comparison (`?milkdown=1` or the popup toggle).
 
 ## 🚀 Prerequisites
 
@@ -115,13 +115,15 @@ If the editor doesn't appear:
   - Wiki TOC generation (`[[_TOC_]]`)
   - Wiki links
   - Work item links (#123)
+- **ProseMirror toolbar:** text and highlight colors (native color pickers, `wikiStyle` mark → raw `<span style="color:…;background-color:…">` in saved markdown)
 - Image upload and embedding
 - Split screen mode (editor/preview)
 - Full screen editing mode
 
 ## 📚 Developer documentation
 
-- **[Wiki attachments (Azure DevOps REST)](docs/wiki-attachments.md)** — REST contract, Base64 body behavior, and debugging notes for upload (`attachment-service.ts`).
+- **[Wiki attachments (Azure DevOps REST)](docs/wiki-attachments.md)** — REST contract, Base64 body behavior, and debugging notes for upload (`attachment-service.ts`).  
+- **[Wiki WYSIWYG editor (ProseMirror)](docs/wiki-editor.md)** — DOM contract (`wiki-editor-root`, …), `wikiStyle` mark, toolbar color UI, related source paths.
 
 ## ⌨️ Keyboard Shortcuts
 

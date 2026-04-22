@@ -24,7 +24,7 @@ ${ADO_PROJECT}            %{ADO_PROJECT=}
 ${LOCAL_TEST_URL}         %{LOCAL_TEST_URL=file://${CURDIR}/../../../playground.html}
 
 # Milkdown selectors
-${EDITOR_CONTAINER}       .milkdown
+${EDITOR_CONTAINER}       .wiki-editor-shell
 ${PROSEMIRROR_EDITOR}     .ProseMirror
 ${TOC_WIDGET}             .ado-toc-widget
 ${TOSP_WIDGET}            .ado-tosp-widget

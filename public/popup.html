@@ -315,6 +315,14 @@
                 <option value="left">Left</option>
             </select>
         </div>
+        <div class="setting-row" style="align-items: flex-start;">
+            <span class="setting-label" style="padding-top: 2px;">Milkdown editor</span>
+            <label style="display: flex; align-items: center; gap: 6px; cursor: pointer; font-size: 12px;">
+                <input type="checkbox" id="useMilkdownWikiEditor" style="cursor: pointer;">
+                <span>Use Milkdown (comparison / legacy)</span>
+            </label>
+        </div>
+        <div class="hint">The default editor is ProseMirror (WikiEditor). Enable this to load Milkdown instead. Refresh the wiki tab after changing. Open a wiki with <span class="shortcut-key">?milkdown=1</span> for a one-off Milkdown session, or <span class="shortcut-key">?wikieditor=1</span> to force WikiEditor.</div>
     </div>
 
     <div class="section">

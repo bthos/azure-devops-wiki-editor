@@ -1,15 +1,13 @@
 /**
- * Azure DevOps Theme for Milkdown
- * 
- * Custom theme matching Azure DevOps Wiki styling.
- * Supports Light, Dark, High Contrast Dark, and High Contrast Light themes.
- * 
- * Theming is handled via CSS custom properties that respond to
- * the data-theme attribute on the body element.
+ * Azure DevOps theme for the wiki WYSIWYG surface (shared CSS; legacy bundle uses Milkdown `Editor.make()`).
+ *
+ * Supports light, dark, high-contrast dark, and high-contrast light variants via
+ * the `data-theme` attribute on `body` and `.wiki-editor-dark` on the editor root.
  */
 
 import type { Ctx } from '@milkdown/kit/ctx';
 import { editorViewOptionsCtx } from '@milkdown/kit/core';
+import { WIKI_EDITOR_DARK_CLASS, WIKI_EDITOR_SHELL_CLASS } from '../editor/wiki-editor-dom';
 
 // Import the theme CSS
 import './ado-theme.css';
@@ -20,8 +18,8 @@ import './ado-theme.css';
 export type AdoTheme = 'light' | 'dark' | 'hc-dark' | 'hc-light';
 
 /**
- * Azure DevOps theme configuration for Milkdown
- * 
+ * ProseMirror view attributes for the legacy Milkdown Core bundle (`Editor.make()`), aligned with `WikiEditor` DOM classes.
+ *
  * Usage:
  * ```typescript
  * import { adoTheme } from './theme/ado-theme';
@@ -38,7 +36,7 @@ export const adoTheme = (ctx: Ctx): void => {
         attributes: {
             ...prev.attributes,
             class: [
-                'milkdown',
+                WIKI_EDITOR_SHELL_CLASS,
                 (prev.attributes as Record<string, string>)?.class || ''
             ].filter(Boolean).join(' ').trim(),
             spellcheck: 'false',
@@ -78,14 +76,14 @@ export function isDarkTheme(theme?: AdoTheme): boolean {
  * Used for standalone contexts where body doesn't have data-theme
  */
 export function applyDarkTheme(editorElement: HTMLElement): void {
-    editorElement.classList.add('milkdown-dark-theme');
+    editorElement.classList.add(WIKI_EDITOR_DARK_CLASS);
 }
 
 /**
  * Remove dark theme class from the editor container
  */
 export function removeDarkTheme(editorElement: HTMLElement): void {
-    editorElement.classList.remove('milkdown-dark-theme');
+    editorElement.classList.remove(WIKI_EDITOR_DARK_CLASS);
 }
 
 export default adoTheme;

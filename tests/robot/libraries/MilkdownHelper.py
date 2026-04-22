@@ -19,9 +19,9 @@ class MilkdownHelper:
     
     # CSS Selectors for Milkdown elements
     SELECTORS = {
-        'editor_container': '.milkdown',
+        'editor_container': '.wiki-editor-shell',
         'prosemirror': '.ProseMirror',
-        'toolbar': '.milkdown-toolbar, [class*="toolbar"]',
+        'toolbar': '.wiki-editor-toolbar, [class*="toolbar"]',
         'toc_widget': '.ado-toc-widget',
         'tosp_widget': '.ado-tosp-widget',
         'mention': '.ado-mention, [data-mention]',

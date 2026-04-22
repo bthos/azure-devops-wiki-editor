@@ -167,6 +167,34 @@ describe('renderTospChildListHtml and renderTospHtml', () => {
         expect(html).toContain('pagePath=');
     });
 
+    it('renders nested sub-pages as nested lists', () => {
+        const pages: WikiPage[] = [
+            {
+                id: 1,
+                path: '/parent',
+                order: 0,
+                remoteUrl: '',
+                subPages: [
+                    { id: 2, path: '/parent/child', order: 0, remoteUrl: '' },
+                    {
+                        id: 3,
+                        path: '/parent/other',
+                        order: 1,
+                        remoteUrl: '',
+                        subPages: [{ id: 4, path: '/parent/other/deep', order: 0, remoteUrl: '' }],
+                    },
+                ],
+            },
+        ];
+        setWindowLocation('https://dev.azure.com/o/p/_wiki/wikis/w');
+        const html = renderTospChildListHtml(pages, wiki);
+        expect(html).toContain('parent');
+        expect(html).toContain('child');
+        expect(html).toContain('deep');
+        expect((html.match(/<ul/g) || []).length).toBe(3);
+        expect(html.indexOf('child')).toBeLessThan(html.indexOf('deep'));
+    });
+
     it('wraps list in renderTospHtml', () => {
         const html = renderTospHtml([], wiki);
         expect(html).toContain('tosp-container');
@@ -218,7 +246,7 @@ describe('fetchChildPages', () => {
             'fetch',
             vi.fn().mockImplementation((url: string) => {
                 expect(url).toContain('/_apis/wiki/wikis/w/pages/7?');
-                expect(url).toContain('recursionLevel=1');
+                expect(url).toContain('recursionLevel=full');
                 return Promise.resolve({
                     ok: true,
                     json: async () => ({ subPages: raw }),
@@ -229,6 +257,30 @@ describe('fetchChildPages', () => {
         expect(pages).toEqual([
             { id: 1, path: '/a', order: 1, remoteUrl: 'https://r', gitItemPath: undefined },
         ]);
+    });
+
+    it('maps nested subPages when API returns full recursion', async () => {
+        setWindowLocation('https://dev.azure.com/o/p/_wiki/wikis/w/7/foo');
+        const raw = [
+            {
+                id: 1,
+                path: '/root',
+                order: 0,
+                remoteUrl: '',
+                subPages: [{ id: 2, path: '/root/leaf', order: 0, remoteUrl: 'https://leaf' }],
+            },
+        ];
+        vi.stubGlobal(
+            'fetch',
+            vi.fn().mockResolvedValue({
+                ok: true,
+                json: async () => ({ subPages: raw }),
+            }),
+        );
+        const pages = await fetchChildPages(wiki);
+        expect(pages).toHaveLength(1);
+        expect(pages[0].subPages).toHaveLength(1);
+        expect(pages[0].subPages![0]).toMatchObject({ id: 2, path: '/root/leaf' });
     });
 
     it('accepts PascalCase SubPages', async () => {

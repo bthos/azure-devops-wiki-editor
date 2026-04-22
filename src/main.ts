@@ -1,5 +1,5 @@
 // Azure DevOps Wiki Editor - Main Content Script
-// Uses Milkdown Core for WYSIWYG markdown editing
+// Default WYSIWYG: ProseMirror {@link WikiEditor}; optional Milkdown for comparison (popup / `?milkdown=1`).
 
 import { 
     Editor, 
@@ -21,7 +21,8 @@ import {
     AdoAttachmentService,
     AdoMentionService,
     attachmentServiceCtx,
-    configureAttachmentUpload
+    configureAttachmentUpload,
+    WikiEditor,
 } from './editor-bundle';
 
 import { getWikiInfoFromUrl } from './ado-wiki-api';
@@ -29,13 +30,16 @@ import { adoHeadingAnchorPlugin } from './plugins/ado-heading-anchor-plugin';
 import { attachmentImageResolvePlugin } from './plugins/attachment-image-resolve';
 import { setupMentionProfileCard } from './plugins/mention-profile-card';
 import { adoWikiAttachmentImageHandler, adoWikiAttachmentLinkHandler } from './syntax/ado-wiki-attachment-stringify';
+import { postprocessAdoMarkers, preprocessMentions } from './utils/wiki-markers';
+import { WIKI_EDITOR_DARK_CLASS, WIKI_EDITOR_ROOT_ID } from './editor/wiki-editor-dom';
 
 // Define global types
 declare global {
     interface Window {
         MilkdownEditor: typeof Editor;
         editorObserver?: MutationObserver;
-        wikiEditorInstance?: Editor;
+        /** Active surface: legacy Milkdown {@link Editor} or migration {@link WikiEditor}. */
+        wikiEditorInstance?: Editor | WikiEditor;
     }
 }
 
@@ -50,6 +54,58 @@ let isWysiwygMode = false;
 let mentionService: AdoMentionService | null = null;
 /** Set in {@link initializeEditor} for {@link syncEditorToTextarea} (attachment URL round-trip). */
 let attachmentServiceInstance: AdoAttachmentService | null = null;
+
+const STORAGE_USE_MILKDOWN = 'useMilkdownWikiEditor';
+
+/** Legacy opt-in to ProseMirror; migrated when reading {@link STORAGE_USE_MILKDOWN}. */
+const STORAGE_LEGACY_PM = 'useProseMirrorWikiEditor';
+
+/**
+ * When false (default), {@link initializeEditor} mounts {@link WikiEditor}.
+ * Enable Milkdown for side-by-side comparison via the extension popup or `?milkdown=1` on the wiki URL.
+ * `?wikieditor=1` still forces the ProseMirror editor regardless of other flags.
+ */
+function readUseMilkdownWikiEditor(): Promise<boolean> {
+    try {
+        const u = new URL(location.href);
+        if (u.searchParams.get('wikieditor') === '1') {
+            return Promise.resolve(false);
+        }
+        if (u.searchParams.get('milkdown') === '1') {
+            return Promise.resolve(true);
+        }
+    } catch {
+        /* ignore */
+    }
+    return new Promise((resolve) => {
+        if (typeof chrome === 'undefined' || !chrome.storage?.sync) {
+            resolve(false);
+            return;
+        }
+        chrome.storage.sync.get([STORAGE_USE_MILKDOWN, STORAGE_LEGACY_PM], (r) => {
+            if (typeof r[STORAGE_USE_MILKDOWN] === 'boolean') {
+                resolve(!!r[STORAGE_USE_MILKDOWN]);
+                return;
+            }
+            if (r[STORAGE_LEGACY_PM] === true) {
+                resolve(false);
+                return;
+            }
+            if (r[STORAGE_LEGACY_PM] === false) {
+                resolve(true);
+                return;
+            }
+            resolve(false);
+        });
+    });
+}
+
+function getMarkdownFromEditorInstance(inst: Editor | WikiEditor): string {
+    if (inst instanceof WikiEditor) {
+        return inst.getMarkdown();
+    }
+    return inst.action(getMarkdown());
+}
 
 /**
  * Helper function to check if an element is visible
@@ -98,8 +154,7 @@ function createModeToggle(position: string = 'right'): HTMLElement {
  */
 function syncEditorToTextarea(textarea: HTMLTextAreaElement): void {
     if (window.wikiEditorInstance) {
-        // Get markdown content using the action API
-        let content = window.wikiEditorInstance.action(getMarkdown());
+        let content = getMarkdownFromEditorInstance(window.wikiEditorInstance);
         
         // Restore ADO markers to original format
         content = postprocessAdoMarkers(content);
@@ -150,10 +205,10 @@ function enableWysiwygMode(textarea: HTMLTextAreaElement, wikiEditor: HTMLElemen
     }
     
     // Show/create editor
-    let editorDiv = document.querySelector('#milkdown-editor') as HTMLElement;
+    let editorDiv = document.querySelector(`#${WIKI_EDITOR_ROOT_ID}`) as HTMLElement;
     if (!editorDiv) {
         editorDiv = document.createElement('div');
-        editorDiv.id = 'milkdown-editor';
+        editorDiv.id = WIKI_EDITOR_ROOT_ID;
         wikiEditor.appendChild(editorDiv);
     }
     editorDiv.style.display = 'block';
@@ -209,7 +264,7 @@ function disableWysiwygMode(textarea: HTMLTextAreaElement, wikiEditor: HTMLEleme
     }
     
     // Hide editor
-    const editorDiv = document.querySelector('#milkdown-editor');
+    const editorDiv = document.querySelector(`#${WIKI_EDITOR_ROOT_ID}`);
     if (editorDiv) {
         (editorDiv as HTMLElement).style.display = 'none';
     }
@@ -234,30 +289,6 @@ function updateToggleLabels(isWysiwyg: boolean): void {
             wysiwygLabel.classList.remove('active');
         }
     }
-}
-
-/**
- * Preprocess markdown to protect @<user> mentions from HTML parsing
- * Converts @<user> to @‹user› using angle quotes that won't be interpreted as HTML
- */
-function preprocessMentions(content: string): string {
-    // Replace @<user> with @‹user› (using U+2039 and U+203A single angle quotation marks)
-    return content.replace(/@<([^>]+)>/g, '@‹$1›');
-}
-
-/**
- * Postprocess markdown to restore escaped characters
- * Restores @‹user› back to @<user> and unescapes angle brackets
- */
-function postprocessAdoMarkers(content: string): string {
-    return content
-        // Restore @‹user› back to @<user>
-        .replace(/@‹([^›]+)›/g, '@<$1>')
-        // Restore escaped angle brackets: \< → <
-        .replace(/\\</g, '<')
-        // Restore TOC and TOSP markers
-        .replace(/\\?\[\\?\[\\?_TOC\\?_\\?\]\\?\]/g, '[[_TOC_]]')
-        .replace(/\\?\[\\?\[\\?_TOSP\\?_\\?\]\\?\]/g, '[[_TOSP_]]');
 }
 
 /**
@@ -296,6 +327,82 @@ async function initializeEditor(textarea: HTMLTextAreaElement, editorDiv: HTMLEl
     if (attachmentService) {
         await attachmentService.hydrateRepositoryId();
         content = attachmentService.rewriteMarkdownToDisplayUrls(content);
+    }
+
+    const useMilkdownWiki = await readUseMilkdownWikiEditor();
+    if (!useMilkdownWiki) {
+        try {
+            let wikiRef!: WikiEditor;
+            wikiRef = new WikiEditor(editorDiv, content, {
+                attachmentService: attachmentService ?? undefined,
+                mentionService: mentionService ?? undefined,
+                onDocChanged: () => {
+                    if (!isWysiwygMode) return;
+                    let processedContent = wikiRef.getMarkdown();
+                    processedContent = postprocessAdoMarkers(processedContent);
+                    if (attachmentService) {
+                        processedContent = attachmentService.markdownRestoreRelativeAttachmentPaths(processedContent);
+                    }
+                    if (mentionService) {
+                        processedContent = mentionService.restoreMentions(processedContent);
+                    }
+                    textarea.value = processedContent;
+                    textarea.dispatchEvent(new Event('input', { bubbles: true }));
+                },
+            });
+            window.wikiEditorInstance = wikiRef;
+
+            setupMentionProfileCard(editorDiv, mentionService);
+
+            if (useDarkTheme) {
+                editorDiv.classList.add(WIKI_EDITOR_DARK_CLASS);
+            }
+
+            if (form) {
+                form.addEventListener('submit', function () {
+                    syncEditorToTextarea(textarea);
+                });
+            }
+
+            const proseMirror = editorDiv.querySelector('.ProseMirror');
+            if (proseMirror) {
+                const scrollCodeBlockToCursor = () => {
+                    const selection = window.getSelection();
+                    if (!selection || selection.rangeCount === 0) return;
+
+                    const range = selection.getRangeAt(0);
+                    const cursorNode = range.startContainer;
+                    const cursorPre =
+                        cursorNode.nodeType === Node.TEXT_NODE
+                            ? cursorNode.parentElement?.closest('pre')
+                            : cursorNode.nodeType === Node.ELEMENT_NODE
+                              ? (cursorNode as Element).closest('pre')
+                              : null;
+
+                    if (cursorPre) {
+                        const cursorRect = range.getBoundingClientRect();
+                        const preRect = cursorPre.getBoundingClientRect();
+                        const pre = cursorPre as HTMLElement;
+
+                        const cursorLeft = cursorRect.left - preRect.left + pre.scrollLeft;
+
+                        if (cursorLeft < pre.scrollLeft) {
+                            pre.scrollLeft = Math.max(0, cursorLeft - 20);
+                        } else if (cursorLeft > pre.scrollLeft + pre.clientWidth - 20) {
+                            pre.scrollLeft = cursorLeft - pre.clientWidth + 20;
+                        }
+                    }
+                };
+
+                proseMirror.addEventListener('input', () => setTimeout(scrollCodeBlockToCursor, 50));
+                document.addEventListener('selectionchange', () => setTimeout(scrollCodeBlockToCursor, 50));
+            }
+
+            console.log('ProseMirror WikiEditor initialized');
+        } catch (error) {
+            console.error('Failed to initialize WikiEditor:', error);
+        }
+        return;
     }
 
     try {
@@ -369,7 +476,7 @@ async function initializeEditor(textarea: HTMLTextAreaElement, editorDiv: HTMLEl
         
         // Apply dark theme class if needed
         if (useDarkTheme) {
-            editorDiv.classList.add('milkdown-dark-theme');
+            editorDiv.classList.add(WIKI_EDITOR_DARK_CLASS);
         }
         
         // Handle form submission

@@ -104,9 +104,14 @@ export const mentionMark = $mark('userMention', () => ({
   
   toMarkdown: {
     match: (mark: Mark) => mark.type.name === 'userMention',
-    runner: (state: any, mark: Mark, node: any) => {
-      // The text content already contains @‹user›, just pass it through
-      // Return true to indicate we handled this mark (prevents default handling)
+    runner: (state: any, mark: Mark, _node: any) => {
+      // Must emit the mention as a single text leaf and return a truthy value so the serializer
+      // does not also run the default text handler (which re-stringifies `node.text` and lets
+      // mdast-util-to-markdown escape `<`, `@`, etc.). That double emission corrupted emails like
+      // `@<a@b.com>` into `@<<<<<<...>>>>>>` after repeated WYSIWYG toggles.
+      const userName = String(mark.attrs.userName ?? '');
+      state.addNode('text', undefined, `@‹${userName}›`);
+      return state;
     },
   },
 }));

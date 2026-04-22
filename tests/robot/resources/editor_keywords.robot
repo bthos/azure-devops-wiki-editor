@@ -8,7 +8,7 @@ Resource          common.robot
 
 *** Variables ***
 # Editor element selectors
-${TOOLBAR_CONTAINER}      .milkdown-toolbar, [class*="toolbar"]
+${TOOLBAR_CONTAINER}      .wiki-editor-toolbar, [class*="toolbar"]
 ${BOLD_BUTTON}            button[data-type="bold"], [aria-label*="Bold"]
 ${ITALIC_BUTTON}          button[data-type="italic"], [aria-label*="Italic"]
 ${HEADING_BUTTON}         button[data-type="heading"], [aria-label*="Heading"]

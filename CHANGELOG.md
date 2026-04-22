@@ -7,6 +7,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [3.1.0] - 2026-04-21
+
+### Added
+
+- **WikiEditor (ProseMirror)** as the default WYSIWYG surface (`src/editor/`, `main.ts`): markdown-it + `prosemirror-markdown` schema, tables, task lists, TOC/TOSP/HTML atoms, code block widget, heading anchors, attachment paste/display, wiki toolbar. Milkdown remains optional (popup / `?milkdown=1`).
+- **ProseMirror toolbar — text & highlight colors**  
+  - One **Text & highlight colors** dropdown with two native `<input type="color">` controls (foreground + background).  
+  - Applies the `wikiStyle` mark (`src/editor/wiki-schema.ts`): serializes to raw wiki HTML `<span style="color:…;background-color:…">` and round-trips through `markdown-it` `html_inline` without using `ado_html_inline` atoms.  
+  - Reset actions: clear text color, clear highlight, reset both (`applyWikiStyle` in `src/editor/wiki-insert-markers.ts`).  
+- **Contributor doc:** [`docs/wiki-editor.md`](docs/wiki-editor.md) — DOM contract (`wiki-editor-root`, …), `wikiStyle` behavior, file map.
+- **Unit tests** for wiki markdown, tables, task lists, heading anchors, hosts, mention service, and related helpers (`tests/unit/wiki-*.spec.ts`, …).
+
+### Changed
+
+- **WYSIWYG DOM / CSS naming** (default ProseMirror path and shared theme): replaced `milkdown-*` host class/id names with `wiki-editor-root`, `wiki-editor-shell`, `wiki-editor-toolbar`, and `wiki-editor-dark` (`src/editor/wiki-editor-dom.ts`, `public/custom-styles.css`, `src/theme/ado-theme.css`, `src/toolbar/toolbar.css`). Optional Milkdown bundle uses the same shell class via `ado-theme.ts` so styling stays aligned.  
+- **Robot E2E** selectors updated to `.wiki-editor-shell` / `.wiki-editor-toolbar` (`tests/robot/…`, `MilkdownHelper.py`).
+- **ADO wiki API, mention service, syntax glue** — updates aligned with the ProseMirror path and attachment flows (see git history for detail).
+
 ## [3.0.1] - 2026-04-19
 
 ### Fixed
@@ -27,5 +45,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **README**: long technical attachment notes replaced with a short **Developer documentation** link to `docs/wiki-attachments.md`.  
 - **README**: `test` script description updated (Vitest).
 
-[Unreleased]: https://github.com/bthos/azure-devops-wiki-editor/compare/v3.0.1...HEAD
+[Unreleased]: https://github.com/bthos/azure-devops-wiki-editor/compare/v3.1.0...HEAD
+[3.1.0]: https://github.com/bthos/azure-devops-wiki-editor/compare/v3.0.1...v3.1.0
 [3.0.1]: https://github.com/bthos/azure-devops-wiki-editor/releases/tag/v3.0.1

@@ -9,11 +9,11 @@ import { $node, $remark, $view } from '@milkdown/kit/utils';
 import type { Node } from '@milkdown/kit/prose/model';
 import { adoWikiHeadingAnchorsFromPlainTexts } from '../ado-wiki-api';
 
-interface HeadingInfo {
-  level: number;
-  text: string;
-  /** Encoded fragment for `href="#..."` */
-  fragment: string;
+export interface HeadingInfo {
+    level: number;
+    text: string;
+    /** Encoded fragment for `href="#..."` */
+    fragment: string;
 }
 
 /**
@@ -118,7 +118,7 @@ export const adoTocNode = $node('adoToc', () => ({
   },
 }));
 
-function buildTocHtml(headings: HeadingInfo[]): string {
+export function buildTocHtml(headings: HeadingInfo[]): string {
   if (headings.length === 0) {
     return '<div class="ado-toc-empty">No headings found</div>';
   }

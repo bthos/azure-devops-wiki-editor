@@ -1,7 +1,7 @@
-/* Milkdown Toolbar Styles - Azure DevOps Design */
+/* Wiki WYSIWYG toolbar — Azure DevOps design */
 /* Uses design tokens from ado-theme.css */
 
-.milkdown-toolbar {
+.wiki-editor-toolbar {
     display: flex;
     align-items: center;
     gap: 4px;
@@ -89,11 +89,52 @@
     pointer-events: none;
 }
 
+/* `<input type="color">` in wiki toolbar (text + highlight via `wikiStyle` mark) */
+.toolbar-color-input {
+    width: 26px;
+    height: 22px;
+    padding: 0;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+}
+
+.toolbar-color-input:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+    pointer-events: none;
+}
+
+.wiki-style-color-menu {
+    min-width: 220px;
+    padding: 8px 0;
+}
+
+.wiki-style-color-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 6px 12px;
+}
+
+.wiki-style-color-label {
+    font-size: 12px;
+    color: var(--ado-text-secondary, rgba(0, 0, 0, 0.55));
+    white-space: nowrap;
+}
+
+.wiki-style-color-input {
+    width: 36px;
+    height: 28px;
+    flex-shrink: 0;
+}
+
 /* High contrast theme support */
 :is(
     body[data-theme="ms.vss-web.vsts-theme-hc-dark"],
     body[data-theme="ms.vss-web.vsts-theme-hc-light"]
-) .milkdown-toolbar {
+) .wiki-editor-toolbar {
     border-bottom-width: var(--ado-border-width);
 }
 
@@ -282,4 +323,229 @@
     body[data-theme="ms.vss-web.vsts-theme-hc-light"]
 ) .table-grid-cell.highlighted {
     background-color: var(--ado-accent-color, #0078d4);
+}
+
+/* ProseMirror wiki: “Paste as HTML” modal */
+.wiki-paste-html-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 100000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0, 0, 0, 0.35);
+    padding: 16px;
+}
+
+.wiki-paste-html-panel {
+    width: min(640px, 100%);
+    max-height: min(90vh, 720px);
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 16px 18px;
+    background: var(--ado-surface-bg, #ffffff);
+    border: 1px solid var(--ado-border-color, #eaeaea);
+    border-radius: 4px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
+}
+
+.wiki-paste-html-title {
+    margin: 0;
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--ado-text-primary, rgba(0, 0, 0, 0.9));
+}
+
+.wiki-paste-html-hint {
+    margin: 0;
+    font-size: 12px;
+    line-height: 1.4;
+    color: var(--ado-text-secondary, rgba(0, 0, 0, 0.55));
+}
+
+.wiki-paste-html-textarea {
+    flex: 1;
+    min-height: 200px;
+    max-height: 50vh;
+    resize: vertical;
+    font-family: var(--ado-font-mono, Consolas, Monaco, monospace);
+    font-size: 12px;
+    line-height: 1.45;
+    padding: 8px 10px;
+    border: 1px solid var(--ado-border-color, #eaeaea);
+    border-radius: 2px;
+    color: var(--ado-text-primary, rgba(0, 0, 0, 0.9));
+    background: var(--ado-surface-secondary, #faf9f8);
+}
+
+.wiki-paste-html-textarea:focus {
+    outline: 2px solid var(--ado-accent-color, #0078d4);
+    outline-offset: 1px;
+}
+
+.wiki-paste-html-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+}
+
+.wiki-paste-html-btn {
+    min-width: 88px;
+    height: 32px;
+    padding: 0 14px;
+    font-size: 13px;
+    border-radius: 2px;
+    cursor: pointer;
+    border: 1px solid transparent;
+}
+
+.wiki-paste-html-btn-primary {
+    background: var(--ado-accent-color, #0078d4);
+    color: #fff;
+    border-color: var(--ado-accent-color, #0078d4);
+}
+
+.wiki-paste-html-btn-primary:hover {
+    filter: brightness(1.05);
+}
+
+.wiki-paste-html-btn-secondary {
+    background: var(--ado-surface-bg, #ffffff);
+    color: var(--ado-text-primary, rgba(0, 0, 0, 0.9));
+    border-color: var(--ado-border-color, #eaeaea);
+}
+
+.wiki-paste-html-btn-secondary:hover {
+    background: var(--ado-surface-secondary, #faf9f8);
+}
+
+/* ProseMirror wiki: @mention team picker (Core REST members) */
+.wiki-mention-picker-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 100000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0, 0, 0, 0.35);
+    padding: 16px;
+}
+
+.wiki-mention-picker-panel {
+    width: min(420px, 100%);
+    max-height: min(85vh, 560px);
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 16px 18px;
+    background: var(--ado-surface-bg, #ffffff);
+    border: 1px solid var(--ado-border-color, #eaeaea);
+    border-radius: 4px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
+}
+
+.wiki-mention-picker-title {
+    margin: 0;
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--ado-text-primary, rgba(0, 0, 0, 0.9));
+}
+
+.wiki-mention-picker-search {
+    width: 100%;
+    box-sizing: border-box;
+    height: 32px;
+    padding: 0 10px;
+    font-size: 13px;
+    border: 1px solid var(--ado-border-color, #eaeaea);
+    border-radius: 2px;
+}
+
+.wiki-mention-picker-status {
+    margin: 0;
+    font-size: 12px;
+    color: var(--ado-text-secondary, rgba(0, 0, 0, 0.55));
+}
+
+.wiki-mention-picker-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    overflow-y: auto;
+    min-height: 120px;
+    max-height: 360px;
+    border: 1px solid var(--ado-border-color, #eaeaea);
+    border-radius: 4px;
+    background: var(--ado-surface-secondary, #faf9f8);
+}
+
+.wiki-mention-picker-empty {
+    padding: 12px;
+    font-size: 13px;
+    color: var(--ado-text-secondary, rgba(0, 0, 0, 0.55));
+}
+
+.wiki-mention-picker-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 10px;
+    cursor: pointer;
+    border-bottom: 1px solid var(--ado-border-color, #eaeaea);
+    outline: none;
+}
+
+.wiki-mention-picker-item:last-child {
+    border-bottom: none;
+}
+
+.wiki-mention-picker-item:hover,
+.wiki-mention-picker-item:focus {
+    background: var(--ado-accent-bg, rgba(0, 120, 212, 0.12));
+}
+
+.wiki-mention-picker-avatar {
+    flex-shrink: 0;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: var(--ado-accent-color, #0078d4);
+    color: #fff;
+    font-size: 11px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+}
+
+.wiki-mention-picker-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.wiki-mention-picker-text {
+    min-width: 0;
+    flex: 1;
+}
+
+.wiki-mention-picker-name {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--ado-text-primary, rgba(0, 0, 0, 0.9));
+}
+
+.wiki-mention-picker-sub {
+    font-size: 12px;
+    color: var(--ado-text-secondary, rgba(0, 0, 0, 0.55));
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.wiki-mention-picker-actions {
+    display: flex;
+    justify-content: flex-end;
 }
