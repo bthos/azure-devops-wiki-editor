@@ -1,49 +1,25 @@
 // Azure DevOps Wiki Editor - Main Content Script
-// Default WYSIWYG: ProseMirror {@link WikiEditor}; optional Milkdown for comparison (popup / `?milkdown=1`).
+// WYSIWYG: ProseMirror {@link WikiEditor} (Manifest V3 content script).
 
-import { 
-    Editor, 
-    rootCtx, 
-    defaultValueCtx, 
-    remarkStringifyOptionsCtx,
-    commonmark,
-    gfm,
-    history,
-    listener,
-    listenerCtx,
-    clipboard,
-    getMarkdown,
-    adoTheme,
+import {
     isDarkTheme,
-    adoSyntaxPlugin,
-    toolbarPlugin,
-    upload,
     AdoAttachmentService,
     AdoMentionService,
-    attachmentServiceCtx,
-    configureAttachmentUpload,
     WikiEditor,
 } from './editor-bundle';
 
 import { getWikiInfoFromUrl } from './ado-wiki-api';
-import { adoHeadingAnchorPlugin } from './plugins/ado-heading-anchor-plugin';
-import { attachmentImageResolvePlugin } from './plugins/attachment-image-resolve';
 import { setupMentionProfileCard } from './plugins/mention-profile-card';
-import { adoWikiAttachmentImageHandler, adoWikiAttachmentLinkHandler } from './syntax/ado-wiki-attachment-stringify';
 import { postprocessAdoMarkers, preprocessMentions } from './utils/wiki-markers';
 import { WIKI_EDITOR_DARK_CLASS, WIKI_EDITOR_ROOT_ID } from './editor/wiki-editor-dom';
 
-// Define global types
 declare global {
     interface Window {
-        MilkdownEditor: typeof Editor;
         editorObserver?: MutationObserver;
-        /** Active surface: legacy Milkdown {@link Editor} or migration {@link WikiEditor}. */
-        wikiEditorInstance?: Editor | WikiEditor;
+        wikiEditorInstance?: WikiEditor;
     }
 }
 
-// Export empty object to ensure this file is treated as a module
 export {};
 
 const MAX_RETRIES = 10;
@@ -52,72 +28,22 @@ let timeoutId: number | null = null;
 let editorReady = false;
 let isWysiwygMode = false;
 let mentionService: AdoMentionService | null = null;
-/** Set in {@link initializeEditor} for {@link syncEditorToTextarea} (attachment URL round-trip). */
 let attachmentServiceInstance: AdoAttachmentService | null = null;
 
-const STORAGE_USE_MILKDOWN = 'useMilkdownWikiEditor';
+/** Removes code-block scroll listeners from the previous mount (toggle / re-init). */
+let detachCodeBlockScrollListeners: (() => void) | null = null;
 
-/** Legacy opt-in to ProseMirror; migrated when reading {@link STORAGE_USE_MILKDOWN}. */
-const STORAGE_LEGACY_PM = 'useProseMirrorWikiEditor';
+const formWikiSubmitHandlers = new WeakMap<HTMLFormElement, () => void>();
 
-/**
- * When false (default), {@link initializeEditor} mounts {@link WikiEditor}.
- * Enable Milkdown for side-by-side comparison via the extension popup or `?milkdown=1` on the wiki URL.
- * `?wikieditor=1` still forces the ProseMirror editor regardless of other flags.
- */
-function readUseMilkdownWikiEditor(): Promise<boolean> {
-    try {
-        const u = new URL(location.href);
-        if (u.searchParams.get('wikieditor') === '1') {
-            return Promise.resolve(false);
-        }
-        if (u.searchParams.get('milkdown') === '1') {
-            return Promise.resolve(true);
-        }
-    } catch {
-        /* ignore */
-    }
-    return new Promise((resolve) => {
-        if (typeof chrome === 'undefined' || !chrome.storage?.sync) {
-            resolve(false);
-            return;
-        }
-        chrome.storage.sync.get([STORAGE_USE_MILKDOWN, STORAGE_LEGACY_PM], (r) => {
-            if (typeof r[STORAGE_USE_MILKDOWN] === 'boolean') {
-                resolve(!!r[STORAGE_USE_MILKDOWN]);
-                return;
-            }
-            if (r[STORAGE_LEGACY_PM] === true) {
-                resolve(false);
-                return;
-            }
-            if (r[STORAGE_LEGACY_PM] === false) {
-                resolve(true);
-                return;
-            }
-            resolve(false);
-        });
-    });
+function getMarkdownFromEditorInstance(inst: WikiEditor): string {
+    return inst.getMarkdown();
 }
 
-function getMarkdownFromEditorInstance(inst: Editor | WikiEditor): string {
-    if (inst instanceof WikiEditor) {
-        return inst.getMarkdown();
-    }
-    return inst.action(getMarkdown());
-}
-
-/**
- * Helper function to check if an element is visible
- */
 function isElementVisible(element: HTMLElement): boolean {
     return !!(element.offsetWidth || element.offsetHeight || element.getClientRects().length) &&
         window.getComputedStyle(element).display !== 'none';
 }
 
-/**
- * Find the closest ancestor that matches a selector
- */
 function findClosest(element: HTMLElement, selector: string): HTMLElement | null {
     let currentElement = element;
     while (currentElement && !currentElement.matches(selector)) {
@@ -129,9 +55,6 @@ function findClosest(element: HTMLElement, selector: string): HTMLElement | null
     return currentElement;
 }
 
-/**
- * Create the custom mode toggle switch
- */
 function createModeToggle(position: string = 'right'): HTMLElement {
     const container = document.createElement('div');
     container.id = 'wysiwyg-toggle-container';
@@ -149,21 +72,16 @@ function createModeToggle(position: string = 'right'): HTMLElement {
     return container;
 }
 
-/**
- * Get the content from the editor and update the textarea
- */
 function syncEditorToTextarea(textarea: HTMLTextAreaElement): void {
     if (window.wikiEditorInstance) {
         let content = getMarkdownFromEditorInstance(window.wikiEditorInstance);
-        
-        // Restore ADO markers to original format
+
         content = postprocessAdoMarkers(content);
 
         if (attachmentServiceInstance) {
             content = attachmentServiceInstance.markdownRestoreRelativeAttachmentPaths(content);
         }
 
-        // Restore mentions to storage format (@<GUID>)
         if (mentionService) {
             content = mentionService.restoreMentions(content);
         }
@@ -174,37 +92,29 @@ function syncEditorToTextarea(textarea: HTMLTextAreaElement): void {
     }
 }
 
-/**
- * Switch to WYSIWYG mode
- */
 function enableWysiwygMode(textarea: HTMLTextAreaElement, wikiEditor: HTMLElement): void {
     isWysiwygMode = true;
-    
-    // Hide ADO toolbar
+
     const adoToolbar = wikiEditor.querySelector('.we-toolbar-container');
     if (adoToolbar) {
         (adoToolbar as HTMLElement).style.display = 'none';
     }
-    
-    // Hide the wiki markdown toolbar
+
     const wikiMarkdownToolbar = document.querySelector('.wiki-markdown-toolbar');
     if (wikiMarkdownToolbar) {
         (wikiMarkdownToolbar as HTMLElement).style.display = 'none';
     }
-    
-    // Hide ADO preview container
+
     const previewContainer = wikiEditor.querySelector('.we-text-preview-container');
     if (previewContainer) {
         (previewContainer as HTMLElement).style.display = 'none';
     }
-    
-    // Hide ADO textarea container
+
     const taContainer = wikiEditor.querySelector('.we-ta-container');
     if (taContainer) {
         (taContainer as HTMLElement).style.display = 'none';
     }
-    
-    // Show/create editor
+
     let editorDiv = document.querySelector(`#${WIKI_EDITOR_ROOT_ID}`) as HTMLElement;
     if (!editorDiv) {
         editorDiv = document.createElement('div');
@@ -212,8 +122,7 @@ function enableWysiwygMode(textarea: HTMLTextAreaElement, wikiEditor: HTMLElemen
         wikiEditor.appendChild(editorDiv);
     }
     editorDiv.style.display = 'block';
-    
-    // Destroy existing editor if present
+
     if (window.wikiEditorInstance) {
         try {
             window.wikiEditorInstance.destroy();
@@ -223,63 +132,49 @@ function enableWysiwygMode(textarea: HTMLTextAreaElement, wikiEditor: HTMLElemen
         window.wikiEditorInstance = undefined;
         editorDiv.innerHTML = '';
     }
-    
-    initializeEditor(textarea, editorDiv);
-    
-    // Update toggle labels
+
+    void initializeEditor(textarea, editorDiv);
+
     updateToggleLabels(true);
 }
 
-/**
- * Switch to Markdown mode
- */
 function disableWysiwygMode(textarea: HTMLTextAreaElement, wikiEditor: HTMLElement): void {
     isWysiwygMode = false;
-    
-    // Sync content back to textarea
+
     syncEditorToTextarea(textarea);
-    
-    // Show ADO toolbar
+
     const adoToolbar = wikiEditor.querySelector('.we-toolbar-container');
     if (adoToolbar) {
         (adoToolbar as HTMLElement).style.display = '';
     }
-    
-    // Show the wiki markdown toolbar
+
     const wikiMarkdownToolbar = document.querySelector('.wiki-markdown-toolbar');
     if (wikiMarkdownToolbar) {
         (wikiMarkdownToolbar as HTMLElement).style.display = '';
     }
-    
-    // Show ADO preview container
+
     const previewContainer = wikiEditor.querySelector('.we-text-preview-container');
     if (previewContainer) {
         (previewContainer as HTMLElement).style.display = '';
     }
-    
-    // Show ADO textarea container
+
     const taContainer = wikiEditor.querySelector('.we-ta-container');
     if (taContainer) {
         (taContainer as HTMLElement).style.display = '';
     }
-    
-    // Hide editor
+
     const editorDiv = document.querySelector(`#${WIKI_EDITOR_ROOT_ID}`);
     if (editorDiv) {
         (editorDiv as HTMLElement).style.display = 'none';
     }
-    
-    // Update toggle labels
+
     updateToggleLabels(false);
 }
 
-/**
- * Update the toggle label active states
- */
 function updateToggleLabels(isWysiwyg: boolean): void {
     const mdLabel = document.querySelector('.toggle-label.markdown-label');
     const wysiwygLabel = document.querySelector('.toggle-label.wysiwyg-label');
-    
+
     if (mdLabel && wysiwygLabel) {
         if (isWysiwyg) {
             mdLabel.classList.remove('active');
@@ -291,16 +186,14 @@ function updateToggleLabels(isWysiwyg: boolean): void {
     }
 }
 
-/**
- * Initialize the Milkdown Core Editor
- */
 async function initializeEditor(textarea: HTMLTextAreaElement, editorDiv: HTMLElement): Promise<void> {
+    detachCodeBlockScrollListeners?.();
+    detachCodeBlockScrollListeners = null;
+
     const form = findClosest(textarea, 'form');
-    
-    // Detect current theme
+
     const useDarkTheme = isDarkTheme();
-    
-    // Initialize services
+
     const wikiInfo = getWikiInfoFromUrl();
     let attachmentService: AdoAttachmentService | null = null;
     attachmentServiceInstance = null;
@@ -310,7 +203,7 @@ async function initializeEditor(textarea: HTMLTextAreaElement, editorDiv: HTMLEl
             org: wikiInfo.org,
             projectId: wikiInfo.projectId,
             wikiId: wikiInfo.wikiIdentifier,
-            wikiVersion: wikiInfo.version
+            wikiVersion: wikiInfo.version,
         };
 
         attachmentService = new AdoAttachmentService(wikiContext);
@@ -318,221 +211,102 @@ async function initializeEditor(textarea: HTMLTextAreaElement, editorDiv: HTMLEl
         mentionService = new AdoMentionService(wikiContext);
     }
 
-    // Resolve mentions (GUID -> Name) and then preprocess
-    let content = textarea.value;
-    if (mentionService) {
-        content = await mentionService.resolveMentions(content);
-    }
-    content = preprocessMentions(content);
-    if (attachmentService) {
-        await attachmentService.hydrateRepositoryId();
-        content = attachmentService.rewriteMarkdownToDisplayUrls(content);
-    }
-
-    const useMilkdownWiki = await readUseMilkdownWikiEditor();
-    if (!useMilkdownWiki) {
-        try {
-            let wikiRef!: WikiEditor;
-            wikiRef = new WikiEditor(editorDiv, content, {
-                attachmentService: attachmentService ?? undefined,
-                mentionService: mentionService ?? undefined,
-                onDocChanged: () => {
-                    if (!isWysiwygMode) return;
-                    let processedContent = wikiRef.getMarkdown();
-                    processedContent = postprocessAdoMarkers(processedContent);
-                    if (attachmentService) {
-                        processedContent = attachmentService.markdownRestoreRelativeAttachmentPaths(processedContent);
-                    }
-                    if (mentionService) {
-                        processedContent = mentionService.restoreMentions(processedContent);
-                    }
-                    textarea.value = processedContent;
-                    textarea.dispatchEvent(new Event('input', { bubbles: true }));
-                },
-            });
-            window.wikiEditorInstance = wikiRef;
-
-            setupMentionProfileCard(editorDiv, mentionService);
-
-            if (useDarkTheme) {
-                editorDiv.classList.add(WIKI_EDITOR_DARK_CLASS);
-            }
-
-            if (form) {
-                form.addEventListener('submit', function () {
-                    syncEditorToTextarea(textarea);
-                });
-            }
-
-            const proseMirror = editorDiv.querySelector('.ProseMirror');
-            if (proseMirror) {
-                const scrollCodeBlockToCursor = () => {
-                    const selection = window.getSelection();
-                    if (!selection || selection.rangeCount === 0) return;
-
-                    const range = selection.getRangeAt(0);
-                    const cursorNode = range.startContainer;
-                    const cursorPre =
-                        cursorNode.nodeType === Node.TEXT_NODE
-                            ? cursorNode.parentElement?.closest('pre')
-                            : cursorNode.nodeType === Node.ELEMENT_NODE
-                              ? (cursorNode as Element).closest('pre')
-                              : null;
-
-                    if (cursorPre) {
-                        const cursorRect = range.getBoundingClientRect();
-                        const preRect = cursorPre.getBoundingClientRect();
-                        const pre = cursorPre as HTMLElement;
-
-                        const cursorLeft = cursorRect.left - preRect.left + pre.scrollLeft;
-
-                        if (cursorLeft < pre.scrollLeft) {
-                            pre.scrollLeft = Math.max(0, cursorLeft - 20);
-                        } else if (cursorLeft > pre.scrollLeft + pre.clientWidth - 20) {
-                            pre.scrollLeft = cursorLeft - pre.clientWidth + 20;
-                        }
-                    }
-                };
-
-                proseMirror.addEventListener('input', () => setTimeout(scrollCodeBlockToCursor, 50));
-                document.addEventListener('selectionchange', () => setTimeout(scrollCodeBlockToCursor, 50));
-            }
-
-            console.log('ProseMirror WikiEditor initialized');
-        } catch (error) {
-            console.error('Failed to initialize WikiEditor:', error);
-        }
-        return;
-    }
-
     try {
-        // Create Milkdown Core editor with plugins
-        const editor = await Editor.make()
-            .config(adoTheme)
-            .config((ctx) => {
-                // Set the root element
-                ctx.set(rootCtx, editorDiv);
-                
-                // Set default content (already preprocessed)
-                ctx.set(defaultValueCtx, content);
-                
-                // Inject attachment service for toolbar access
-                ctx.inject(attachmentServiceCtx, attachmentService);
+        let content = textarea.value;
+        if (mentionService) {
+            content = await mentionService.resolveMentions(content);
+        }
+        content = preprocessMentions(content);
+        if (attachmentService) {
+            await attachmentService.hydrateRepositoryId();
+            content = attachmentService.rewriteMarkdownToDisplayUrls(content);
+        }
 
-                // Configure upload plugin if service is available
+        let wikiRef!: WikiEditor;
+        wikiRef = new WikiEditor(editorDiv, content, {
+            attachmentService: attachmentService ?? undefined,
+            mentionService: mentionService ?? undefined,
+            onDocChanged: () => {
+                if (!isWysiwygMode) return;
+                let processedContent = wikiRef.getMarkdown();
+                processedContent = postprocessAdoMarkers(processedContent);
                 if (attachmentService) {
-                    configureAttachmentUpload(ctx, attachmentService);
+                    processedContent = attachmentService.markdownRestoreRelativeAttachmentPaths(processedContent);
                 }
-                
-                // Configure remark-stringify: ADO list style + safe attachment URLs (angle brackets; avoids `\)` from destinationRaw)
-                const stringifyOpts = ctx.get(remarkStringifyOptionsCtx);
-                ctx.set(remarkStringifyOptionsCtx, {
-                    ...stringifyOpts,
-                    bullet: '-',
-                    bulletOther: '*',
-                    handlers: {
-                        ...stringifyOpts.handlers,
-                        image: adoWikiAttachmentImageHandler,
-                        link: adoWikiAttachmentLinkHandler,
-                    },
-                });
-                
-                // Add markdown listener for syncing to textarea
-                ctx.get(listenerCtx).markdownUpdated((_ctx, markdown, _prevMarkdown) => {
-                    if (isWysiwygMode) {
-                        // Restore ADO markers to original format
-                        let processedContent = postprocessAdoMarkers(markdown);
-
-                        if (attachmentService) {
-                            processedContent = attachmentService.markdownRestoreRelativeAttachmentPaths(processedContent);
-                        }
-
-                        // Restore mentions to storage format (@<GUID>)
-                        if (mentionService) {
-                            processedContent = mentionService.restoreMentions(processedContent);
-                        }
-
-                        textarea.value = processedContent;
-                        textarea.dispatchEvent(new Event('input', { bubbles: true }));
-                    }
-                });
-            })
-            .use(commonmark)
-            .use(gfm)
-            .use(history)
-            .use(listener)
-            .use(clipboard)
-            .use(upload)
-            .use(adoSyntaxPlugin)
-            .use(toolbarPlugin)
-            .use(adoHeadingAnchorPlugin)
-            .use(attachmentImageResolvePlugin)
-            .create();
-        
-        // Store the editor instance
-        window.wikiEditorInstance = editor;
+                if (mentionService) {
+                    processedContent = mentionService.restoreMentions(processedContent);
+                }
+                textarea.value = processedContent;
+                textarea.dispatchEvent(new Event('input', { bubbles: true }));
+                textarea.dispatchEvent(new Event('change', { bubbles: true }));
+            },
+        });
+        window.wikiEditorInstance = wikiRef;
 
         setupMentionProfileCard(editorDiv, mentionService);
-        
-        // Apply dark theme class if needed
+
         if (useDarkTheme) {
             editorDiv.classList.add(WIKI_EDITOR_DARK_CLASS);
         }
-        
-        // Handle form submission
-        if (form) {
-            form.addEventListener('submit', function() {
+
+        if (form instanceof HTMLFormElement) {
+            const prevSubmit = formWikiSubmitHandlers.get(form);
+            if (prevSubmit) {
+                form.removeEventListener('submit', prevSubmit);
+            }
+            const submitHandler = () => {
                 syncEditorToTextarea(textarea);
-            });
+            };
+            form.addEventListener('submit', submitHandler);
+            formWikiSubmitHandlers.set(form, submitHandler);
         }
-        
-        // Auto-scroll code blocks to cursor position
+
         const proseMirror = editorDiv.querySelector('.ProseMirror');
         if (proseMirror) {
             const scrollCodeBlockToCursor = () => {
                 const selection = window.getSelection();
                 if (!selection || selection.rangeCount === 0) return;
-                
+
                 const range = selection.getRangeAt(0);
                 const cursorNode = range.startContainer;
-                const cursorPre = cursorNode.nodeType === Node.TEXT_NODE 
-                    ? cursorNode.parentElement?.closest('pre')
-                    : cursorNode.nodeType === Node.ELEMENT_NODE
-                    ? (cursorNode as Element).closest('pre')
-                    : null;
-                
+                const cursorPre =
+                    cursorNode.nodeType === Node.TEXT_NODE
+                        ? cursorNode.parentElement?.closest('pre')
+                        : cursorNode.nodeType === Node.ELEMENT_NODE
+                          ? (cursorNode as Element).closest('pre')
+                          : null;
+
                 if (cursorPre) {
                     const cursorRect = range.getBoundingClientRect();
                     const preRect = cursorPre.getBoundingClientRect();
                     const pre = cursorPre as HTMLElement;
-                    
-                    // Calculate cursor position relative to pre block
+
                     const cursorLeft = cursorRect.left - preRect.left + pre.scrollLeft;
-                    
-                    // Scroll horizontally if cursor is outside visible area
+
                     if (cursorLeft < pre.scrollLeft) {
-                        pre.scrollLeft = Math.max(0, cursorLeft - 20); // 20px padding
+                        pre.scrollLeft = Math.max(0, cursorLeft - 20);
                     } else if (cursorLeft > pre.scrollLeft + pre.clientWidth - 20) {
-                        pre.scrollLeft = cursorLeft - pre.clientWidth + 20; // 20px padding
+                        pre.scrollLeft = cursorLeft - pre.clientWidth + 20;
                     }
                 }
             };
-            
-            // Monitor on input and selection change
-            proseMirror.addEventListener('input', () => setTimeout(scrollCodeBlockToCursor, 50));
-            proseMirror.addEventListener('selectionchange', () => setTimeout(scrollCodeBlockToCursor, 50));
-            document.addEventListener('selectionchange', () => setTimeout(scrollCodeBlockToCursor, 50));
+
+            const onInput = () => setTimeout(scrollCodeBlockToCursor, 50);
+            const onSelectionChange = () => setTimeout(scrollCodeBlockToCursor, 50);
+            proseMirror.addEventListener('input', onInput);
+            document.addEventListener('selectionchange', onSelectionChange);
+            detachCodeBlockScrollListeners = () => {
+                proseMirror.removeEventListener('input', onInput);
+                document.removeEventListener('selectionchange', onSelectionChange);
+            };
         }
-        
-        console.log('Milkdown Core editor initialized successfully');
+
+        console.log('WikiEditor initialized');
     } catch (error) {
-        console.error('Failed to initialize Milkdown Core Editor:', error);
+        console.error('Failed to initialize WikiEditor:', error);
     }
 }
 
-/**
- * Setup the toggle and wait for Milkdown to load
- */
 function setupEditor(): void {
     if (editorReady) {
         return;
@@ -543,34 +317,23 @@ function setupEditor(): void {
         return;
     }
 
-    // Find visible textarea
     const textareas = document.querySelectorAll('.we-ta-container textarea');
     let visibleTextarea: HTMLTextAreaElement | null = null;
-    
+
     for (let i = 0; i < textareas.length; i++) {
         if (isElementVisible(textareas[i] as HTMLTextAreaElement)) {
             visibleTextarea = textareas[i] as HTMLTextAreaElement;
             break;
         }
     }
-    
+
     if (!visibleTextarea) {
         timeoutId = window.setTimeout(setupEditor, 500);
         return;
     }
-    
-    // Check if Milkdown Editor is available
-    if (typeof Editor === 'undefined' && !window.MilkdownEditor) {
-        console.warn(`Waiting for Milkdown Editor to load (attempt ${retryCount + 1}/${MAX_RETRIES})`);
-        retryCount++;
-        timeoutId = window.setTimeout(setupEditor, 500);
-        return;
-    }
-    
-    // Mark as ready
+
     editorReady = true;
-    
-    // Clean up
+
     if (timeoutId) {
         window.clearTimeout(timeoutId);
         timeoutId = null;
@@ -579,29 +342,25 @@ function setupEditor(): void {
         window.editorObserver.disconnect();
         delete window.editorObserver;
     }
-    
+
     const wikiEditor = document.querySelector('.wiki-editor') as HTMLElement;
     if (!wikiEditor) {
         return;
     }
-    
+
     const textarea = visibleTextarea;
-    
-    // Check if toggle already exists
+
     if (document.querySelector('#wysiwyg-toggle-container')) {
         return;
     }
-    
-    // Function to create toggle and set up event listener
+
     function createToggleWithPosition(position: string) {
-        // Create and insert toggle at the top of the wiki editor
         const toggle = createModeToggle(position);
         wikiEditor.insertBefore(toggle, wikiEditor.firstChild);
-        
-        // Setup toggle event listener
+
         const toggleInput = document.querySelector('#wysiwyg-toggle-input') as HTMLInputElement;
         if (toggleInput) {
-            toggleInput.addEventListener('change', function() {
+            toggleInput.addEventListener('change', function () {
                 if (this.checked) {
                     enableWysiwygMode(textarea, wikiEditor);
                 } else {
@@ -610,36 +369,32 @@ function setupEditor(): void {
             });
         }
     }
-    
-    // Load toggle position setting and create toggle
+
     if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.sync) {
-        chrome.storage.sync.get(['togglePosition'], function(result) {
+        chrome.storage.sync.get(['togglePosition'], function (result) {
             const position = result.togglePosition || 'right';
             createToggleWithPosition(position);
         });
     } else {
-        // Fallback for non-extension context (playground.html)
         createToggleWithPosition('right');
     }
 }
 
-// Use MutationObserver for better performance
 function observeDOM(): void {
     window.editorObserver = new MutationObserver(() => {
         if (retryCount < MAX_RETRIES && !editorReady) {
             setupEditor();
         }
     });
-    
+
     window.editorObserver.observe(document.body, {
         childList: true,
-        subtree: true
+        subtree: true,
     });
-    
+
     setupEditor();
 }
 
-// Initialize when document is ready
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', observeDOM);
 } else {

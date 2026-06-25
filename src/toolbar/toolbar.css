@@ -473,8 +473,8 @@
     margin: 0;
     padding: 0;
     overflow-y: auto;
-    min-height: 120px;
-    max-height: 360px;
+    min-height: 47px;
+    max-height: 354px;
     border: 1px solid var(--ado-border-color, #eaeaea);
     border-radius: 4px;
     background: var(--ado-surface-secondary, #faf9f8);

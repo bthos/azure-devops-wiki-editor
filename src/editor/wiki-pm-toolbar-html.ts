@@ -1,11 +1,10 @@
 /**
- * Toolbar inner HTML aligned with {@link ../toolbar/view.ts#createToolbar} (Milkdown).
- * ProseMirror path adds “Paste as HTML” (`ado_html_block`); wiki markdown uses raw HTML like Azure DevOps
- * (`markdown-it` `html: true`). Milkdown uses a code-block placeholder for HTML.
+ * Toolbar inner HTML for the ProseMirror wiki path (formatting, tables, “Paste as HTML”, colors).
+ * Wiki markdown follows Azure DevOps conventions (`markdown-it` with controlled HTML).
  */
 
 export type WikiPmToolbarHtmlOpts = {
-    /** When non-empty, inserts the attachment control (same SVG as Milkdown). */
+    /** When non-empty, inserts the attachment control SVG in the toolbar. */
     attachmentButtonHtml: string;
 };
 
@@ -130,6 +129,9 @@ export function wikiPmToolbarInnerHtml(opts: WikiPmToolbarHtmlOpts): string {
       <button type="button" class="toolbar-button" data-action="insert-mention" title="Insert @mention" aria-label="Insert mention">
         <span class="toolbar-text">@</span>
       </button>
+      <button type="button" class="toolbar-button" data-action="insert-work-item" title="Insert work item (#id)" aria-label="Insert work item">
+        <span class="toolbar-text">#</span>
+      </button>
       <button type="button" class="toolbar-button" data-action="paste-html" title="Paste as HTML (ADO-style)" aria-label="Paste as HTML">
         <span class="toolbar-text">&lt;/&gt;</span>
       </button>
@@ -151,6 +153,26 @@ export function wikiPmToolbarInnerHtml(opts: WikiPmToolbarHtmlOpts): string {
         <svg viewBox="0 0 20 20" width="16" height="16" fill="currentColor">
           <path d="M6 3a3 3 0 0 0-3 3v8a3 3 0 0 0 3 3h8a3 3 0 0 0 3-3V6a3 3 0 0 0-3-3H6ZM4 6c0-1.1.9-2 2-2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6Zm4.85 1.85a.5.5 0 1 0-.7-.7l-2.5 2.5a.5.5 0 0 0 0 .7l2.5 2.5a.5.5 0 0 0 .7-.7L6.71 10l2.14-2.15Zm3-.7a.5.5 0 0 0-.7.7L13.29 10l-2.14 2.15a.5.5 0 0 0 .7.7l2.5-2.5a.5.5 0 0 0 0-.7l-2.5-2.5Z"/>
         </svg>
+      </button>
+      <button type="button" class="toolbar-button" data-action="insert-mermaid" title="Insert Mermaid diagram (ADO ::: mermaid container)" aria-label="Insert Mermaid diagram">
+        <svg viewBox="0 0 16 16" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linejoin="miter" aria-hidden="true">
+          <rect x="3.25" y="1.75" width="3.5" height="3.5" rx="0.45"/>
+          <line x1="5" y1="5.25" x2="5" y2="7.35" stroke-linecap="square"/>
+          <path d="M5 7.35 L7.85 10.2 L5 13.05 L2.15 10.2 Z"/>
+          <line x1="7.85" y1="10.2" x2="9.15" y2="10.2" stroke-linecap="square"/>
+          <rect x="9.15" y="8.45" width="3.5" height="3.5" rx="0.45"/>
+        </svg>
+      </button>
+      <button type="button" class="toolbar-button" data-action="insert-video" title="Insert video (YouTube, Stream, SharePoint iframe)" aria-label="Insert video iframe embed">
+        <svg viewBox="0 0 16 16" width="16" height="16" fill="currentColor" aria-hidden="true">
+          <path fill-rule="evenodd" d="M2.5 4.5A1.5 1.5 0 014 3h6a1.5 1.5 0 011.5 1.5v7A1.5 1.5 0 0110 13H4a1.5 1.5 0 01-1.5-1.5v-7zM8.25 6.55l3.15 1.81a.45.45 0 010 .78L8.25 10.95a.45.45 0 01-.675-.39V6.94a.45.45 0 01.675-.39z"/>
+        </svg>
+      </button>
+      <button type="button" class="toolbar-button" data-action="insert-math-inline" title="Insert inline math ($…$)" aria-label="Insert inline math">
+        <span class="toolbar-text">f(x)</span>
+      </button>
+      <button type="button" class="toolbar-button" data-action="insert-math-display" title="Insert display math (dollar block)" aria-label="Insert display math">
+        <span class="toolbar-text">∫</span>
       </button>
     </div>
     <div class="toolbar-separator"></div>
@@ -240,7 +262,7 @@ export function wikiPmToolbarInnerHtml(opts: WikiPmToolbarHtmlOpts): string {
   `;
 }
 
-/** Same attachment icon as Milkdown toolbar (paperclip). */
+/** Paperclip attachment icon for the toolbar. */
 export const wikiPmToolbarAttachmentButtonHtml = `
     <button type="button" class="toolbar-button" data-action="image" title="Insert Attachment" aria-label="Insert Attachment">
       <svg aria-hidden="true" fill="currentColor" width="1em" height="1em" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">

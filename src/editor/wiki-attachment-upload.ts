@@ -1,11 +1,17 @@
+import { closeHistory } from 'prosemirror-history';
+
+import type { Node } from 'prosemirror-model';
+
 import { Plugin } from 'prosemirror-state';
+
 import type { EditorView } from 'prosemirror-view';
+
 import type { AdoAttachmentService } from '../services/attachment-service';
 
 /**
- * Upload each file via {@link AdoAttachmentService.uploadAttachment} and replace the current
- * selection with an `image` node (images) or a `paragraph` with a `link` mark (other attachments).
- * Dispatches one transaction per file so the selection advances naturally.
+ * Upload each file via {@link AdoAttachmentService.uploadAttachment} and insert results in a **single**
+ * transaction (one undo step for the whole paste/drop batch). Uses {@link closeHistory} so the batch
+ * does not merge with the previous typing event in the undo stack.
  */
 export async function insertUploadedFilesIntoWikiEditor(
     view: EditorView,
@@ -13,21 +19,19 @@ export async function insertUploadedFilesIntoWikiEditor(
     files: readonly File[],
 ): Promise<void> {
     const { schema } = view.state;
+    const nodes: Node[] = [];
+
     for (const file of files) {
         try {
             const url = await service.uploadAttachment(file);
-            const tr = view.state.tr;
             if (file.type.startsWith('image/')) {
                 const node = schema.nodes.image?.createAndFill({ src: url, alt: file.name });
-                if (node) {
-                    view.dispatch(tr.replaceSelectionWith(node).scrollIntoView());
-                }
+                if (node) nodes.push(node);
             } else {
                 const linkMark = schema.marks.link?.create({ href: url, title: file.name });
                 if (linkMark && schema.nodes.paragraph) {
                     const textNode = schema.text(file.name, [linkMark]);
-                    const node = schema.nodes.paragraph.create({}, [textNode]);
-                    view.dispatch(tr.replaceSelectionWith(node).scrollIntoView());
+                    nodes.push(schema.nodes.paragraph.create({}, [textNode]));
                 }
             }
         } catch (e) {
@@ -35,9 +39,24 @@ export async function insertUploadedFilesIntoWikiEditor(
             window.alert(`Upload failed: ${e instanceof Error ? e.message : String(e)}`);
         }
     }
+
+    if (nodes.length === 0) {
+        return;
+    }
+
+    let tr = closeHistory(view.state.tr);
+    for (let i = 0; i < nodes.length; i++) {
+        const node = nodes[i]!;
+        if (i === 0) {
+            tr = tr.replaceSelectionWith(node);
+        } else {
+            tr = tr.insert(tr.selection.anchor, node);
+        }
+    }
+    view.dispatch(tr.scrollIntoView());
 }
 
-/** Paste / drop files into the editor (same behaviour as Milkdown upload plugin). */
+/** Paste / drop files into the editor (upload to ADO wiki attachments API). */
 export function wikiAttachmentPasteDropPlugin(service: AdoAttachmentService): Plugin {
     return new Plugin({
         props: {

@@ -49,11 +49,18 @@ import {
     insertAdoHtmlBlock,
     insertAdoTocBlock,
     insertAdoTospBlock,
+    insertWikiMathDisplayBlock,
+    insertWikiMathInline,
+    insertWikiMermaidBlock,
+    insertWikiVideoBlock,
     insertWikiMentionDisplayName,
     insertWikiMentionFromPrompt,
+    insertWikiWorkItemFromPreview,
 } from './wiki-insert-markers';
 
 import { openWikiMentionPickerDialog } from './wiki-mention-picker-dialog';
+
+import { openWikiWorkItemPickerDialog } from './wiki-work-item-picker-dialog';
 
 import { openWikiPasteHtmlDialog } from './wiki-paste-html-dialog';
 
@@ -64,8 +71,6 @@ import { selectionInsideCodeBlock } from './wiki-code-block-context';
 import { wikiPmToolbarAttachmentButtonHtml, wikiPmToolbarInnerHtml } from './wiki-pm-toolbar-html';
 
 
-
-/** Reuse Milkdown toolbar look (loaded with this module). */
 
 import '../toolbar/toolbar.css';
 
@@ -563,11 +568,21 @@ function refreshToolbar(toolbar: HTMLElement, state: EditorState): void {
 
         }
 
-        if (action === 'insert-toc' || action === 'insert-tosp') {
+        if (action === 'insert-toc' || action === 'insert-tosp' || action === 'insert-mermaid' || action === 'insert-math-display') {
 
             btn.disabled = listButtonsDisabled;
 
             btn.classList.toggle('disabled', listButtonsDisabled);
+
+        }
+
+        if (action === 'insert-math-inline') {
+
+            const canMathInline = !inCodeBlock && insertWikiMathInline()(state);
+
+            btn.disabled = !canMathInline;
+
+            btn.classList.toggle('disabled', !canMathInline);
 
         }
 
@@ -579,7 +594,7 @@ function refreshToolbar(toolbar: HTMLElement, state: EditorState): void {
 
         }
 
-        if (action === 'insert-mention') {
+        if (action === 'insert-mention' || action === 'insert-work-item') {
 
             btn.disabled = inCodeBlock;
 
@@ -637,7 +652,7 @@ function refreshToolbar(toolbar: HTMLElement, state: EditorState): void {
 
 /**
 
- * Formatting toolbar for the ProseMirror wiki path. Markup matches Milkdown {@link ../toolbar/view.ts};
+ * Formatting toolbar for the ProseMirror wiki path. Markup is defined in {@link ./wiki-pm-toolbar-html}.
 
  * inserts before `.editor` inside the `.wiki-editor-shell` wrapper.
 
@@ -949,6 +964,18 @@ export function mountWikiToolbar(host: HTMLElement, view: EditorView, opts?: Wik
 
                 break;
 
+            case 'insert-work-item':
+
+                void openWikiWorkItemPickerDialog({ title: 'Insert work item' }).then((preview) => {
+
+                    if (!preview) return;
+
+                    run(view, insertWikiWorkItemFromPreview(preview));
+
+                });
+
+                break;
+
             case 'paste-html':
 
                 void openWikiPasteHtmlDialog({ title: 'Paste as HTML' }).then((raw) => {
@@ -986,6 +1013,30 @@ export function mountWikiToolbar(host: HTMLElement, view: EditorView, opts?: Wik
             case 'code-block':
 
                 run(view, setBlockType(schema.nodes.code_block, { params: '' }));
+
+                break;
+
+            case 'insert-mermaid':
+
+                run(view, insertWikiMermaidBlock());
+
+                break;
+
+            case 'insert-video':
+
+                run(view, insertWikiVideoBlock());
+
+                break;
+
+            case 'insert-math-inline':
+
+                run(view, insertWikiMathInline());
+
+                break;
+
+            case 'insert-math-display':
+
+                run(view, insertWikiMathDisplayBlock());
 
                 break;
 

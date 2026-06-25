@@ -1,11 +1,11 @@
 *** Settings ***
-Documentation     Basic Milkdown Editor Tests
+Documentation     Basic wiki WYSIWYG editor tests
 ...               Tests for core editor functionality including loading,
 ...               basic text editing, and formatting features.
 Resource          resources/common.robot
 Resource          resources/editor_keywords.robot
 Library           libraries/ErrorHandler.py
-Library           libraries/MilkdownHelper.py
+Library           libraries/WikiEditorHelper.py
 Library           Collections
 Suite Setup       Setup Test Suite
 Suite Teardown    Cleanup Test Suite
@@ -38,7 +38,7 @@ Test Teardown With Screenshot
 
 *** Test Cases ***
 Test Editor Loads Successfully
-    [Documentation]    Verify the Milkdown editor loads and is ready for input
+    [Documentation]    Verify the wiki editor loads and is ready for input
     [Tags]    smoke    editor    ui
     
     Open Local Test Page    headless=${HEADLESS}

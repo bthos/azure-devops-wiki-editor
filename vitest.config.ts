@@ -8,7 +8,7 @@ export default defineConfig({
         coverage: {
             provider: 'v8',
             reporter: ['text', 'text-summary'],
-            /** Core logic modules; extension entrypoints and Milkdown glue are exercised manually / E2E. */
+            /** Core logic modules; full content script is exercised manually / E2E. */
             include: ['src/ado-wiki-api.ts', 'src/services/attachment-service.ts'],
             thresholds: {
                 lines: 80,

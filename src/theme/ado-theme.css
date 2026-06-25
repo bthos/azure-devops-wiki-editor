@@ -1,5 +1,5 @@
 /**
- * Azure DevOps theme for the wiki WYSIWYG editor (ProseMirror and optional Milkdown bundle).
+ * Azure DevOps theme for the wiki WYSIWYG editor (ProseMirror).
  *
  * Matches Azure DevOps Wiki styling with support for:
  * - Light Theme (default)
@@ -51,6 +51,12 @@
     /* === States === */
     --ado-danger-color: #a80000;
     --ado-danger-bg: rgba(168, 0, 0, 0.1);
+
+    /**
+     * Block widgets (code, mermaid, math, HTML, TOC, TOSP): inset from the dashed widget
+     * border to header / body chrome. Use everywhere that spacing should match the shell.
+     */
+    --ado-widget-inset: 8px;
 }
 
 /* ==============================================
@@ -537,7 +543,7 @@ body[data-theme="ms.vss-web.vsts-theme-hc-light"] .wiki-editor-shell hr {
     margin-top: 4px;
 }
 
-/* Task Lists - Milkdown uses data-item-type="task" and data-checked attributes */
+/* Task lists: data-item-type="task" and data-checked */
 .wiki-editor-shell ul:has(> li[data-item-type="task"]),
 .wiki-editor-shell ul:has(> li[data-checked]),
 .wiki-editor-shell ul.task-list,
@@ -662,8 +668,7 @@ body[data-theme="ms.vss-web.vsts-theme-hc-dark"] .wiki-editor-shell li[data-chec
    ============================================== */
 
 .ado-toc-widget,
-.ado-tosp-widget,
-.ado-code-widget {
+.ado-tosp-widget {
     display: block;
     width: fit-content;
     font-family: var(--ado-font-family);
@@ -677,14 +682,32 @@ body[data-theme="ms.vss-web.vsts-theme-hc-dark"] .wiki-editor-shell li[data-chec
     transition: border-color 0.15s ease;
 }
 
-.ado-code-widget {
-    min-width: 280px;
-    max-width: min(100%, 720px);
+.ado-code-widget,
+.ado-mermaid-widget,
+.ado-math-widget,
+.ado-html-widget,
+.ado-video-widget {
+    display: block;
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+    font-family: var(--ado-font-family);
+    background-color: transparent;
+    border: 1px dashed transparent;
+    border-radius: 4px;
+    margin: 12px 0 0 0;
+    min-width: 0;
+    position: relative;
+    transition: border-color 0.15s ease;
 }
 
 .ado-toc-widget:hover,
 .ado-tosp-widget:hover,
-.ado-code-widget:hover {
+.ado-code-widget:hover,
+.ado-mermaid-widget:hover,
+.ado-math-widget:hover,
+.ado-html-widget:hover,
+.ado-video-widget:hover {
     border-color: var(--ado-border-color);
 }
 
@@ -693,7 +716,7 @@ body[data-theme="ms.vss-web.vsts-theme-hc-dark"] .wiki-editor-shell li[data-chec
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 4px 8px;
+    padding: var(--ado-widget-inset);
     background-color: transparent;
     border-bottom: none;
     border-radius: 4px 4px 0 0;
@@ -706,7 +729,15 @@ body[data-theme="ms.vss-web.vsts-theme-hc-dark"] .wiki-editor-shell li[data-chec
 .ado-toc-widget:hover .ado-widget-header,
 .ado-tosp-widget:hover .ado-widget-header,
 .ado-code-widget:hover .ado-widget-header,
-.ado-code-widget-editing .ado-widget-header {
+.ado-code-widget-editing .ado-widget-header,
+.ado-mermaid-widget:hover .ado-widget-header,
+.ado-mermaid-widget-editing .ado-widget-header,
+.ado-math-widget:hover .ado-widget-header,
+.ado-math-widget-editing .ado-widget-header,
+.ado-html-widget:hover .ado-widget-header,
+.ado-html-widget-editing .ado-widget-header,
+.ado-video-widget:hover .ado-widget-header,
+.ado-video-widget-editing .ado-widget-header {
     opacity: 1;
     background-color: var(--ado-surface-secondary);
 }
@@ -749,7 +780,17 @@ body[data-theme="ms.vss-web.vsts-theme-hc-dark"] .wiki-editor-shell li[data-chec
 .ado-code-widget:hover .ado-widget-edit,
 .ado-code-widget-editing .ado-widget-edit,
 .ado-video-widget:hover .ado-widget-delete,
-.ado-mermaid-widget:hover .ado-widget-delete {
+.ado-video-widget:hover .ado-widget-edit,
+.ado-video-widget-editing .ado-widget-edit,
+.ado-mermaid-widget:hover .ado-widget-delete,
+.ado-mermaid-widget:hover .ado-widget-edit,
+.ado-mermaid-widget-editing .ado-widget-edit,
+.ado-math-widget:hover .ado-widget-delete,
+.ado-math-widget:hover .ado-widget-edit,
+.ado-math-widget-editing .ado-widget-edit,
+.ado-html-widget:hover .ado-widget-delete,
+.ado-html-widget:hover .ado-widget-edit,
+.ado-html-widget-editing .ado-widget-edit {
     opacity: 1;
 }
 
@@ -825,8 +866,8 @@ body[data-theme="ms.vss-web.vsts-theme-hc-dark"] .wiki-editor-shell li[data-chec
 .ado-code-lang-row {
     display: flex;
     align-items: center;
-    gap: 8px;
-    margin: 0 0 8px;
+    gap: var(--ado-widget-inset);
+    margin: 0 0 var(--ado-widget-inset);
     flex-wrap: wrap;
 }
 
@@ -840,12 +881,18 @@ body[data-theme="ms.vss-web.vsts-theme-hc-dark"] .wiki-editor-shell li[data-chec
     letter-spacing: 0.5px;
 }
 
-.ado-code-lang-input {
+.ado-code-lang-combo {
+    position: relative;
     flex: 1 1 140px;
     min-width: 120px;
     max-width: 100%;
+}
+
+.ado-code-lang-input {
+    display: block;
+    width: 100%;
     box-sizing: border-box;
-    padding: 4px 8px;
+    padding: 4px var(--ado-widget-inset);
     font-family: Consolas, 'Courier New', monospace;
     font-size: 12px;
     line-height: 1.35;
@@ -860,14 +907,65 @@ body[data-theme="ms.vss-web.vsts-theme-hc-dark"] .wiki-editor-shell li[data-chec
     outline-offset: 0;
 }
 
+.ado-code-lang-suggest {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: calc(100% + 2px);
+    z-index: 100;
+    max-height: 240px;
+    overflow-y: auto;
+    box-sizing: border-box;
+    padding: 4px 0;
+    background: var(--ado-surface-bg);
+    border: 1px solid var(--ado-border-color);
+    border-radius: 4px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+}
+
+.wiki-editor-dark .ado-code-lang-suggest {
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.45);
+}
+
+.ado-code-lang-suggest-item {
+    display: block;
+    width: 100%;
+    box-sizing: border-box;
+    margin: 0;
+    padding: 6px 10px;
+    border: none;
+    border-radius: 0;
+    text-align: left;
+    font-family: Consolas, 'Courier New', monospace;
+    font-size: 12px;
+    line-height: 1.35;
+    color: var(--ado-text-primary);
+    background: transparent;
+    cursor: pointer;
+}
+
+.ado-code-lang-suggest-item:hover,
+.ado-code-lang-suggest-item:focus-visible {
+    background-color: var(--ado-surface-secondary);
+    outline: none;
+}
+
 .ado-code-body {
     margin: 0;
     padding: 0;
 }
 
+/* Code / Mermaid: in edit mode the body only holds controls + textarea (no inner padded pre/preview). */
+.ado-code-widget-editing .ado-code-body,
+.ado-mermaid-widget-editing .ado-code-body,
+.ado-video-widget-editing .ado-code-body {
+    padding: var(--ado-widget-inset);
+    box-sizing: border-box;
+}
+
 .ado-code-body pre {
     margin: 0;
-    padding: 8px;
+    padding: var(--ado-widget-inset);
     max-height: 360px;
     overflow: auto;
     background: var(--ado-code-bg);
@@ -884,13 +982,58 @@ body[data-theme="ms.vss-web.vsts-theme-hc-dark"] .wiki-editor-shell li[data-chec
     color: var(--ado-text-primary);
 }
 
+/* highlight.js (readonly code widget; github.css baseline + ADO shell) */
+.ado-code-body pre code.hljs {
+    background: transparent;
+    color: var(--ado-text-primary);
+}
+
+.wiki-editor-dark .ado-code-body .hljs-comment,
+.wiki-editor-dark .ado-code-body .hljs-quote {
+    color: #6a9955;
+}
+
+.wiki-editor-dark .ado-code-body .hljs-keyword,
+.wiki-editor-dark .ado-code-body .hljs-selector-tag,
+.wiki-editor-dark .ado-code-body .hljs-section,
+.wiki-editor-dark .ado-code-body .hljs-doctag,
+.wiki-editor-dark .ado-code-body .hljs-type,
+.wiki-editor-dark .ado-code-body .hljs-name,
+.wiki-editor-dark .ado-code-body .hljs-strong {
+    color: #569cd6;
+}
+
+.wiki-editor-dark .ado-code-body .hljs-number {
+    color: #b5cea8;
+}
+
+.wiki-editor-dark .ado-code-body .hljs-string,
+.wiki-editor-dark .ado-code-body .hljs-attr {
+    color: #ce9178;
+}
+
+.wiki-editor-dark .ado-code-body .hljs-built_in,
+.wiki-editor-dark .ado-code-body .hljs-literal {
+    color: #4ec9b0;
+}
+
+.wiki-editor-dark .ado-code-body .hljs-variable,
+.wiki-editor-dark .ado-code-body .hljs-template-variable {
+    color: #9cdcfe;
+}
+
+.wiki-editor-dark .ado-code-body .hljs-title,
+.wiki-editor-dark .ado-code-body .hljs-function .hljs-keyword {
+    color: #dcdcaa;
+}
+
 .ado-code-textarea {
     display: block;
     width: 100%;
     box-sizing: border-box;
     min-height: 200px;
-    margin: 0 0 4px;
-    padding: 8px;
+    margin: 0;
+    padding: var(--ado-widget-inset);
     font-family: Consolas, 'Courier New', monospace;
     font-size: 12px;
     line-height: 1.45;
@@ -906,10 +1049,25 @@ body[data-theme="ms.vss-web.vsts-theme-hc-dark"] .wiki-editor-shell li[data-chec
     outline-offset: 0;
 }
 
+.ado-mermaid-widget .ado-code-body > .ado-code-textarea {
+    min-height: 160px;
+    background: transparent;
+}
+
+.ado-video-widget .ado-code-body > .ado-code-textarea {
+    min-height: 140px;
+    background: transparent;
+}
+
+.ado-math-widget .ado-math-body > .ado-code-textarea {
+    min-height: 140px;
+    background: transparent;
+}
+
 /* TOC Content */
 .ado-toc-content {
     display: block;
-    padding: 4px 8px 8px 8px;
+    padding: var(--ado-widget-inset);
     margin: 0;
 }
 
@@ -982,7 +1140,7 @@ body[data-theme="ms.vss-web.vsts-theme-hc-dark"] .ado-toc-link:hover {
 /* TOSP Content */
 .ado-tosp-content {
     display: block;
-    padding: 4px 8px 8px 8px;
+    padding: var(--ado-widget-inset);
     margin: 0;
 }
 
@@ -1045,54 +1203,198 @@ body[data-theme="ms.vss-web.vsts-theme-hc-dark"] .ado-toc-link:hover {
 }
 
 /* ==============================================
-   WORK ITEM REFERENCES
+   WORK ITEM REFERENCES (ADO-style chip)
    ============================================== */
 
 .ado-work-item-ref {
+    position: relative;
     display: inline-flex;
-    align-items: center;
+    align-items: stretch;
+    max-width: 100%;
     font-family: var(--ado-font-family);
     font-size: 13px;
-    font-weight: 500;
-    color: var(--ado-link-color);
-    background-color: var(--ado-accent-bg);
-    border: 1px solid var(--ado-accent-color);
-    border-radius: 3px;
-    padding: 1px 6px;
+    line-height: 1.35;
+    font-weight: 400;
+    color: var(--ado-text-primary, #323130);
+    background-color: var(--ado-neutral-lighter, #f3f2f1);
+    border: 1px solid var(--ado-border-subtle, #edebe9);
+    border-radius: 2px;
     margin: 0 2px;
     text-decoration: none;
     cursor: pointer;
+    vertical-align: baseline;
+    box-sizing: border-box;
     transition: background-color 0.1s ease, border-color 0.1s ease;
 }
 
 .ado-work-item-ref:hover {
-    background-color: var(--ado-accent-bg-hover);
+    background-color: var(--ado-neutral-light, #edebe9);
+    border-color: var(--ado-border-default, #c8c6c4);
 }
 
-.ado-work-item-icon {
+/* Markdown source `#id` — kept for PM / selection / serializer */
+.ado-work-item-md-source {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
+.ado-work-item-accent {
+    flex: 0 0 3px;
+    width: 3px;
+    align-self: stretch;
+    background-color: #c23934;
+    border-radius: 2px 0 0 2px;
+}
+
+.ado-work-item-card {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    min-height: 22px;
+    padding: 2px 8px 2px 6px;
+    max-width: min(520px, 100%);
+    overflow: hidden;
+}
+
+.ado-work-item-type-icon {
+    flex: 0 0 auto;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 18px;
+    height: 18px;
+    padding: 0 4px;
+    font-size: 11px;
     font-weight: 600;
-    margin-right: 1px;
+    line-height: 1;
+    color: #fff;
+    border-radius: 2px;
+    background-color: #605e5c;
+}
+
+.ado-work-item-type-icon[data-wi-type-slug='bug'] {
+    background-color: #cc293d;
+}
+
+.ado-work-item-type-icon[data-wi-type-slug='user-story'],
+.ado-work-item-type-icon[data-wi-type-slug='userstory'] {
+    background-color: #009ccc;
+}
+
+.ado-work-item-type-icon[data-wi-type-slug='task'] {
+    background-color: #f2cb1d;
+    color: #323130;
+}
+
+.ado-work-item-type-icon[data-wi-type-slug='feature'] {
+    background-color: #773b93;
+}
+
+.ado-work-item-type-icon[data-wi-type-slug='epic'] {
+    background-color: #e06c00;
 }
 
 .ado-work-item-id {
-    font-weight: 500;
+    flex: 0 0 auto;
+    color: var(--ado-text-secondary, #605e5c);
+    font-weight: 400;
+    font-variant-numeric: tabular-nums;
+}
+
+.ado-work-item-title {
+    flex: 1 1 auto;
+    min-width: 48px;
+    font-weight: 600;
+    color: var(--ado-link-color, #0078d4);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+a.ado-work-item-ref .ado-work-item-title {
+    color: var(--ado-link-color, #0078d4);
+}
+
+.ado-work-item-sep {
+    flex: 0 0 auto;
+    color: var(--ado-text-tertiary, #a19f9d);
+    font-weight: 400;
+    user-select: none;
+}
+
+.ado-work-item-state {
+    flex: 0 1 auto;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    min-width: 0;
+    overflow: hidden;
+    color: var(--ado-text-primary, #323130);
+    font-weight: 400;
+}
+
+.ado-work-item-state-dot {
+    flex: 0 0 auto;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background-color: #605e5c;
+}
+
+.ado-work-item-state[data-wi-state-slug='closed'] .ado-work-item-state-dot,
+.ado-work-item-state[data-wi-state-slug='resolved'] .ado-work-item-state-dot,
+.ado-work-item-state[data-wi-state-slug='done'] .ado-work-item-state-dot,
+.ado-work-item-state[data-wi-state-slug='completed'] .ado-work-item-state-dot,
+.ado-work-item-state[data-wi-state-slug='removed'] .ado-work-item-state-dot {
+    background-color: #107c10;
+}
+
+.ado-work-item-state[data-wi-state-slug='active'] .ado-work-item-state-dot,
+.ado-work-item-state[data-wi-state-slug='new'] .ado-work-item-state-dot,
+.ado-work-item-state[data-wi-state-slug='in-progress'] .ado-work-item-state-dot,
+.ado-work-item-state[data-wi-state-slug='committed'] .ado-work-item-state-dot {
+    background-color: #0078d4;
+}
+
+.ado-work-item-state-text {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 /* HC Work Items */
 :is(
-    body[data-theme="ms.vss-web.vsts-theme-hc-dark"],
-    body[data-theme="ms.vss-web.vsts-theme-hc-light"]
+    body[data-theme='ms.vss-web.vsts-theme-hc-dark'],
+    body[data-theme='ms.vss-web.vsts-theme-hc-light']
 ) .ado-work-item-ref {
     background-color: transparent;
     border-width: var(--ado-border-width);
 }
 
 :is(
-    body[data-theme="ms.vss-web.vsts-theme-hc-dark"],
-    body[data-theme="ms.vss-web.vsts-theme-hc-light"]
+    body[data-theme='ms.vss-web.vsts-theme-hc-dark'],
+    body[data-theme='ms.vss-web.vsts-theme-hc-light']
 ) .ado-work-item-ref:hover {
     background-color: var(--ado-accent-color);
     color: var(--ado-surface-bg);
+}
+
+:is(
+    body[data-theme='ms.vss-web.vsts-theme-hc-dark'],
+    body[data-theme='ms.vss-web.vsts-theme-hc-light']
+) .ado-work-item-title,
+:is(
+    body[data-theme='ms.vss-web.vsts-theme-hc-dark'],
+    body[data-theme='ms.vss-web.vsts-theme-hc-light']
+) a.ado-work-item-ref .ado-work-item-title {
+    color: inherit;
 }
 
 /* ==============================================
@@ -1237,55 +1539,72 @@ body[data-theme="ms.vss-web.vsts-theme-hc-dark"] .ado-toc-link:hover {
 }
 
 /* ==============================================
-   VIDEO WIDGET
+   MERMAID WIDGET (shell + header: shared with .ado-toc-widget / .ado-code-widget)
    ============================================== */
 
-.ado-video-widget {
-    display: block;
-    font-family: var(--ado-font-family);
-    background-color: var(--ado-surface-bg);
-    border: var(--ado-border-width) solid var(--ado-border-color);
-    border-radius: 2px;
-    box-shadow: var(--ado-shadow-sm);
-    margin: 12px 0 16px 0;
-    max-width: 560px;
-    transition: box-shadow 0.1s ease;
-    position: relative;
-}
-
-.ado-video-widget:hover {
-    box-shadow: var(--ado-shadow-md);
-}
-
-.ado-video-widget:hover .ado-widget-delete {
-    display: flex;
-}
-
-.ado-video-title {
-    font-weight: 600;
-    font-size: 12px;
-    line-height: 16px;
-    color: var(--ado-text-secondary);
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    margin: 0;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-}
-
-.ado-video-icon {
-    font-size: 10px;
-    color: #c23b22;
-}
-
+.ado-mermaid-preview,
+.ado-math-body,
 .ado-video-preview {
-    padding: 16px;
-    background-color: var(--ado-surface-overlay);
-    min-height: 60px;
+    margin: 0;
+    padding: var(--ado-widget-inset);
+    max-height: 360px;
+    overflow: auto;
+    background: transparent;
+    border: none;
+    border-radius: 0;
+}
+
+/* Video block: same body wrapper as Mermaid (`ado-code-body` + preview pane). */
+.ado-video-widget .ado-code-body {
+    margin: 0;
+    padding: 0;
+}
+
+.ado-video-preview-stack {
     display: flex;
-    align-items: center;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+    width: 100%;
+}
+
+.ado-video-media {
+    width: 100%;
+}
+
+.ado-video-element,
+.ado-video-iframe {
+    display: block;
+    width: 100%;
+    max-width: 100%;
+    max-height: 360px;
+    border-radius: 4px;
+    background-color: #000;
+}
+
+.ado-video-iframe {
+    aspect-ratio: 16 / 9;
+    height: auto;
+    border: 0;
+}
+
+.ado-video-footer {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
     justify-content: center;
+    gap: 8px;
+}
+
+.ado-video-open-link {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--ado-link-color);
+    text-decoration: none;
+}
+
+.ado-video-open-link:hover {
+    text-decoration: underline;
 }
 
 .ado-video-url {
@@ -1299,68 +1618,29 @@ body[data-theme="ms.vss-web.vsts-theme-hc-dark"] .ado-toc-link:hover {
     font-size: 13px;
     color: var(--ado-text-secondary);
     font-style: italic;
+    text-align: center;
 }
 
-/* HC Video */
-:is(
-    body[data-theme="ms.vss-web.vsts-theme-hc-dark"],
-    body[data-theme="ms.vss-web.vsts-theme-hc-light"]
-) .ado-video-preview {
-    border-top: var(--ado-border-width) solid var(--ado-border-color);
-}
-
-body[data-theme="ms.vss-web.vsts-theme-hc-dark"] .ado-video-icon {
-    color: #ff6b6b;
-}
-
-/* ==============================================
-   MERMAID WIDGET
-   ============================================== */
-
-.ado-mermaid-widget {
-    display: block;
-    font-family: var(--ado-font-family);
-    background-color: var(--ado-surface-bg);
-    border: var(--ado-border-width) solid var(--ado-border-color);
-    border-radius: 2px;
-    box-shadow: var(--ado-shadow-sm);
-    margin: 12px 0 16px 0;
-    max-width: 100%;
-    transition: box-shadow 0.1s ease;
-    position: relative;
-}
-
-.ado-mermaid-widget:hover {
-    box-shadow: var(--ado-shadow-md);
-}
-
-.ado-mermaid-widget:hover .ado-widget-delete {
-    display: flex;
-}
-
-.ado-mermaid-title {
-    font-weight: 600;
-    font-size: 12px;
-    line-height: 16px;
-    color: var(--ado-text-secondary);
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
+.wiki-mermaid-loading {
     margin: 0;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-}
-
-.ado-mermaid-icon {
     font-size: 12px;
-    color: #ff69b4;
+    color: var(--ado-text-secondary);
 }
 
-.ado-mermaid-preview {
-    padding: 12px;
-    background-color: var(--ado-surface-overlay);
-    max-height: 200px;
-    overflow: auto;
+.wiki-mermaid-error {
+    margin: 0 0 8px 0;
+    font-size: 12px;
+    color: var(--ado-text-secondary);
+    font-weight: 600;
+}
+
+.wiki-mermaid-svg-host {
+    line-height: 0;
+}
+
+.wiki-mermaid-svg-host svg {
+    max-width: 100%;
+    height: auto;
 }
 
 .ado-mermaid-code {
@@ -1371,14 +1651,6 @@ body[data-theme="ms.vss-web.vsts-theme-hc-dark"] .ado-video-icon {
     color: var(--ado-text-primary);
     white-space: pre;
     overflow-x: auto;
-}
-
-/* HC Mermaid */
-:is(
-    body[data-theme="ms.vss-web.vsts-theme-hc-dark"],
-    body[data-theme="ms.vss-web.vsts-theme-hc-light"]
-) .ado-mermaid-preview {
-    border-top: var(--ado-border-width) solid var(--ado-border-color);
 }
 
 /* ==============================================
@@ -1397,30 +1669,12 @@ body[data-theme="ms.vss-web.vsts-theme-hc-dark"] .ado-video-icon {
     line-height: normal;
 }
 
-.ado-html-widget {
-    display: block;
-    width: fit-content;
-    font-family: var(--ado-font-family);
-    background-color: transparent;
-    border: 1px dashed transparent;
-    border-radius: 4px;
-    margin: 12px 0 0 0;
-    min-width: 500px;
-    max-width: 100%;
-    position: relative;
-    transition: border-color 0.15s ease;
-}
-
-.ado-html-widget:hover {
-    border-color: var(--ado-border-color);
-}
-
 /* Widget Header */
-.ado-html-widget .ado-widget-header {
+.ado-html-widget .ado-widget-header,
+.ado-video-widget .ado-widget-header {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 4px 8px;
     background-color: transparent;
     border-bottom: none;
     border-radius: 4px 4px 0 0;
@@ -1428,12 +1682,10 @@ body[data-theme="ms.vss-web.vsts-theme-hc-dark"] .ado-video-icon {
     transition: opacity 0.15s ease, background-color 0.15s ease;
 }
 
-.ado-html-widget:hover .ado-widget-header {
-    opacity: 1;
-    background-color: var(--ado-surface-secondary);
-}
-
-.ado-html-title {
+.ado-html-title,
+.ado-mermaid-title,
+.ado-math-title,
+.ado-video-title {
     font-weight: 500;
     font-size: 11px;
     line-height: 14px;
@@ -1482,13 +1734,9 @@ body[data-theme="ms.vss-web.vsts-theme-hc-dark"] .ado-video-icon {
     pointer-events: none;
 }
 
-.ado-html-widget:hover .ado-widget-edit,
-.ado-html-widget:hover .ado-widget-delete {
-    opacity: 1;
-}
-
-/* Override absolute positioning for HTML widget buttons */
-.ado-html-widget .ado-widget-delete {
+/* Override absolute positioning for HTML / video widget buttons */
+.ado-html-widget .ado-widget-delete,
+.ado-video-widget .ado-widget-delete {
     position: static;
     transform: none;
 }
@@ -1510,7 +1758,8 @@ body[data-theme="ms.vss-web.vsts-theme-hc-dark"] .ado-video-icon {
 
 /* HTML Content Area */
 .ado-html-content {
-    padding: 0;
+    padding: var(--ado-widget-inset);
+    box-sizing: border-box;
     margin: 0;
     color: var(--ado-text-primary);
     font-size: 14px;
@@ -1541,7 +1790,8 @@ body[data-theme="ms.vss-web.vsts-theme-hc-dark"] .ado-video-icon {
 
 /* HTML Editor Area */
 .ado-html-editor {
-    padding: 12px;
+    padding: var(--ado-widget-inset);
+    box-sizing: border-box;
     background-color: var(--ado-surface-overlay);
     border-top: var(--ado-border-width) solid var(--ado-border-color);
 }
@@ -1550,7 +1800,7 @@ body[data-theme="ms.vss-web.vsts-theme-hc-dark"] .ado-video-icon {
     width: 100%;
     min-height: 120px;
     max-height: 400px;
-    padding: 10px;
+    padding: var(--ado-widget-inset);
     font-family: var(--ado-font-mono);
     font-size: 13px;
     line-height: 1.4;
@@ -1620,7 +1870,19 @@ body[data-theme="ms.vss-web.vsts-theme-hc-dark"] .ado-video-icon {
 :is(
     body[data-theme="ms.vss-web.vsts-theme-hc-dark"],
     body[data-theme="ms.vss-web.vsts-theme-hc-light"]
-) .ado-html-widget .ado-widget-delete {
+) .ado-html-widget .ado-widget-delete,
+:is(
+    body[data-theme="ms.vss-web.vsts-theme-hc-dark"],
+    body[data-theme="ms.vss-web.vsts-theme-hc-light"]
+) .ado-math-widget .ado-widget-delete,
+:is(
+    body[data-theme="ms.vss-web.vsts-theme-hc-dark"],
+    body[data-theme="ms.vss-web.vsts-theme-hc-light"]
+) .ado-mermaid-widget .ado-widget-delete,
+:is(
+    body[data-theme="ms.vss-web.vsts-theme-hc-dark"],
+    body[data-theme="ms.vss-web.vsts-theme-hc-light"]
+) .ado-video-widget .ado-widget-delete {
     opacity: 1;
     border-width: var(--ado-border-width);
 }
@@ -1639,7 +1901,19 @@ body[data-theme="ms.vss-web.vsts-theme-hc-dark"] .ado-video-icon {
 :is(
     body[data-theme="ms.vss-web.vsts-theme-hc-dark"],
     body[data-theme="ms.vss-web.vsts-theme-hc-light"]
-) .ado-html-textarea {
+) .ado-html-textarea,
+:is(
+    body[data-theme="ms.vss-web.vsts-theme-hc-dark"],
+    body[data-theme="ms.vss-web.vsts-theme-hc-light"]
+) .ado-mermaid-widget .ado-code-textarea,
+:is(
+    body[data-theme="ms.vss-web.vsts-theme-hc-dark"],
+    body[data-theme="ms.vss-web.vsts-theme-hc-light"]
+) .ado-video-widget .ado-code-textarea,
+:is(
+    body[data-theme="ms.vss-web.vsts-theme-hc-dark"],
+    body[data-theme="ms.vss-web.vsts-theme-hc-light"]
+) .ado-math-widget .ado-code-textarea {
     border-width: var(--ado-border-width);
 }
 
@@ -1652,4 +1926,25 @@ body[data-theme="ms.vss-web.vsts-theme-hc-dark"] .ado-video-icon {
     body[data-theme="ms.vss-web.vsts-theme-hc-light"]
 ) .ado-html-cancel {
     border-width: var(--ado-border-width);
+}
+
+/* KaTeX math (wiki_math_* nodes; fonts from dist/katex/fonts/) */
+.wiki-math-inline-view {
+    display: inline-block;
+    vertical-align: middle;
+    max-width: 100%;
+    overflow-x: auto;
+}
+
+.wiki-math-error {
+    font-family: var(--ado-font-mono);
+    font-size: 12px;
+    color: var(--ado-text-secondary);
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+
+.wiki-editor-dark .ado-math-body .katex,
+.wiki-editor-dark .wiki-math-inline-view .katex {
+    color: var(--ado-text-primary);
 }

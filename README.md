@@ -2,7 +2,7 @@
 
 # Azure DevOps Wiki Editor
 
-Chrome Extension that replaces the default Azure DevOps wiki markdown editor with a WYSIWYG experience. The **default** surface is a **ProseMirror** wiki editor (`WikiEditor`); an optional [Milkdown](https://milkdown.dev) ([`@milkdown/kit`](https://github.com/Milkdown/milkdown)) bundle remains for comparison (`?milkdown=1` or the popup toggle).
+Chrome extension that replaces the default Azure DevOps wiki markdown editor with a **WYSIWYG** experience powered by **ProseMirror**, **markdown-it** (GFM-style tables and task lists), and **remark**-family utilities where needed for Azure DevOps–specific markdown.
 
 ## 🚀 Prerequisites
 
@@ -167,7 +167,7 @@ If you encounter any issues:
 
 ## 📦 Dependencies
 
-- `@milkdown/kit` — Milkdown editor framework (ProseMirror-based WYSIWYG and markdown pipeline)
+Core runtime libraries include `prosemirror-*`, `prosemirror-markdown`, `markdown-it-multimd-table`, `markdown-it-task-lists`, and `remark-parse` / `remark-stringify` / `remark-gfm` / `unified` (see `package.json`).
 
 ## 🛠️ DevDependencies
 

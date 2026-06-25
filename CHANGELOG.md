@@ -7,11 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **Work item refs (`#12345`):** markdown-it recognizes Azure DevOps-style references (≥2 digits, not URL fragments / hex-style tails). ProseMirror mark `wikiWorkItem` renders as chip (`.ado-work-item-ref`); saved markdown stays plain `#12345`. Link to `_workitems/edit/{id}` when the page URL is an ADO wiki (`buildAdoWorkItemEditHref` in `ado-wiki-api.ts`). Tests: `wiki-work-item-markdown.spec.ts`, `wiki-work-item-match.ts`.
+- **Video embeds (ADO `::: video` … `:::`):** HTTPS-only URLs, max length 2048, no credentials in the URL. ProseMirror atom `ado_video_block` with widget (`wiki-video-widget-plugin.ts`); direct `https` links to `.mp4` / `.webm` / `.ogg` get a native `<video controls>` preview when the host allows it (otherwise placeholder + **Open** link). Parse/serialize round-trip via `wiki-markdown-video-container-it.ts`, `wiki-markdown-parser.ts`, `wiki-markdown-serializer.ts`; toolbar inserts a sample HTTPS MP4 (`insertWikiVideoBlock`). Tests: `wiki-video-url.spec.ts`, `wiki-video-markdown.spec.ts`.
+- **Toolbar:** buttons **Mermaid**, **f(x)** (inline math), and **∫** (display math) next to Code block; wired in `wiki-pm-toolbar-html.ts` / `wiki-toolbar.ts` with `insertWikiMermaidBlock`, `insertWikiMathInline`, `insertWikiMathDisplayBlock` in `wiki-insert-markers.ts`.
+- **Math inline (ADO):** parse + serialize **`$x+y$`** (same-line; skip digit-only “price” spans); legacy `\(` … `\)` still parses and saves as `$…$` (`wiki-markdown-math-it.ts`, `wiki-markdown-serializer.ts`).
+- **Mermaid diagrams:** Azure DevOps **`::: mermaid` … `:::`** container parsed via `wiki-markdown-mermaid-container-it.ts`; markdown still maps to `code_block` + widget. **Serialize** emits the ADO container; fenced `` ```mermaid `` still **parses** and is normalized on save. `wiki-mermaid-render.ts`, `wiki-mermaid-code-block-widget.ts`. Tests: `tests/unit/wiki-mermaid-markdown.spec.ts`. **Bundle:** `content.js` grows substantially (~+6 MB dev IIFE) because Mermaid is included in the content script.
+- **Wiki math (KaTeX):** safe delimiters `\(...\)`, `$$…$$`, and `\[…\]` (no single-`$` inline). `markdown-it` rules, `wiki_math_*` schema atoms, serializer normalizes display to `$$` blocks, node views + `trust: false` rendering. KaTeX CSS/fonts copied to `dist/katex/` at build; manifest loads `katex/katex.min.css`. Tests: `tests/unit/wiki-math-markdown.spec.ts`.
+- **Readonly code-block syntax highlighting** in the wiki code widget (`wiki-code-highlight.ts`, highlight.js with ten bundled grammars + aliases). Unknown languages and very large snippets fall back to plain text; dark theme token colors in `ado-theme.css`. Tests: `tests/unit/wiki-code-highlight.spec.ts`.
+- **Editor history (Option C):** `wiki-editor-history-config.ts` tunes `prosemirror-history` (`depth`, `newGroupDelay`). Multi-file attachment uploads dispatch as **one** undo step via `closeHistory` + batched steps in `wiki-attachment-upload.ts`. Tests: `tests/unit/wiki-editor-history.spec.ts`.
+
 ## [3.1.0] - 2026-04-21
 
 ### Added
 
-- **WikiEditor (ProseMirror)** as the default WYSIWYG surface (`src/editor/`, `main.ts`): markdown-it + `prosemirror-markdown` schema, tables, task lists, TOC/TOSP/HTML atoms, code block widget, heading anchors, attachment paste/display, wiki toolbar. Milkdown remains optional (popup / `?milkdown=1`).
 - **ProseMirror toolbar — text & highlight colors**  
   - One **Text & highlight colors** dropdown with two native `<input type="color">` controls (foreground + background).  
   - Applies the `wikiStyle` mark (`src/editor/wiki-schema.ts`): serializes to raw wiki HTML `<span style="color:…;background-color:…">` and round-trips through `markdown-it` `html_inline` without using `ado_html_inline` atoms.  
@@ -21,8 +31,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- **WYSIWYG DOM / CSS naming** (default ProseMirror path and shared theme): replaced `milkdown-*` host class/id names with `wiki-editor-root`, `wiki-editor-shell`, `wiki-editor-toolbar`, and `wiki-editor-dark` (`src/editor/wiki-editor-dom.ts`, `public/custom-styles.css`, `src/theme/ado-theme.css`, `src/toolbar/toolbar.css`). Optional Milkdown bundle uses the same shell class via `ado-theme.ts` so styling stays aligned.  
-- **Robot E2E** selectors updated to `.wiki-editor-shell` / `.wiki-editor-toolbar` (`tests/robot/…`, `MilkdownHelper.py`).
 - **ADO wiki API, mention service, syntax glue** — updates aligned with the ProseMirror path and attachment flows (see git history for detail).
 
 ## [3.0.1] - 2026-04-19

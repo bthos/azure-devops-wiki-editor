@@ -40,6 +40,7 @@
       ],
       "css": [
         "content.css",
+        "katex/katex.min.css",
         "custom-styles.css"
       ]
     }

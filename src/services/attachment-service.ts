@@ -1,5 +1,3 @@
-import { createSlice, Ctx } from '@milkdown/kit/ctx';
-
 export interface IAttachment {
     file: File;
     guidSuffixedFileName: string;
@@ -344,5 +342,3 @@ export class AdoAttachmentService {
         return `/.attachments/${encodeURIComponent(guidSuffixedFileName)}`;
     }
 }
-
-export const attachmentServiceCtx = createSlice<AdoAttachmentService | null>(null, 'attachmentService');

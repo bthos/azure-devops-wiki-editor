@@ -3,6 +3,10 @@ import multimdTable from 'markdown-it-multimd-table';
 import taskLists from 'markdown-it-task-lists';
 
 import { wikiMentionInlinePlugin } from './wiki-markdown-mention-it';
+import { wikiWorkItemInlinePlugin } from './wiki-markdown-work-item-it';
+import { wikiMathMarkdownIt } from './wiki-markdown-math-it';
+import { wikiMermaidContainerMarkdownIt } from './wiki-markdown-mermaid-container-it';
+import { wikiVideoContainerMarkdownIt } from './wiki-markdown-video-container-it';
 
 /** markdown-it `StateBlock` (types vary by markdown-it version). */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -45,7 +49,15 @@ export function createWikiMarkdownIt(): MarkdownIt {
         .use(multimdTable)
         /** GFM `- [ ]` / `- [x]`; injects `html_inline` checkbox tokens — handled in {@link ./wiki-markdown-parser.ts}. */
         .use(taskLists, { enabled: true })
-        .use(wikiMentionInlinePlugin);
+        .use(wikiMentionInlinePlugin)
+        /** ADO `#12345` work item refs in prose (not URL fragments); see {@link ./wiki-markdown-work-item-it.ts}. */
+        .use(wikiWorkItemInlinePlugin)
+        /** Safe math delimiters only (no single `$`); see {@link ./wiki-markdown-math-it.ts}. */
+        .use(wikiMathMarkdownIt)
+        /** ADO `::: mermaid` … `:::` → same `code_block` as fenced ```mermaid. */
+        .use(wikiMermaidContainerMarkdownIt)
+        /** ADO `::: video` … `:::` → `ado_video_block` (body: iframe HTML or embed URL). */
+        .use(wikiVideoContainerMarkdownIt);
     md.block.ruler.before('paragraph', 'ado_wiki_markers', adoMarkersBlock);
     return md;
 }

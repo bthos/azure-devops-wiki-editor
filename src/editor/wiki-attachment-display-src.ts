@@ -4,7 +4,7 @@ import type { AdoAttachmentService } from '../services/attachment-service';
 
 /**
  * When {@link AdoAttachmentService.isDisplaySrcReady} is true, rewrite `/.attachments/...`
- * in the document the same way as Milkdown `attachmentImageResolvePlugin` (`src/plugins/attachment-image-resolve.ts`):
+ * in the document for `/.attachments/` image `src` and link `href` values:
  * - `image` node `src`
  * - `link` mark `href` on text (non-image uploads)
  */

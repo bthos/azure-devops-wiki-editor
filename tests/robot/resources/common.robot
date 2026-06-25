@@ -8,7 +8,7 @@ Library           Collections
 Library           String
 Library           DateTime
 Library           ../libraries/ErrorHandler.py
-Library           ../libraries/MilkdownHelper.py
+Library           ../libraries/WikiEditorHelper.py
 
 *** Variables ***
 ${BROWSER_TIMEOUT}        30s
@@ -23,7 +23,7 @@ ${ADO_PROJECT}            %{ADO_PROJECT=}
 # Default uses CURDIR (resources/) -> ../../.. to reach project root
 ${LOCAL_TEST_URL}         %{LOCAL_TEST_URL=file://${CURDIR}/../../../playground.html}
 
-# Milkdown selectors
+# Wiki editor selectors
 ${EDITOR_CONTAINER}       .wiki-editor-shell
 ${PROSEMIRROR_EDITOR}     .ProseMirror
 ${TOC_WIDGET}             .ado-toc-widget
@@ -115,7 +115,7 @@ Wait And Fill Text
     Log    Filled text in: ${locator}
 
 Wait For Editor Ready
-    [Documentation]    Wait for Milkdown editor to be fully loaded
+    [Documentation]    Wait for wiki WYSIWYG editor to be fully loaded
     [Arguments]    ${timeout}=${BROWSER_TIMEOUT}
     
     Wait For Elements State    ${EDITOR_CONTAINER}    visible    timeout=${timeout}
@@ -125,18 +125,18 @@ Wait For Editor Ready
     ${is_editable}=    Get Attribute    ${PROSEMIRROR_EDITOR}    contenteditable
     Should Be Equal    ${is_editable}    true    msg=Editor is not editable
     
-    Log    Milkdown editor is ready    console=True
+    Log    Wiki editor is ready    console=True
     Log Audit Entry    Wait For Editor    SUCCESS
 
 Get Editor Content
-    [Documentation]    Get the current content from the Milkdown editor
+    [Documentation]    Get the current content from the wiki editor
     [Arguments]    ${format}=text
     
     ${content}=    Get Text    ${PROSEMIRROR_EDITOR}
     RETURN    ${content}
 
 Type In Editor
-    [Documentation]    Type text into the Milkdown editor
+    [Documentation]    Type text into the wiki editor
     [Arguments]    ${text}
     
     Click    ${PROSEMIRROR_EDITOR}

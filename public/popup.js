@@ -6,7 +6,6 @@ document.addEventListener("DOMContentLoaded", function () {
     
     // Settings event listeners
     document.getElementById("togglePosition").addEventListener("change", saveSettings);
-    document.getElementById("useMilkdownWikiEditor").addEventListener("change", saveWikiEngineSetting);
     
     // Domain event listeners
     document.getElementById("addDomain").addEventListener("click", addDomain);
@@ -21,20 +20,9 @@ document.addEventListener("DOMContentLoaded", function () {
  * Load saved settings
  */
 function loadSettings() {
-    chrome.storage.sync.get(['togglePosition', 'useMilkdownWikiEditor', 'useProseMirrorWikiEditor'], function(result) {
+    chrome.storage.sync.get(['togglePosition'], function(result) {
         const position = result.togglePosition || 'right'; // Default to right
         document.getElementById('togglePosition').value = position;
-        var milkdown = false;
-        if (typeof result.useMilkdownWikiEditor === 'boolean') {
-            milkdown = !!result.useMilkdownWikiEditor;
-        } else if (result.useProseMirrorWikiEditor === true) {
-            milkdown = false;
-        } else if (result.useProseMirrorWikiEditor === false) {
-            milkdown = true;
-        } else {
-            milkdown = false;
-        }
-        document.getElementById('useMilkdownWikiEditor').checked = milkdown;
     });
 }
 
@@ -50,17 +38,6 @@ function saveSettings() {
             return;
         }
         console.log('Settings saved: togglePosition =', togglePosition);
-    });
-}
-
-function saveWikiEngineSetting() {
-    const useMilkdownWikiEditor = document.getElementById('useMilkdownWikiEditor').checked;
-    chrome.storage.sync.set({ useMilkdownWikiEditor: useMilkdownWikiEditor }, function() {
-        if (chrome.runtime.lastError) {
-            console.error('Error saving wiki engine setting:', chrome.runtime.lastError);
-            return;
-        }
-        console.log('Settings saved: useMilkdownWikiEditor =', useMilkdownWikiEditor);
     });
 }
 

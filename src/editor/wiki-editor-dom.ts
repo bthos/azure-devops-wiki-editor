@@ -1,8 +1,8 @@
-/** DOM contract for the ProseMirror wiki editor and the shared WYSIWYG host (optional Milkdown uses the same root). */
+/** DOM contract for the ProseMirror wiki WYSIWYG host. */
 
 export const WIKI_EDITOR_ROOT_ID = 'wiki-editor-root';
 
-/** Wrapper around `.editor` + `.ProseMirror` (replaces legacy `milkdown` shell class). */
+/** Wrapper around `.editor` + `.ProseMirror`. */
 export const WIKI_EDITOR_SHELL_CLASS = 'wiki-editor-shell';
 
 export const WIKI_EDITOR_TOOLBAR_CLASS = 'wiki-editor-toolbar';

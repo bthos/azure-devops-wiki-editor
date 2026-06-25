@@ -1,5 +1,5 @@
 *** Settings ***
-Documentation     Keywords for Milkdown editor interactions
+Documentation     Keywords for wiki WYSIWYG editor interactions
 ...               Provides high-level keywords for testing editor functionality
 Library           Browser
 Library           Collections
@@ -27,13 +27,13 @@ ${TABLE_ELEMENT}          ${PROSEMIRROR_EDITOR} table
 
 *** Keywords ***
 Verify Editor Is Loaded
-    [Documentation]    Verify the Milkdown editor is properly loaded
+    [Documentation]    Verify the wiki editor is properly loaded
     
     Wait For Elements State    ${EDITOR_CONTAINER}    visible    timeout=10s
     Wait For Elements State    ${PROSEMIRROR_EDITOR}    visible    timeout=10s
     
     ${editor_exists}=    Get Element Count    ${EDITOR_CONTAINER}
-    Should Be True    ${editor_exists} > 0    msg=Milkdown editor container not found
+    Should Be True    ${editor_exists} > 0    msg=Wiki editor container not found
     
     ${prosemirror_exists}=    Get Element Count    ${PROSEMIRROR_EDITOR}
     Should Be True    ${prosemirror_exists} > 0    msg=ProseMirror editor not found

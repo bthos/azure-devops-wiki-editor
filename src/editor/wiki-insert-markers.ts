@@ -1,9 +1,12 @@
-import type { Command, EditorState, Transaction } from 'prosemirror-state';
+import type { Node } from 'prosemirror-model';
+import { TextSelection, type Command, type EditorState, type Transaction } from 'prosemirror-state';
 import { isInTable } from 'prosemirror-tables';
 
 import { selectionInsideCodeBlock } from './wiki-code-block-context';
+import { WIKI_MATH_MAX_TEX_CHARS } from './wiki-math-katex';
 import { sanitizeWikiHtml } from './wiki-html-sanitize';
 import { normalizeWikiToolbarHexColor } from './wiki-text-color';
+import type { AdoWorkItemPreview } from './wiki-work-item-wit-api';
 
 export { isWikiToolbarHexColor } from './wiki-text-color';
 
@@ -18,7 +21,7 @@ export function cursorInHeading(state: EditorState): boolean {
     return false;
 }
 
-/** True when the selection is inside a bullet or ordered list (Milkdown disables HTML block there). */
+/** True when the selection is inside a bullet or ordered list (HTML block insert is disabled there). */
 export function selectionInList(state: EditorState): boolean {
     const $from = state.selection.$from;
     for (let d = $from.depth; d > 0; d--) {
@@ -243,5 +246,156 @@ export function insertWikiMentionFromPrompt(): Command {
             return false;
         }
         return insertWikiMentionDisplayName(raw)(state, dispatch);
+    };
+}
+
+/**
+ * Inserts `#id` with {@link wikiWorkItem} metadata from the picker (skips lazy WIT resolve).
+ * Skips in code blocks; allowed in tables and headings.
+ */
+export function insertWikiWorkItemFromPreview(preview: AdoWorkItemPreview): Command {
+    return (state, dispatch) => {
+        if (selectionInsideCodeBlock(state)) {
+            return false;
+        }
+        const markType = state.schema.marks.wikiWorkItem;
+        if (!markType) {
+            return false;
+        }
+        const id = preview.id.trim();
+        if (!/^\d{2,}$/.test(id)) {
+            return false;
+        }
+        if (!dispatch) {
+            return true;
+        }
+        const text = state.schema.text(`#${id}`, [
+            markType.create({
+                id,
+                title: preview.title,
+                state: preview.state,
+                workItemType: preview.workItemType,
+                resolveAttempted: true,
+            }),
+        ]);
+        dispatch(state.tr.replaceSelectionWith(text, false).scrollIntoView());
+        return true;
+    };
+}
+
+const DEFAULT_MERMAID_SOURCE = 'flowchart LR\n    A[Start] --> B[End]';
+
+function insertStandaloneBlock(state: EditorState, dispatch: ((tr: Transaction) => void) | undefined, node: Node): boolean {
+    if (isInTable(state) || selectionInsideCodeBlock(state) || cursorInHeading(state)) {
+        return false;
+    }
+    const { $from } = state.selection;
+    const depth = $from.depth;
+    const parent = $from.parent;
+    const { schema } = state;
+
+    if (parent.type === schema.nodes.paragraph && parent.content.size === 0) {
+        const start = $from.before(depth);
+        const end = $from.after(depth);
+        const outer = $from.node(depth - 1);
+        const outerIndex = $from.index(depth - 1);
+        if (!outer.canReplaceWith(outerIndex, outerIndex + 1, node.type)) {
+            return false;
+        }
+        if (dispatch) {
+            dispatch(state.tr.replaceWith(start, end, node).scrollIntoView());
+        }
+        return true;
+    }
+
+    const after = $from.after(depth);
+    const $after = state.doc.resolve(after);
+    const container = $after.parent;
+    const index = $after.index();
+    if (!container.canReplaceWith(index, index, node.type)) {
+        return false;
+    }
+    if (dispatch) {
+        dispatch(state.tr.insert(after, node).scrollIntoView());
+    }
+    return true;
+}
+
+/** ADO `::: video` … `:::` embed (`ado_video_block` + {@link ./wiki-video-widget-plugin.ts}). Inserts an empty block. */
+export function insertWikiVideoBlock(): Command {
+    return (state, dispatch) => {
+        const type = state.schema.nodes.ado_video_block;
+        if (!type) {
+            return false;
+        }
+        const node = type.create({ body: '' });
+        return insertStandaloneBlock(state, dispatch, node);
+    };
+}
+
+/** Mermaid diagram: ADO `::: mermaid` … `:::` (`code_block` + widget; serializes to container). */
+export function insertWikiMermaidBlock(): Command {
+    return (state, dispatch) => {
+        const type = state.schema.nodes.code_block;
+        if (!type) {
+            return false;
+        }
+        const body = state.schema.text(DEFAULT_MERMAID_SOURCE);
+        const node = type.create({ params: 'mermaid' }, body);
+        return insertStandaloneBlock(state, dispatch, node);
+    };
+}
+
+/** Display math `$$ … $$` (`wiki_math_block`). */
+export function insertWikiMathDisplayBlock(): Command {
+    return (state, dispatch) => {
+        const type = state.schema.nodes.wiki_math_block;
+        if (!type) {
+            return false;
+        }
+        const node = type.create({ tex: 'E = mc^2' });
+        return insertStandaloneBlock(state, dispatch, node);
+    };
+}
+
+function capWikiMathTexFromSelection(raw: string): string {
+    const t = raw.replace(/\r\n/g, '\n');
+    if (t.length <= WIKI_MATH_MAX_TEX_CHARS) return t;
+    return t.slice(0, WIKI_MATH_MAX_TEX_CHARS);
+}
+
+/**
+ * Inline math `$…$` (`wiki_math_inline`): wraps the **non-empty text selection** in one atom (like applying bold to a range).
+ * Empty range or cross-parent range is rejected.
+ */
+export function insertWikiMathInline(): Command {
+    return (state, dispatch) => {
+        if (selectionInsideCodeBlock(state)) {
+            return false;
+        }
+        const type = state.schema.nodes.wiki_math_inline;
+        if (!type) {
+            return false;
+        }
+        const sel = state.selection;
+        if (!(sel instanceof TextSelection) || sel.empty) {
+            return false;
+        }
+        const { from, to } = sel;
+        const $from = state.doc.resolve(from);
+        const $to = state.doc.resolve(to);
+        if ($from.parent !== $to.parent) {
+            return false;
+        }
+        const tex = capWikiMathTexFromSelection(state.doc.textBetween(from, to, ''));
+        if (tex.trim().length === 0) {
+            return false;
+        }
+        const node = type.create({ tex });
+        if (!dispatch) {
+            return true;
+        }
+        dispatch(state.tr.replaceSelectionWith(node, false).scrollIntoView());
+        return true;
     };
 }

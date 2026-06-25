@@ -34,17 +34,25 @@ import { mountWikiToolbar } from './wiki-toolbar';
 
 import { wikiCodeBlockInputGuardPlugin, wikiCodeBlockWidgetPlugin } from './wiki-code-block-widget-plugin';
 
+import { wikiMathWidgetPlugin } from './wiki-math-widget-plugin';
+
 import { wikiHeadingAnchorPlugin, wikiHeadingAnchorPluginKey } from './wiki-heading-anchor-plugin';
 
 import { wikiTaskListClickPlugin } from './wiki-task-list-plugin';
 
 import { wikiAdoWidgetPlugin } from './wiki-ado-widget-plugin';
 
+import { wikiWorkItemResolvePlugin } from './wiki-work-item-resolve-plugin';
+
+import { wikiVideoWidgetPlugin } from './wiki-video-widget-plugin';
+
 import type { AdoAttachmentService } from '../services/attachment-service';
 
 import type { AdoMentionService } from '../services/mention-service';
 
 import { WIKI_EDITOR_SHELL_CLASS } from './wiki-editor-dom';
+
+import { wikiEditorHistoryOptions } from './wiki-editor-history-config';
 
 
 
@@ -58,17 +66,11 @@ export type WikiEditorOptions = {
 
     onDocChanged?: () => void;
 
-    /**
-
-     * When true (default), mount a minimal `.wiki-editor-toolbar` above the editor (shared CSS with the legacy Milkdown bundle).
-
-     * Set false for headless/tests.
-
-     */
+    /** When true (default), mount `.wiki-editor-toolbar` above the editor. Set false for headless/tests. */
 
     toolbar?: boolean;
 
-    /** When set, enables paste/drop file upload and the toolbar attachment control (same ADO paths as Milkdown). */
+    /** When set, enables paste/drop file upload and the toolbar attachment control (ADO `/.attachments/` paths). */
 
     attachmentService?: AdoAttachmentService | null;
 
@@ -84,7 +86,7 @@ function wikiEditorPlugins(extra: Plugin[] = []) {
 
     return [
 
-        history(),
+        history({ ...wikiEditorHistoryOptions }),
 
         keymap({
 
@@ -114,7 +116,13 @@ function wikiEditorPlugins(extra: Plugin[] = []) {
 
         wikiCodeBlockWidgetPlugin(),
 
+        wikiMathWidgetPlugin(),
+
+        wikiVideoWidgetPlugin(),
+
         wikiAdoWidgetPlugin(),
+
+        wikiWorkItemResolvePlugin(),
 
         ...extra,
 
@@ -125,15 +133,10 @@ function wikiEditorPlugins(extra: Plugin[] = []) {
 
 
 /**
-
- * ProseMirror-only wiki editor (no Milkdown). Wired from `main.ts` by default; Milkdown remains opt-in (popup / `?milkdown=1`).
-
+ * ProseMirror wiki editor for Azure DevOps wiki markdown. Wired from `main.ts`.
  *
-
  * DOM: `#wiki-editor-root` → `.wiki-editor-shell` → `.wiki-editor-toolbar` + `.editor` → `.ProseMirror`
-
  * so {@link ../../public/custom-styles.css} flex rules apply.
-
  */
 
 export class WikiEditor {

@@ -1,6 +1,6 @@
 {
   "name": "azure-devops-wiki-editor",
-  "description": "Chrome Extension enables WYSIWYG editor in Azure DevOps markdown wiki. Based on Milkdown framework (https://milkdown.dev)",
+  "description": "Chrome extension: WYSIWYG Azure DevOps wiki editor (ProseMirror + markdown-it)",
   "version": "3.1.0",
   "type": "module",
   "scripts": {
@@ -32,10 +32,13 @@
   },
   "homepage": "https://github.com/bthos/azure-devops-wiki-editor#readme",
   "dependencies": {
-    "@milkdown/kit": "^7.5.0",
+    "highlight.js": "^11.11.1",
+    "katex": "^0.16.45",
+    "markdown-it": "^14.1.1",
     "markdown-it-multimd-table": "^4.2.3",
     "markdown-it-task-lists": "^2.1.1",
     "mdast-util-to-markdown": "^2.1.2",
+    "mermaid": "^11.14.0",
     "prosemirror-commands": "^1.7.1",
     "prosemirror-gapcursor": "^1.4.1",
     "prosemirror-history": "^1.5.0",
@@ -58,6 +61,7 @@
     "@commitlint/cli": "^19.8.0",
     "@commitlint/config-conventional": "^19.8.0",
     "@types/chrome": "^0.0.239",
+    "@types/markdown-it": "^14.1.2",
     "@vitest/coverage-v8": "^4.1.4",
     "archiver": "^7.0.1",
     "commitizen": "^4.3.1",

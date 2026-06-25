@@ -151,6 +151,20 @@ export function getWikiInfoFromUrl(): WikiInfo | null {
 }
 
 /**
+ * Work item form URL on the current host (`…/{org}/{project}/_workitems/edit/{id}`).
+ * Returns `null` when not on an ADO wiki page or id is invalid.
+ */
+export function buildAdoWorkItemEditHref(workItemId: string): string | null {
+    const id = workItemId.trim();
+    if (!/^\d{2,}$/.test(id)) return null;
+    if (typeof window === 'undefined') return null;
+    const info = getWikiInfoFromUrl();
+    if (!info) return null;
+    const base = window.location.origin;
+    return `${base}/${encodeURIComponent(info.org)}/${encodeURIComponent(info.projectId)}/_workitems/edit/${id}`;
+}
+
+/**
  * Numeric wiki page id from the path segment after the wiki name, e.g.
  * `.../_wiki/wikis/My.wiki/42/...` → `42`. Prefer this for GET .../pages/{id} (reliable subPages).
  */

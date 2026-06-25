@@ -70,6 +70,17 @@ async function main() {
     });
 
     copyRecursive(publicDir, distDir);
+
+    const katexDist = path.join(rootDir, 'node_modules', 'katex', 'dist');
+    const katexCss = path.join(katexDist, 'katex.min.css');
+    const katexFonts = path.join(katexDist, 'fonts');
+    if (fs.existsSync(katexCss)) {
+        copyRecursive(katexCss, path.join(distDir, 'katex', 'katex.min.css'));
+        if (fs.existsSync(katexFonts)) {
+            copyRecursive(katexFonts, path.join(distDir, 'katex', 'fonts'));
+        }
+    }
+
     await zipDistFixed();
 }
 

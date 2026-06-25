@@ -7,7 +7,7 @@ Based on the [robot-automation-blueprint](https://github.com/bthos/robot-automat
 ## Features
 
 - **UI Automation**: Browser-based testing using Playwright (Browser Library)
-- **Milkdown Editor Testing**: Specialized keywords for testing the Milkdown editor
+- **Wiki WYSIWYG testing**: Keywords for the ProseMirror wiki editor
 - **ADO Markers Testing**: Tests for TOC, TOSP, mentions, and work item references
 - **Comprehensive Reporting**: HTML reports, logs, and screenshots
 - **Audit Trail**: Complete logging of all automation actions
@@ -85,10 +85,10 @@ tests/
     ├── test_ado_markers.robot   # ADO markers (TOC, TOSP, mentions, work items)
     ├── resources/               # Reusable Robot Framework resources
     │   ├── common.robot         # Common keywords and variables
-    │   └── editor_keywords.robot# Milkdown editor-specific keywords
+    │   └── editor_keywords.robot# Wiki editor keywords
     ├── libraries/               # Python libraries
     │   ├── ErrorHandler.py      # Error handling and retry logic
-    │   └── MilkdownHelper.py    # Milkdown editor helper utilities
+    │   └── WikiEditorHelper.py  # Wiki editor helper utilities
     ├── data/                    # Test data files
     ├── reports/                 # Generated reports (auto-created)
     ├── logs/                    # Log files (auto-created)
@@ -98,7 +98,7 @@ tests/
 ## Test Suites
 
 ### test_editor_basic.robot
-Basic Milkdown editor functionality tests:
+Basic wiki editor functionality tests:
 - Editor loading
 - Text input
 - Heading insertion
@@ -181,7 +181,7 @@ After test execution, reports are generated in `reports/`:
 |---------|-------------|
 | `Setup Test Environment` | Initialize test environment |
 | `Open Local Test Page` | Open the test HTML page |
-| `Wait For Editor Ready` | Wait for Milkdown editor to load |
+| `Wait For Editor Ready` | Wait for wiki editor to load |
 | `Get Editor Content` | Get current editor content |
 | `Type In Editor` | Type text into editor |
 | `Clear Editor Content` | Clear all editor content |
@@ -214,7 +214,7 @@ After test execution, reports are generated in `reports/`:
 | `save_audit_log` | Save audit log to JSON file |
 | `handle_error` | Handle errors with logging |
 
-#### MilkdownHelper.py
+#### WikiEditorHelper.py
 
 | Method | Description |
 |--------|-------------|

@@ -3,8 +3,10 @@ import { MarkdownParser, defaultMarkdownParser } from 'prosemirror-markdown';
 import { wikiSchema } from './wiki-schema';
 import { createWikiMarkdownIt } from './wiki-markdown-it';
 import { sanitizeWikiHtml } from './wiki-html-sanitize';
+import { WIKI_MATH_MAX_TEX_CHARS } from './wiki-math-katex';
 import { taskListCheckedFromListItemOpen, type MdToken } from './wiki-task-list-tokens';
 import { isWikiHtmlInlineClosingSpan, tryParseWikiStyleSpanOpenHtml } from './wiki-text-color';
+import { normalizeWikiVideoEmbedInput } from './wiki-video-url';
 
 const wikiTokens = {
     ...defaultMarkdownParser.tokens,
@@ -37,6 +39,26 @@ const wikiTokens = {
     },
     ado_toc: { node: 'ado_toc' as const },
     ado_tosp: { node: 'ado_tosp' as const },
+    /** `::: mermaid` … `:::` (ADO wiki); same PM node as fenced ```mermaid. */
+    ado_mermaid_container: {
+        block: 'code_block' as const,
+        noCloseToken: true as const,
+        getAttrs: () => ({ params: 'mermaid' }),
+    },
+    /** `::: video` … `:::` — iframe HTML or embed **src** URL (YouTube / Stream / SharePoint). */
+    ado_video_container: {
+        node: 'ado_video_block' as const,
+        noCloseToken: true as const,
+        getAttrs: (tok: unknown) => {
+            const raw = String((tok as { content?: string }).content ?? '').replace(/\r\n/g, '\n');
+            const body = raw.replace(/^\n+|\n+$/g, '');
+            if (/<iframe/i.test(body)) {
+                return { body };
+            }
+            const n = normalizeWikiVideoEmbedInput(body);
+            return { body: n ?? body.trim() };
+        },
+    },
     /** `@‹name›` from {@link ./wiki-markdown-mention-it.ts}; text is display name only (mark wraps it). */
     mention_inline: {
         mark: 'userMention' as const,
@@ -44,6 +66,36 @@ const wikiTokens = {
         getAttrs: (tok: unknown) => {
             const t = tok as { content?: string; meta?: { userName?: string } };
             return { userName: (t.meta && t.meta.userName) || String(t.content ?? '') };
+        },
+    },
+    /** `#12345` from {@link ./wiki-markdown-work-item-it.ts}; token content is full `#…` text. */
+    work_item_inline: {
+        mark: 'wikiWorkItem' as const,
+        noCloseToken: true as const,
+        getAttrs: (tok: unknown) => {
+            const t = tok as { meta?: { id?: string } };
+            const id = String(t.meta?.id ?? '').trim();
+            return { id };
+        },
+    },
+    /** `\(...\)` — see {@link ./wiki-markdown-math-it.ts} (no single `$`). */
+    wiki_math_inline: {
+        node: 'wiki_math_inline' as const,
+        getAttrs: (tok: unknown) => {
+            const raw = String((tok as { content?: string }).content ?? '');
+            const tex = raw.length > WIKI_MATH_MAX_TEX_CHARS ? raw.slice(0, WIKI_MATH_MAX_TEX_CHARS) : raw;
+            return { tex };
+        },
+    },
+    /** `$$…$$` or `\[…\]` display — serialized as `$$` blocks. */
+    wiki_math_block: {
+        node: 'wiki_math_block' as const,
+        getAttrs: (tok: unknown) => {
+            const raw = String((tok as { content?: string }).content ?? '')
+                .replace(/\r\n/g, '\n')
+                .replace(/^\n+|\n+$/g, '');
+            const tex = raw.length > WIKI_MATH_MAX_TEX_CHARS ? raw.slice(0, WIKI_MATH_MAX_TEX_CHARS) : raw;
+            return { tex };
         },
     },
 };

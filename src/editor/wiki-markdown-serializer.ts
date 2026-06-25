@@ -41,6 +41,29 @@ function isPlainURL(link: Mark, parent: Node, index: number): boolean {
 
 const baseNodes = defaultMarkdownSerializer.nodes as Record<string, NodeSerializer>;
 
+/** Escape `$` inside TeX so it does not close the `$…$` pair when re-parsed. */
+function escapeWikiDollarInlineTexForMarkdown(tex: string): string {
+    return tex.replace(/\$/g, '\\$');
+}
+
+function normalizeWikiMathBlockTex(tex: string): string {
+    return tex.replace(/\r\n/g, '\n').trim();
+}
+
+/** ADO wiki `::: mermaid` … `:::`; other `code_block` uses default fenced serializer. */
+function wikiSerializeCodeBlock(state: MarkdownSerializerState, node: Node, parent: Node, index: number): void {
+    const params = String(node.attrs['params'] ?? '').trim().toLowerCase();
+    if (params === 'mermaid') {
+        state.ensureNewLine();
+        state.write('::: mermaid\n');
+        state.text(node.textContent, false);
+        state.write('\n:::\n');
+        state.closeBlock(node);
+        return;
+    }
+    (baseNodes.code_block as NodeSerializer)(state, node, parent, index);
+}
+
 function wikiSerializeBulletList(state: MarkdownSerializerState, node: Node) {
     const s = state as WikiMarkdownSerializerState;
     if (s.closed && (s.closed as { type?: unknown }).type === node.type) s.flushClose(3);
@@ -106,6 +129,16 @@ const extraNodes: Record<string, NodeSerializer> = {
         state.write('[[_TOSP_]]');
         state.closeBlock(node);
     },
+    ado_video_block(state, node) {
+        state.ensureNewLine();
+        const body = String(node.attrs['body'] ?? '').replace(/\r\n/g, '\n');
+        state.write('::: video\n');
+        if (body) {
+            state.write(body);
+        }
+        state.write('\n:::\n');
+        state.closeBlock(node);
+    },
     ado_html_block(state, node) {
         state.ensureNewLine();
         const html = String(node.attrs['html'] ?? '');
@@ -119,6 +152,19 @@ const extraNodes: Record<string, NodeSerializer> = {
     },
     ado_html_inline(state, node) {
         state.write(String(node.attrs['html'] ?? ''));
+    },
+    wiki_math_inline(state, node) {
+        state.write('$');
+        state.write(escapeWikiDollarInlineTexForMarkdown(String(node.attrs['tex'] ?? '')));
+        state.write('$');
+    },
+    wiki_math_block(state, node) {
+        state.ensureNewLine();
+        const body = normalizeWikiMathBlockTex(String(node.attrs['tex'] ?? ''));
+        state.write('$$\n');
+        state.write(body);
+        state.write('\n$$\n');
+        state.closeBlock(node);
     },
     table: serializeTable,
     image(state, node, parent, index) {
@@ -139,6 +185,7 @@ const wikiNodes: Record<string, NodeSerializer> = {
     ...baseNodes,
     bullet_list: wikiSerializeBulletList,
     ordered_list: wikiSerializeOrderedList,
+    code_block: wikiSerializeCodeBlock,
     ...extraNodes,
 };
 
@@ -155,6 +202,13 @@ const wikiMarks = {
         open: '@\u2039',
         close: '\u203A',
         mixable: false,
+        expelEnclosingWhitespace: false,
+    },
+    /** Markdown stays literal `#12345` (mark adds chip only in the editor DOM). */
+    wikiWorkItem: {
+        open: '',
+        close: '',
+        mixable: true,
         expelEnclosingWhitespace: false,
     },
     wikiStyle: {

@@ -8,7 +8,7 @@ Documentation     ADO Markers Plugin Tests
 Resource          resources/common.robot
 Resource          resources/editor_keywords.robot
 Library           libraries/ErrorHandler.py
-Library           libraries/MilkdownHelper.py
+Library           libraries/WikiEditorHelper.py
 Library           Collections
 Suite Setup       Setup Test Suite
 Suite Teardown    Cleanup Test Suite
@@ -196,7 +196,7 @@ Test Combined ADO Markers
     Log Audit Entry    Combined ADO Markers Test    SUCCESS
 
 Test Mention Parsing
-    [Documentation]    Test the MilkdownHelper mention parsing
+    [Documentation]    Test WikiEditorHelper mention parsing
     [Tags]    ado    mention    parsing    unit
     
     # Generate test markdown with mentions
@@ -215,7 +215,7 @@ Test Mention Parsing
     Log Audit Entry    Mention Parsing Test    SUCCESS
 
 Test Work Item Parsing
-    [Documentation]    Test the MilkdownHelper work item parsing
+    [Documentation]    Test WikiEditorHelper work item parsing
     [Tags]    ado    workitem    parsing    unit
     
     # Generate test markdown with work items
