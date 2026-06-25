@@ -17,6 +17,8 @@ declare global {
     interface Window {
         editorObserver?: MutationObserver;
         wikiEditorInstance?: WikiEditor;
+        /** Set to `true` after first content-script execution to guard against re-injection. */
+        __adoWikiEditorLoaded?: boolean;
     }
 }
 
@@ -328,6 +330,7 @@ function setupEditor(): void {
     }
 
     if (!visibleTextarea) {
+        retryCount++;
         timeoutId = window.setTimeout(setupEditor, 500);
         return;
     }
@@ -395,8 +398,103 @@ function observeDOM(): void {
     setupEditor();
 }
 
-if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', observeDOM);
-} else {
+/**
+ * Reset editor state and re-run setup after an in-document SPA navigation.
+ * Called by the pushState / replaceState / popstate listeners below.
+ *
+ * Guard against tight loops: only reset if the toggle container has been
+ * removed from the DOM (meaning the SPA actually tore down the wiki view)
+ * and the current URL is a wiki URL.
+ */
+function handleSpaNavigation(): void {
+    const togglePresent = !!document.querySelector('#wysiwyg-toggle-container');
+    if (editorReady && togglePresent) {
+        // Editor is live and the DOM hasn't changed — nothing to do.
+        return;
+    }
+
+    if (!/\/_wiki\//i.test(window.location.href)) {
+        // Navigated away from the wiki — don't attempt to set up.
+        return;
+    }
+
+    // Reset latches so setupEditor can run fresh.
+    editorReady = false;
+    retryCount = 0;
+    isWysiwygMode = false;
+
+    if (timeoutId) {
+        window.clearTimeout(timeoutId);
+        timeoutId = null;
+    }
+    if (window.editorObserver) {
+        window.editorObserver.disconnect();
+        delete window.editorObserver;
+    }
+
     observeDOM();
+}
+
+// ── Bootstrap ─────────────────────────────────────────────────────────────────
+//
+// The content script runs inside an IIFE (esbuild `format: 'iife'`).  When the
+// background service worker re-injects content.js via `chrome.scripting.executeScript`
+// after a SPA navigation, the IIFE runs a second time with fresh local variables.
+// `window.__adoWikiEditorLoaded` is the cross-run sentinel on the shared `window`
+// object so the second run can disconnect the stale observer and restart cleanly.
+//
+// On first load we also wire up pushState / replaceState monkeypatches so that
+// in-document wiki-page-to-wiki-page navigations are handled entirely within the
+// content script, without needing a background round-trip.
+
+if (window.__adoWikiEditorLoaded) {
+    // ── Re-injection path ────────────────────────────────────────────────────
+    // The background script already verified `__adoWikiEditorLoaded === false`
+    // before injecting, so this branch executes only when a previous run set the
+    // flag (e.g. declarative injection on a hard reload) and then background
+    // injects again on a subsequent SPA navigation where the flag was missed.
+    // Reset and re-init defensively.
+    editorReady = false;
+    retryCount = 0;
+    if (timeoutId) {
+        window.clearTimeout(timeoutId);
+        timeoutId = null;
+    }
+    if (window.editorObserver) {
+        window.editorObserver.disconnect();
+        delete window.editorObserver;
+    }
+    observeDOM();
+} else {
+    // ── First-load path ───────────────────────────────────────────────────────
+    window.__adoWikiEditorLoaded = true;
+
+    // Register SPA navigation listeners once so they persist across in-document
+    // route changes without accumulating duplicate handlers.
+    window.addEventListener('popstate', handleSpaNavigation);
+
+    // Monkeypatch History API to catch pushState / replaceState navigation.
+    // Both methods are bound to `history` before wrapping so the originals are
+    // called with the correct receiver regardless of `this` at call sites.
+    const origPushState = history.pushState.bind(history) as typeof history.pushState;
+    const origReplaceState = history.replaceState.bind(history) as typeof history.replaceState;
+
+    history.pushState = function (...args: Parameters<typeof history.pushState>): void {
+        origPushState(...args);
+        window.dispatchEvent(new Event('__adoWikiEditorNavigate'));
+    };
+
+    history.replaceState = function (...args: Parameters<typeof history.replaceState>): void {
+        origReplaceState(...args);
+        window.dispatchEvent(new Event('__adoWikiEditorNavigate'));
+    };
+
+    window.addEventListener('__adoWikiEditorNavigate', handleSpaNavigation);
+
+    // Normal document-load bootstrap.
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', observeDOM);
+    } else {
+        observeDOM();
+    }
 }

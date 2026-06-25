@@ -102,6 +102,7 @@ If the editor doesn't appear:
 ## ✨ Features
 
 - WYSIWYG editing interface for Azure DevOps Wiki pages
+- Activates automatically on in-app navigation — no page reload required when arriving at a wiki page from another Azure DevOps page (SPA navigation support since v3.1.1)
 - Real-time preview of markdown changes
 - Support for all standard markdown syntax:
   - Headers (H1-H6)
