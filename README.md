@@ -4,6 +4,14 @@
 
 Chrome extension that replaces the default Azure DevOps wiki markdown editor with a **WYSIWYG** experience powered by **ProseMirror**, **markdown-it** (GFM-style tables and task lists), and **remark**-family utilities where needed for Azure DevOps–specific markdown.
 
+## 🔗 Live Demo
+
+Try the WYSIWYG editor right in your browser — no install required:
+
+**👉 [bthos.github.io/azure-devops-wiki-editor](https://bthos.github.io/azure-devops-wiki-editor/)**
+
+The demo is the project's `playground.html` deployed to GitHub Pages (`.github/workflows/pages.yml`); it runs the same editor bundle the extension ships.
+
 ## 🚀 Prerequisites
 
 - [Node.js](https://nodejs.org/) (v12 or higher)
@@ -101,30 +109,26 @@ If the editor doesn't appear:
 
 ## ✨ Features
 
-- WYSIWYG editing interface for Azure DevOps Wiki pages
-- Activates automatically on in-app navigation — no page reload required when arriving at a wiki page from another Azure DevOps page (SPA navigation support since v3.1.1)
-- Real-time preview of markdown changes
-- Support for all standard markdown syntax:
-  - Headers (H1-H6)
-  - Lists (ordered and unordered)
-  - Tables with easy editing interface
-  - Code blocks with syntax highlighting
-  - Task lists (checkboxes)
-  - Blockquotes
-- Azure DevOps specific features:
-  - @mentions support
+- **WYSIWYG editing** for Azure DevOps Wiki pages — edit rich content without hand-writing Markdown.
+- **One-click WYSIWYG ⇄ Markdown toggle** — flip back to the native Azure DevOps Markdown editor anytime for advanced formatting. Toggle-switch position (left/right) is configurable in the extension popup.
+- **Activates on in-app (SPA) navigation** — no page reload required when arriving at a wiki page from another Azure DevOps page (since v3.1.1).
+- **Standard Markdown:** headers (H1–H6), ordered/unordered lists, task lists (checkboxes), blockquotes, and code blocks.
+- **Tables** — insert via a visual **grid picker**, then add/remove rows & columns or delete the table from the toolbar dropdown.
+- **Text & highlight colors** — native color pickers; serialized as inline `<span style="color:…;background-color:…">` wiki HTML (`wikiStyle` mark).
+- **Code syntax highlighting** in read-only code blocks (highlight.js).
+- **Math (KaTeX)** — inline `$x+y$` and display `$$…$$` / `\[…\]`; toolbar buttons for inline & display math.
+- **Mermaid diagrams** — Azure DevOps `::: mermaid … :::` blocks rendered live; fenced ` ```mermaid ` is normalized to the ADO container on save.
+- **Video embeds** — Azure DevOps `::: video … :::` blocks with native `<video>` preview for direct MP4/WebM/Ogg links.
+- **Azure DevOps–specific markup:**
+  - @mentions (with people picker)
+  - Work item references (`#123`) rendered as clickable chips linking to the work item
   - Wiki TOC generation (`[[_TOC_]]`)
   - Wiki links
-  - Work item links (#123)
-- **ProseMirror toolbar:** text and highlight colors (native color pickers, `wikiStyle` mark → raw `<span style="color:…;background-color:…">` in saved markdown)
-- Image upload and embedding
-- Split screen mode (editor/preview)
-- Full screen editing mode
-
-## 📚 Developer documentation
-
-- **[Wiki attachments (Azure DevOps REST)](docs/wiki-attachments.md)** — REST contract, Base64 body behavior, and debugging notes for upload (`attachment-service.ts`).  
-- **[Wiki WYSIWYG editor (ProseMirror)](docs/wiki-editor.md)** — DOM contract (`wiki-editor-root`, …), `wikiStyle` mark, toolbar color UI, related source paths.
+- **Image & file upload** — drag, drop, or paste; multi-file uploads collapse into a single undo step.
+- **Undo/redo history** tuned for the wiki editing flow.
+- **Theme aware** — automatically follows your Azure DevOps theme (Light, Dark, High Contrast Dark/Light); the popup follows your browser's dark-mode preference.
+- **Custom domains** — works with Azure DevOps cloud (`dev.azure.com`, `*.visualstudio.com`) and on-premises Azure DevOps Server via custom domains added in the popup.
+- Split-screen (editor/preview) and full-screen editing modes.
 
 ## ⌨️ Keyboard Shortcuts
 

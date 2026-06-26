@@ -9,6 +9,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Live demo:** the WYSIWYG editor now runs in the browser at <https://bthos.github.io/azure-devops-wiki-editor/> — `playground.html` is built and deployed to GitHub Pages on every push to `main` (`.github/workflows/pages.yml`).
+- **WYSIWYG ⇄ Markdown toggle switch:** flip between the WYSIWYG editor and the native Azure DevOps Markdown editor in place, without leaving the page (`createModeToggle` / `enableWysiwygMode` / `disableWysiwygMode` in `src/main.ts`). Toggle-switch position (left/right) is configurable from the popup.
+- **Popup settings:** toggle-switch **position** (left/right) and **Custom Domains** management for on-premises Azure DevOps Server, plus dark-mode-aware popup styling that follows the browser's `prefers-color-scheme` (`public/popup.html`, `public/popup.js`).
+- **Azure DevOps theme integration:** the editor follows the active ADO theme (Light, Dark, High Contrast Dark/Light) via `isDarkTheme()` and `WIKI_EDITOR_DARK_CLASS` applied at mount.
+- **Table toolbar:** grid picker to insert tables by dimension, plus add/delete row & column and delete-table commands, and HTML-block insertion (`wiki-table-commands.ts`, `wiki-pm-toolbar-html.ts`).
 - **Work item refs (`#12345`):** markdown-it recognizes Azure DevOps-style references (≥2 digits, not URL fragments / hex-style tails). ProseMirror mark `wikiWorkItem` renders as chip (`.ado-work-item-ref`); saved markdown stays plain `#12345`. Link to `_workitems/edit/{id}` when the page URL is an ADO wiki (`buildAdoWorkItemEditHref` in `ado-wiki-api.ts`). Tests: `wiki-work-item-markdown.spec.ts`, `wiki-work-item-match.ts`.
 - **Video embeds (ADO `::: video` … `:::`):** HTTPS-only URLs, max length 2048, no credentials in the URL. ProseMirror atom `ado_video_block` with widget (`wiki-video-widget-plugin.ts`); direct `https` links to `.mp4` / `.webm` / `.ogg` get a native `<video controls>` preview when the host allows it (otherwise placeholder + **Open** link). Parse/serialize round-trip via `wiki-markdown-video-container-it.ts`, `wiki-markdown-parser.ts`, `wiki-markdown-serializer.ts`; toolbar inserts a sample HTTPS MP4 (`insertWikiVideoBlock`). Tests: `wiki-video-url.spec.ts`, `wiki-video-markdown.spec.ts`.
 - **Toolbar:** buttons **Mermaid**, **f(x)** (inline math), and **∫** (display math) next to Code block; wired in `wiki-pm-toolbar-html.ts` / `wiki-toolbar.ts` with `insertWikiMermaidBlock`, `insertWikiMathInline`, `insertWikiMathDisplayBlock` in `wiki-insert-markers.ts`.
@@ -17,6 +22,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Wiki math (KaTeX):** safe delimiters `\(...\)`, `$$…$$`, and `\[…\]` (no single-`$` inline). `markdown-it` rules, `wiki_math_*` schema atoms, serializer normalizes display to `$$` blocks, node views + `trust: false` rendering. KaTeX CSS/fonts copied to `dist/katex/` at build; manifest loads `katex/katex.min.css`. Tests: `tests/unit/wiki-math-markdown.spec.ts`.
 - **Readonly code-block syntax highlighting** in the wiki code widget (`wiki-code-highlight.ts`, highlight.js with ten bundled grammars + aliases). Unknown languages and very large snippets fall back to plain text; dark theme token colors in `ado-theme.css`. Tests: `tests/unit/wiki-code-highlight.spec.ts`.
 - **Editor history (Option C):** `wiki-editor-history-config.ts` tunes `prosemirror-history` (`depth`, `newGroupDelay`). Multi-file attachment uploads dispatch as **one** undo step via `closeHistory` + batched steps in `wiki-attachment-upload.ts`. Tests: `tests/unit/wiki-editor-history.spec.ts`.
+
+### Changed
+
+- **Major editor rewrite (#20):** the extension now ships a hand-rolled **ProseMirror + markdown-it** WYSIWYG editor bundled with **esbuild**. The previous editor and its `webpack` build were removed; tests moved to **Vitest**. This is the foundation for the toggle, table, math, Mermaid, video, work-item, and theming features above.
+
+> **Note:** `package.json` / `public/manifest.json` are at **3.1.3**, but no `v3.1.x` tags or per-version changelog entries were cut for the rewrite line. The changes above are grouped under `[Unreleased]` until a release is tagged. When cutting it, decide whether the published Chrome Web Store version (currently 1.0.10) adopts the `3.x` manifest version or restarts numbering.
 
 ## [3.1.0] - 2026-04-21
 
