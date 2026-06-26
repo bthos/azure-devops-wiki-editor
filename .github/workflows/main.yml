@@ -46,12 +46,19 @@ jobs:
         set -e
         node scripts/sync-version.js || { echo "Error: sync-version.js failed"; exit 1; }
 
-        # Commit version updates with [skip ci] to avoid circular trigger
+        # Commit version updates with [skip ci] to avoid circular trigger.
+        # When the tag already matches the committed version the sync produces
+        # no changes — that is success, not failure, so only commit/push when
+        # something actually changed.
         git config --global user.name 'GitHub Actions'
         git config --global user.email 'actions@github.com'
         git add package.json public/manifest.json
-        git commit -m "chore: Sync versions to $VERSION [skip ci]"
-        git push origin HEAD:main
+        if git diff --staged --quiet; then
+          echo "Versions already in sync with tag; nothing to commit."
+        else
+          git commit -m "chore: Sync versions to $VERSION [skip ci]"
+          git push origin HEAD:main
+        fi
 
     - name: Build
       run: npm run build
