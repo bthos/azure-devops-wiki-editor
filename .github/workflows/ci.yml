@@ -4,10 +4,16 @@ on:
   push:
     branches: [main, master]
   pull_request:
+  # Allow this workflow to be called by the release pipeline (main.yml)
+  # so a release can only be cut when typecheck + tests + build pass.
+  workflow_call:
 
 jobs:
   build:
     runs-on: ubuntu-latest
+    # Skip pushes whose commit message contains [skip ci] (e.g. the release
+    # pipeline's version-sync commit). PRs and workflow_call always run.
+    if: "github.event_name != 'push' || !contains(github.event.head_commit.message, '[skip ci]')"
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
