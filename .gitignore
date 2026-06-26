@@ -8,8 +8,6 @@ azure-devops-wiki-editor*.zip
 .claude
 .codemie
 .cursor
-.github
-!.github/workflows
 .specstory
 .vscode
 AGENTS.md
