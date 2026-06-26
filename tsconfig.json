@@ -1,16 +1,17 @@
 {
-   "compilerOptions": {
-      "forceConsistentCasingInFileNames": true,
-      "strict": true,
-      "module": "es6",
-      "target": "es6",
-      "esModuleInterop": true,
-      "sourceMap": true,
-      "rootDir": "src",
-      "outDir": "dist/js",
-      "noEmitOnError": true,
-      "moduleResolution": "node",
-      "typeRoots": [ "node_modules/@types" ]
-   },
-   "include": ["src/**/*"]
+  "compilerOptions": {
+    "target": "ES2020",
+    "module": "ES2020",
+    "lib": ["ES2020", "DOM"],
+    "moduleResolution": "bundler",
+    "strict": true,
+    "forceConsistentCasingInFileNames": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "resolveJsonModule": true,
+    "noEmit": true,
+    "sourceMap": true,
+    "typeRoots": ["node_modules/@types"]
+  },
+  "include": ["src/**/*", "tests/**/*", "vitest.config.ts"]
 }

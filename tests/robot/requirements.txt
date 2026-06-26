@@ -1,0 +1,21 @@
+# Robot Framework Test Dependencies
+# ADO Wiki Editor Extension Testing
+
+# Core Robot Framework
+robotframework==6.1.1
+
+# Browser automation (Playwright-based)
+robotframework-browser>=17.0.0
+
+# HTTP/API Testing
+robotframework-requests>=0.9.6
+
+# Environment management
+python-dotenv>=1.0.0
+
+# Utilities
+PyYAML>=6.0
+jsonschema>=4.20.0
+
+# HTTP requests
+requests>=2.31.0

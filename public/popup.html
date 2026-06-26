@@ -6,40 +6,351 @@
     <meta charset="utf-8">
     <style>
         body {
-            width: 200px;
-            height: 150px;
+            width: 320px;
+            min-height: 200px;
+            font-size: 13px;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 0;
+            padding: 12px;
+            background: #f5f5f5;
+        }
+
+        h3 {
+            margin: 0 0 8px 0;
+            color: #0078d4;
+            font-size: 16px;
+        }
+
+        h4 {
+            margin: 12px 0 6px 0;
+            color: #323130;
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        p {
+            margin: 0 0 8px 0;
+            color: #605e5c;
+        }
+
+        .section {
+            background: white;
+            border-radius: 6px;
+            padding: 10px;
+            margin-bottom: 10px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .shortcut-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 4px 0;
+            border-bottom: 1px solid #edebe9;
+        }
+
+        .shortcut-row:last-child {
+            border-bottom: none;
+        }
+
+        .shortcut-key {
+            font-family: 'Consolas', monospace;
+            background: #f3f2f1;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-size: 11px;
+        }
+
+        .domain-input-container {
+            display: flex;
+            gap: 6px;
+            margin-top: 8px;
+        }
+
+        #customDomain {
+            flex: 1;
+            padding: 6px 8px;
+            border: 1px solid #8a8886;
+            border-radius: 4px;
+            font-size: 12px;
+        }
+
+        #customDomain:focus {
+            outline: none;
+            border-color: #0078d4;
+        }
+
+        button {
+            background: #0078d4;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+
+        button:hover {
+            background: #106ebe;
+        }
+
+        button.remove-btn {
+            background: #d13438;
+            padding: 2px 8px;
+            font-size: 11px;
+        }
+
+        button.remove-btn:hover {
+            background: #a4262c;
+        }
+
+        .domain-list {
+            margin-top: 8px;
+            max-height: 100px;
+            overflow-y: auto;
+        }
+
+        .domain-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 4px 0;
+            border-bottom: 1px solid #edebe9;
+            font-size: 12px;
+        }
+
+        .domain-item:last-child {
+            border-bottom: none;
+        }
+
+        .status-message {
+            font-size: 11px;
+            margin-top: 6px;
+            padding: 4px 8px;
+            border-radius: 3px;
+        }
+
+        .status-success {
+            background: #dff6dd;
+            color: #107c10;
+        }
+
+        .status-error {
+            background: #fde7e9;
+            color: #a80000;
+        }
+
+        .hint {
+            font-size: 11px;
+            color: #8a8886;
+            margin-top: 4px;
+        }
+
+        /* Settings styles */
+        .setting-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 6px 0;
+        }
+
+        .setting-label {
+            font-size: 13px;
+            color: #323130;
+        }
+
+        .setting-select {
+            padding: 4px 8px;
+            border: 1px solid #8a8886;
+            border-radius: 4px;
+            font-size: 12px;
+            background: white;
+            cursor: pointer;
+        }
+
+        .setting-select:focus {
+            outline: none;
+            border-color: #0078d4;
+        }
+
+        /* Reminder notice */
+        .reminder-notice {
+            background: #fff4ce;
+            border: 1px solid #ffb900;
+            border-radius: 4px;
+            padding: 8px 10px;
+            margin-bottom: 10px;
+            font-size: 12px;
+            color: #323130;
+            display: flex;
+            align-items: flex-start;
+            gap: 6px;
+        }
+
+        .reminder-notice .icon {
             font-size: 14px;
-            font-family: Arial, sans-serif;
+            flex-shrink: 0;
+        }
+
+        /* ===== Dark Mode Support ===== */
+        @media (prefers-color-scheme: dark) {
+            body {
+                background: #1b1a19;
+                color: #f3f2f1;
+            }
+
+            h3 {
+                color: #2899f5;
+            }
+
+            h4 {
+                color: #f3f2f1;
+            }
+
+            p {
+                color: #a19f9d;
+            }
+
+            .section {
+                background: #252423;
+                box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+            }
+
+            .shortcut-row {
+                border-bottom-color: #3b3a39;
+                color: #f3f2f1;
+            }
+
+            .shortcut-key {
+                background: #3b3a39;
+                color: #f3f2f1;
+            }
+
+            #customDomain {
+                background: #1b1a19;
+                border-color: #605e5c;
+                color: #f3f2f1;
+            }
+
+            #customDomain::placeholder {
+                color: #8a8886;
+            }
+
+            #customDomain:focus {
+                border-color: #2899f5;
+            }
+
+            button {
+                background: #2899f5;
+            }
+
+            button:hover {
+                background: #3aa0f3;
+            }
+
+            button.remove-btn {
+                background: #f1707b;
+            }
+
+            button.remove-btn:hover {
+                background: #d13438;
+            }
+
+            .domain-item {
+                border-bottom-color: #3b3a39;
+                color: #f3f2f1;
+            }
+
+            .status-success {
+                background: #0e3b0e;
+                color: #92c353;
+            }
+
+            .status-error {
+                background: #3b0e0e;
+                color: #f1707b;
+            }
+
+            .hint {
+                color: #8a8886;
+            }
+
+            .setting-label {
+                color: #f3f2f1;
+            }
+
+            .setting-select {
+                background: #1b1a19;
+                border-color: #605e5c;
+                color: #f3f2f1;
+            }
+
+            .setting-select:focus {
+                border-color: #2899f5;
+            }
+
+            .reminder-notice {
+                background: #3d3225;
+                border-color: #c19c00;
+                color: #f3f2f1;
+            }
         }
     </style>
 </head>
 
 <body>
-    <h3>Azure DevOps Wiki Editor</h3>
-    <p>If it does not work - reload the page 😉</p>
-    <p></p>
-    <h3>⌨️ Keyboard Shortcuts</h3>
-    <div style="display: flex; flex-direction: column; gap: 10px;">
-        <div style="display: flex; justify-content: space-between;">
-            <span>Bold</span>
-            <span>Ctrl+B</span>
-        </div>
-        <div style="display: flex; justify-content: space-between;">
-            <span>Italic</span>
-            <span>Ctrl+I</span>
-        </div>
-        <div style="display: flex; justify-content: space-between;">
-            <span>Strike Through</span>
-            <span>Ctrl+S</span>
-        </div>
-        <div style="display: flex; justify-content: space-between;">
-            <span>Comment Block</span>
-            <span>Ctrl+Shift+C</span>
+    <h3>🖊️ Azure DevOps Wiki Editor</h3>
+    <p>WYSIWYG editor for Azure DevOps Wiki pages</p>
+
+    <div class="reminder-notice">
+        <span class="icon">💡</span>
+        <span>Refresh the wiki page to apply settings changes or if the toggle switch is not displayed.</span>
+    </div>
+
+    <div class="section">
+        <h4>⚙️ Settings</h4>
+        <div class="setting-row">
+            <span class="setting-label">Toggle switch position</span>
+            <select id="togglePosition" class="setting-select">
+                <option value="right">Right</option>
+                <option value="left">Left</option>
+            </select>
         </div>
     </div>
-    <!-- <button id="close-popup">Close</button> -->
+
+    <div class="section">
+        <h4>🌐 Custom Domains</h4>
+        <p>Add custom Azure DevOps Server domains:</p>
+        <div class="domain-input-container">
+            <input type="text" id="customDomain" placeholder="e.g., devops.company.com">
+            <button id="addDomain">Add</button>
+        </div>
+        <div class="hint">Enter domain without protocol (https://)</div>
+        <div id="statusMessage" class="status-message" style="display: none;"></div>
+        <div id="domainList" class="domain-list"></div>
+    </div>
+
+    <div class="section">
+        <h4>⌨️ Keyboard Shortcuts</h4>
+        <div class="shortcut-row">
+            <span>Bold</span>
+            <span class="shortcut-key">Ctrl+B</span>
+        </div>
+        <div class="shortcut-row">
+            <span>Italic</span>
+            <span class="shortcut-key">Ctrl+I</span>
+        </div>
+        <div class="shortcut-row">
+            <span>Strike Through</span>
+            <span class="shortcut-key">Ctrl+S</span>
+        </div>
+        <div class="shortcut-row">
+            <span>Code Block</span>
+            <span class="shortcut-key">Ctrl+Shift+C</span>
+        </div>
+    </div>
 
     <script src="popup.js"></script>
 </body>
 
 </html>
+

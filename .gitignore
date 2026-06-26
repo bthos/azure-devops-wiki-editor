@@ -1,4 +1,51 @@
-dist
 node_modules
-*.pem
+dist
 azure-devops-wiki-editor*.zip
+*.pem
+
+# IDE files
+.artefacts
+.claude
+.codemie
+.cursor
+.specstory
+.vscode
+AGENTS.md
+CLAUDE.md
+PROJECT.md
+
+.inputs
+server.log
+
+
+# >>> talaka (managed) >>>
+# Managed by talaka — a per-developer tool, NOT intended for team sync.
+# Re-run `talaka/shared/lifecycle/tools/init.sh` to refresh, or `talaka/shared/lifecycle/tools/teardown.sh`
+# to remove the whole block. Edits inside this block are overwritten on init.
+#
+# The kit commits nothing of its own: a teammate who does not use talaka
+# sees none of this, and a second kit user just re-runs init.sh to regenerate
+# it. Everything below is personal working state. (curating-knowledge's wiki/ lives at the
+# project root, outside this dir, precisely so it CAN be committed.)
+#
+# --- Artefacts: all per-developer pipeline state (memory, features, PIPELINE.md, PROJECT.md, …) ---
+.tlk/
+#
+# --- Kit-installed agent + skill copies (personal; Veles ratchets these in place) ---
+.claude/agents/bagnik.md
+.claude/agents/cmok.md
+.claude/agents/mokash.md
+.claude/agents/veles.md
+.claude/agents/yaga.md
+.claude/agents/zlydni.md
+.claude/skills/adapting-patterns/
+.claude/skills/auditing-consistency/
+.claude/skills/creating-mockups/
+.claude/skills/curating-knowledge/
+.claude/skills/designing-cli/
+.claude/skills/designing-ux/
+.claude/skills/diagnosing-bugs/
+.claude/skills/eliciting-requirements/
+.claude/skills/mapping-codebase/
+.claude/skills/planning-architecture/
+# <<< talaka (managed) <<<

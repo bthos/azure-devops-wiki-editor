@@ -1,0 +1,684 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Azure DevOps Wiki Editor - Playground</title>
+    <!-- Wiki editor styles -->
+    <link rel="stylesheet" href="dist/custom-styles.css" />
+    <link rel="stylesheet" href="dist/content.css" />
+    <style>
+        /* Reset and base */
+        html, body {
+            height: 100%;
+            margin: 0;
+            overflow: hidden;
+        }
+        body {
+            font-family: 'Segoe UI', 'Segoe UI Web (West European)', -apple-system, BlinkMacSystemFont, Roboto, 'Helvetica Neue', sans-serif;
+            background: #f5f5f5;
+            color: rgba(0, 0, 0, 0.9);
+            transition: background-color 0.3s, color 0.3s;
+        }
+        
+        /* === Azure DevOps Layout Structure === */
+        
+        /* Full page container */
+        .ado-page {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+        }
+        
+        /* Top navigation bar (like Azure DevOps header) */
+        .ado-header {
+            flex-shrink: 0;
+            height: 48px;
+            background: #0078d4;
+            display: flex;
+            align-items: center;
+            padding: 0 16px;
+            gap: 12px;
+        }
+        
+        .ado-header .logo {
+            color: white;
+            font-weight: 600;
+            font-size: 16px;
+        }
+        
+        .ado-header .breadcrumb {
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 14px;
+        }
+        
+        /* Theme switcher in header */
+        .theme-switcher {
+            margin-left: auto;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .theme-switcher label {
+            color: white;
+            font-size: 13px;
+        }
+        
+        .theme-switcher select {
+            padding: 4px 8px;
+            border: 1px solid #0078d4;
+            border-radius: 4px;
+            font-size: 13px;
+            cursor: pointer;
+            background: #ffffff;
+            color: #323130;
+        }
+        
+        .theme-switcher select:focus {
+            outline: none;
+            border-color: #005a9e;
+        }
+        
+        .theme-switcher select option {
+            background: #ffffff;
+            color: #323130;
+        }
+        
+        /* Content area with splitter */
+        .ado-content {
+            flex: 1;
+            display: flex;
+            min-height: 0;
+        }
+        
+        /* Left navigation pane */
+        .ado-nav-pane {
+            width: 240px;
+            flex-shrink: 0;
+            background: #ffffff;
+            border-right: 1px solid #edebe9;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .nav-header {
+            padding: 12px 16px;
+            border-bottom: 1px solid #edebe9;
+            font-weight: 600;
+            font-size: 14px;
+            color: #323130;
+        }
+        
+        .nav-tree {
+            padding: 8px;
+            flex: 1;
+            overflow-y: auto;
+        }
+        
+        .nav-item {
+            display: flex;
+            align-items: center;
+            padding: 6px 12px;
+            border-radius: 4px;
+            font-size: 14px;
+            color: #323130;
+            cursor: pointer;
+            margin-bottom: 2px;
+        }
+        
+        .nav-item:hover {
+            background: #f3f2f1;
+        }
+        
+        .nav-item.active {
+            background: #e5f1fb;
+            color: #0078d4;
+        }
+        
+        .nav-icon {
+            margin-right: 8px;
+            opacity: 0.8;
+        }
+        
+        /* Flexible pane (mimics vss-Splitter--pane-flexible) */
+        .vss-Splitter--pane-flexible {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            position: relative;
+        }
+        
+        /* Wiki editor container */
+        .wiki-editor {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            min-height: 0;
+            overflow: hidden;
+            background: #ffffff;
+        }
+        
+        /* Page header with title and buttons */
+        .bolt-header-with-commandbar {
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            padding: 8px 16px;
+            background: #ffffff;
+            border-bottom: 1px solid #edebe9;
+        }
+        
+        .bolt-header-title {
+            flex: 1;
+            display: flex;
+            align-items: center;
+        }
+        
+        .we-pagename-input {
+            font-size: 18px;
+            font-weight: 600;
+            border: 1px solid transparent;
+            padding: 4px 8px;
+            border-radius: 4px;
+            background: transparent;
+            width: 300px;
+        }
+        
+        .we-pagename-input:focus {
+            outline: none;
+            border-color: #0078d4;
+            background: #ffffff;
+        }
+        
+        .bolt-header-commandbar {
+            display: flex;
+            gap: 8px;
+        }
+        
+        .we-close-btn {
+            padding: 6px 16px;
+            border: 1px solid #8a8886;
+            border-radius: 2px;
+            background: #ffffff;
+            color: #323130;
+            font-size: 14px;
+            cursor: pointer;
+        }
+        
+        .we-close-btn:hover {
+            background: #f3f2f1;
+        }
+        
+        .we-save-btn {
+            padding: 6px 16px;
+            border: 1px solid #0078d4;
+            border-radius: 2px;
+            background: #0078d4;
+            color: #ffffff;
+            font-size: 14px;
+            cursor: pointer;
+        }
+        
+        .we-save-btn:hover {
+            background: #106ebe;
+        }
+        
+        /* Markdown toolbar */
+        .wiki-markdown-toolbar {
+            flex-shrink: 0;
+            padding: 8px 12px;
+            background: #f3f2f1;
+            border-bottom: 1px solid #edebe9;
+            display: flex;
+            gap: 4px;
+            align-items: center;
+        }
+        
+        .wiki-markdown-toolbar .toolbar-btn {
+            padding: 6px 10px;
+            border: 1px solid transparent;
+            border-radius: 2px;
+            background: transparent;
+            color: #323130;
+            font-size: 13px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        
+        .wiki-markdown-toolbar .toolbar-btn:hover {
+            background: #ffffff;
+            border-color: #c8c6c4;
+        }
+        
+        .wiki-markdown-toolbar .separator {
+            width: 1px;
+            height: 24px;
+            background: #c8c6c4;
+            margin: 0 4px;
+        }
+        
+        /* Text area and preview container */
+        .we-text-preview-container {
+            flex: 1;
+            display: flex;
+            min-height: 0;
+            overflow: hidden;
+        }
+        
+        .we-ta-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            min-height: 0;
+            overflow: hidden;
+        }
+        
+        .we-ta-container textarea {
+            flex: 1;
+            padding: 16px;
+            font-family: Menlo, Consolas, 'Courier New', monospace;
+            font-size: 14px;
+            border: none;
+            resize: none;
+            outline: none;
+            min-height: 0;
+        }
+        
+        /* === Dark Theme === */
+        body[data-theme="ms.vss-web.vsts-theme-dark"] {
+            background: #1b1a19;
+            color: #f3f2f1;
+        }
+        
+        body[data-theme="ms.vss-web.vsts-theme-dark"] .ado-header {
+            background: #252423;
+        }
+        
+        body[data-theme="ms.vss-web.vsts-theme-dark"] .ado-nav-pane {
+            background: #252423;
+            border-color: #3b3a39;
+        }
+        
+        body[data-theme="ms.vss-web.vsts-theme-dark"] .nav-header {
+            border-color: #3b3a39;
+            color: #f3f2f1;
+        }
+        
+        body[data-theme="ms.vss-web.vsts-theme-dark"] .nav-item {
+            color: #f3f2f1;
+        }
+        
+        body[data-theme="ms.vss-web.vsts-theme-dark"] .nav-item:hover {
+            background: #323130;
+        }
+        
+        body[data-theme="ms.vss-web.vsts-theme-dark"] .nav-item.active {
+            background: #2b3e50;
+            color: #4fa3ff;
+        }
+        
+        body[data-theme="ms.vss-web.vsts-theme-dark"] .wiki-editor {
+            background: #252423;
+        }
+        
+        body[data-theme="ms.vss-web.vsts-theme-dark"] .bolt-header-with-commandbar {
+            background: #252423;
+            border-color: #3b3a39;
+        }
+        
+        body[data-theme="ms.vss-web.vsts-theme-dark"] .we-pagename-input {
+            color: #f3f2f1;
+        }
+        
+        body[data-theme="ms.vss-web.vsts-theme-dark"] .we-pagename-input:focus {
+            background: #1b1a19;
+        }
+        
+        body[data-theme="ms.vss-web.vsts-theme-dark"] .we-close-btn {
+            background: #252423;
+            border-color: #605e5c;
+            color: #f3f2f1;
+        }
+        
+        body[data-theme="ms.vss-web.vsts-theme-dark"] .wiki-markdown-toolbar {
+            background: #323130;
+            border-color: #3b3a39;
+        }
+        
+        body[data-theme="ms.vss-web.vsts-theme-dark"] .wiki-markdown-toolbar .toolbar-btn {
+            color: #f3f2f1;
+        }
+        
+        body[data-theme="ms.vss-web.vsts-theme-dark"] .wiki-markdown-toolbar .toolbar-btn:hover {
+            background: #252423;
+            border-color: #605e5c;
+        }
+        
+        body[data-theme="ms.vss-web.vsts-theme-dark"] .wiki-markdown-toolbar .separator {
+            background: #605e5c;
+        }
+        
+        body[data-theme="ms.vss-web.vsts-theme-dark"] .we-ta-container textarea {
+            background: #1b1a19;
+            color: #f3f2f1;
+        }
+        
+        body[data-theme="ms.vss-web.vsts-theme-dark"] .theme-switcher select {
+            background: #323130;
+            color: #f3f2f1;
+            border-color: #605e5c;
+        }
+        
+        body[data-theme="ms.vss-web.vsts-theme-dark"] .theme-switcher select option {
+            background: #323130;
+            color: #f3f2f1;
+        }
+        
+        /* === High Contrast Dark Theme === */
+        body[data-theme="ms.vss-web.vsts-theme-hc-dark"] {
+            background: #000000;
+            color: #ffffff;
+        }
+        
+        body[data-theme="ms.vss-web.vsts-theme-hc-dark"] .ado-header {
+            background: #000000;
+            border-bottom: 2px solid #ffffff;
+        }
+        
+        body[data-theme="ms.vss-web.vsts-theme-hc-dark"] .ado-nav-pane {
+            background: #000000;
+            border-color: #ffffff;
+            border-width: 2px;
+        }
+        
+        body[data-theme="ms.vss-web.vsts-theme-hc-dark"] .wiki-editor {
+            background: #000000;
+        }
+        
+        body[data-theme="ms.vss-web.vsts-theme-hc-dark"] .bolt-header-with-commandbar {
+            background: #000000;
+            border-color: #ffffff;
+            border-width: 2px;
+        }
+        
+        body[data-theme="ms.vss-web.vsts-theme-hc-dark"] .we-pagename-input {
+            color: #ffffff;
+            border-color: #ffffff;
+            border-width: 2px;
+        }
+        
+        body[data-theme="ms.vss-web.vsts-theme-hc-dark"] .we-close-btn,
+        body[data-theme="ms.vss-web.vsts-theme-hc-dark"] .we-save-btn {
+            border-width: 2px;
+        }
+        
+        body[data-theme="ms.vss-web.vsts-theme-hc-dark"] .wiki-markdown-toolbar {
+            background: #000000;
+            border-color: #ffffff;
+            border-width: 2px;
+        }
+        
+        body[data-theme="ms.vss-web.vsts-theme-hc-dark"] .we-ta-container textarea {
+            background: #000000;
+            color: #ffffff;
+            border: 2px solid #ffffff;
+        }
+        
+        body[data-theme="ms.vss-web.vsts-theme-hc-dark"] .theme-switcher label {
+            color: #ffffff;
+        }
+        
+        body[data-theme="ms.vss-web.vsts-theme-hc-dark"] .theme-switcher select {
+            background: #000000;
+            color: #ffffff;
+            border: 2px solid #ffffff;
+        }
+        
+        body[data-theme="ms.vss-web.vsts-theme-hc-dark"] .theme-switcher select option {
+            background: #000000;
+            color: #ffffff;
+        }
+        
+        /* === High Contrast Light Theme === */
+        body[data-theme="ms.vss-web.vsts-theme-hc-light"] {
+            background: #ffffff;
+            color: #000000;
+        }
+        
+        body[data-theme="ms.vss-web.vsts-theme-hc-light"] .ado-header {
+            background: #ffffff;
+            border-bottom: 2px solid #000000;
+        }
+        
+        body[data-theme="ms.vss-web.vsts-theme-hc-light"] .ado-header .logo,
+        body[data-theme="ms.vss-web.vsts-theme-hc-light"] .ado-header .breadcrumb {
+            color: #000000;
+        }
+        
+        body[data-theme="ms.vss-web.vsts-theme-hc-light"] .theme-switcher label {
+            color: #000000;
+        }
+        
+        body[data-theme="ms.vss-web.vsts-theme-hc-light"] .theme-switcher select {
+            background: #ffffff;
+            color: #000000;
+            border-color: #000000;
+            border-width: 2px;
+        }
+        
+        body[data-theme="ms.vss-web.vsts-theme-hc-light"] .ado-nav-pane {
+            border-color: #000000;
+            border-width: 2px;
+        }
+        
+        body[data-theme="ms.vss-web.vsts-theme-hc-light"] .bolt-header-with-commandbar {
+            border-color: #000000;
+            border-width: 2px;
+        }
+        
+        body[data-theme="ms.vss-web.vsts-theme-hc-light"] .wiki-markdown-toolbar {
+            background: #ffffff;
+            border-color: #000000;
+            border-width: 2px;
+        }
+        
+        body[data-theme="ms.vss-web.vsts-theme-hc-light"] .we-ta-container textarea {
+            border: 2px solid #000000;
+        }
+    </style>
+</head>
+<body>
+    <!-- Azure DevOps Page Structure -->
+    <div class="ado-page">
+        <!-- Top Navigation Bar -->
+        <div class="ado-header">
+            <span class="logo">Azure DevOps</span>
+            <span class="breadcrumb">MyOrg / MyProject / Overview / Wiki / Page 1</span>
+            
+            <div class="theme-switcher">
+                <label for="themeSelect">Theme:</label>
+                <select id="themeSelect">
+                    <option value="">Light (default)</option>
+                    <option value="ms.vss-web.vsts-theme-dark">Dark</option>
+                    <option value="ms.vss-web.vsts-theme-hc-dark">High Contrast Dark</option>
+                    <option value="ms.vss-web.vsts-theme-hc-light">High Contrast Light</option>
+                </select>
+            </div>
+        </div>
+        
+        <!-- Content Area with Splitter -->
+        <div class="ado-content">
+            <!-- Left Navigation Pane -->
+            <div class="ado-nav-pane">
+                <div class="nav-header">📚 Wiki Pages</div>
+                <div class="nav-tree">
+                    <div class="nav-item active">
+                        <span class="nav-icon">🏠</span>
+                        <span>Page 1</span>
+                    </div>
+                    <div class="nav-item">
+                        <span class="nav-icon">📄</span>
+                        <span>Page 2</span>
+                    </div>
+                    <div class="nav-item">
+                        <span class="nav-icon">📄</span>
+                        <span>Getting Started</span>
+                    </div>
+                    <div class="nav-item">
+                        <span class="nav-icon">📁</span>
+                        <span>Documentation</span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Flexible Pane (mimics vss-Splitter--pane-flexible) -->
+            <div class="vss-Splitter--pane-flexible relative">
+                <!-- Wiki Editor Container -->
+                <div class="wiki-editor">
+                    <!-- Toggle will be injected here by main.js -->
+                    
+                    <!-- Page Header -->
+                    <div class="bolt-header-with-commandbar bolt-header">
+                        <div class="bolt-header-title">
+                            <input type="text" class="we-pagename-input" value="Page 1" placeholder="Page title" aria-label="Page title">
+                        </div>
+                        <div class="bolt-header-commandbar">
+                            <button class="we-close-btn">Close</button>
+                            <button class="we-save-btn">Save</button>
+                        </div>
+                    </div>
+                    
+                    <!-- Markdown Toolbar (visible in markdown mode) -->
+                    <div class="wiki-markdown-toolbar we-toolbar">
+                        <button class="toolbar-btn"><b>B</b></button>
+                        <button class="toolbar-btn"><i>I</i></button>
+                        <button class="toolbar-btn">🔗</button>
+                        <span class="separator"></span>
+                        <button class="toolbar-btn">H1</button>
+                        <button class="toolbar-btn">H2</button>
+                        <button class="toolbar-btn">H3</button>
+                        <span class="separator"></span>
+                        <button class="toolbar-btn">• List</button>
+                        <button class="toolbar-btn">1. List</button>
+                        <button class="toolbar-btn">☑ Task</button>
+                        <span class="separator"></span>
+                        <button class="toolbar-btn">📊 Table</button>
+                        <button class="toolbar-btn">&lt;/&gt; Code</button>
+                    </div>
+                    
+                    <!-- Text Area Container (visible in markdown mode) -->
+                    <div class="we-text-preview-container">
+                        <div class="we-ta-container">
+                            <textarea placeholder="Enter markdown content here...">
+# 🧪 Azure DevOps Wiki Editor Playground
+
+## 📌 ADO Markers
+Here are the special Azure DevOps markers supported by the editor.
+
+### Table of Contents
+The `[[_TOC_]]` marker generates the table of contents.
+
+[[_TOC_]]
+
+### Table of Sub-Pages
+The `[[_TOSP_]]` marker generates a list of sub-pages (rendered as a placeholder here).
+
+[[_TOSP_]]
+
+### Escaped Markers (Edge Cases)
+These should render as text, not widgets, or be handled correctly by the parser/serializer.
+1. Escaped brackets: \[\[_TOC_]]
+2. Fully escaped: \[\[\_TOC\_]]
+3. Mixed escaping: \[\[_TOSP_]]
+
+## 👥 Mentions & Work Items
+- **User Mention:** Hello @<user1>, and @<Jane Doe>!
+- **Work Item:** working on #123456 and #789.
+
+## 📊 Tables
+### With Mentions
+| Name | Role | Status |
+|------|------|--------|
+| @<johndoe> | Developer | 🟢 Active |
+| @<jane.smith> | Designer | 🟡 Away |
+
+### Standard
+| ID | Category | Value |
+|----|----------|-------|
+| 1  | A        | 100   |
+| 2  | B        | 200   |
+
+## ✅ Task Lists
+- [x] Completed task
+- [ ] Pending task
+- [ ] Another pending task
+
+## 💻 Code
+Inline code: `const x = 1;`
+
+Block code:
+```typescript
+function hello(name: string) {
+    console.log(`Hello, ${name}!`);
+}
+```
+
+## 🎨 Formatting & Media
+**Bold**, *Italic*, ~~Strikethrough~~
+
+> 💡 **Note:** This is a blockquote useful for calling out information.
+
+---
+
+### Links & Images
+[Google](https://google.com)
+
+![Placeholder](https://placehold.co/150x50)
+                            </textarea>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // Theme switcher functionality
+        document.getElementById('themeSelect').addEventListener('change', function() {
+            const theme = this.value;
+            if (theme) {
+                document.body.setAttribute('data-theme', theme);
+            } else {
+                document.body.removeAttribute('data-theme');
+            }
+            // Save to localStorage
+            localStorage.setItem('test-theme', theme);
+        });
+        
+        // Restore saved theme
+        const savedTheme = localStorage.getItem('test-theme');
+        if (savedTheme) {
+            document.body.setAttribute('data-theme', savedTheme);
+            document.getElementById('themeSelect').value = savedTheme;
+        }
+        
+        // Add error handling for script loading
+        window.onerror = function(msg, url, line, col, error) {
+            console.error('An error occurred:', msg, 'at', url, 'line:', line);
+            return false;
+        };
+        
+        const contentScript = document.createElement('script');
+        contentScript.src = 'dist/content.js';
+        contentScript.onload = function() {
+            console.log('Content script loaded successfully');
+        };
+        contentScript.onerror = function() {
+            console.error('Failed to load content.js');
+        };
+        document.body.appendChild(contentScript);
+    </script>
+</body>
+</html>

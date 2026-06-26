@@ -1,13 +1,386 @@
-.toc-marker {
-    color: #0078d4;
-    font-family: monospace;
-    padding: 2px 4px;
-    background: rgba(0, 120, 212, 0.1);
-    border-radius: 3px;
-    white-space: nowrap;
+/* Azure DevOps Wiki Editor - Custom Styles */
+/* UI Components and Layout - NOT editor content styling */
+/* Editor content styling is in src/theme/ado-theme.css */
+
+/* ==============================================
+   TOGGLE SWITCH TOKENS
+   ============================================== */
+
+:root {
+    /* Toggle-specific tokens (extend ado-theme tokens) */
+    --toggle-track-bg: #ffffff;
+    --toggle-track-border: #8a8886;
+    --toggle-thumb-bg: #323130;
+    --toggle-track-hover-border: #323130;
+    --toggle-thumb-hover-bg: #201f1e;
+    --toggle-checked-bg: #0078d4;
+    --toggle-checked-hover-bg: #106ebe;
+    --toggle-label-color: #605e5c;
+    --toggle-label-active-color: #323130;
+    --toggle-container-bg: #faf9f8;
+    --toggle-container-border: #edebe9;
+    --toggle-focus-ring: #605e5c;
+    --toggle-focus-bg: #ffffff;
 }
 
-.mention {
-    color: #0078d4;
-    font-weight: 500;
+/* Dark theme toggle tokens */
+:is(
+    [data-theme*="dark"],
+    body[data-theme="ms.vss-web.vsts-theme-dark"]
+) {
+    --toggle-track-bg: #323130;
+    --toggle-track-border: #323130;
+    --toggle-thumb-bg: #ffffff;
+    --toggle-track-hover-border: #484644;
+    --toggle-thumb-hover-bg: #ffffff;
+    --toggle-label-color: #a19f9d;
+    --toggle-label-active-color: #f3f2f1;
+    --toggle-container-bg: #1b1a19;
+    --toggle-container-border: #3b3a39;
+    --toggle-focus-ring: #ffffff;
+    --toggle-focus-bg: #1b1a19;
+}
+
+/* High Contrast Dark toggle tokens */
+body[data-theme="ms.vss-web.vsts-theme-hc-dark"] {
+    --toggle-track-bg: #000000;
+    --toggle-track-border: #ffffff;
+    --toggle-thumb-bg: #ffffff;
+    --toggle-track-hover-border: #1aebff;
+    --toggle-checked-bg: #1aebff;
+    --toggle-checked-hover-bg: #1aebff;
+    --toggle-label-color: #ffffff;
+    --toggle-label-active-color: #ffff00;
+    --toggle-container-bg: #000000;
+    --toggle-container-border: #ffffff;
+    --toggle-focus-ring: #ffffff;
+    --toggle-focus-bg: #000000;
+}
+
+/* High Contrast Light toggle tokens */
+body[data-theme="ms.vss-web.vsts-theme-hc-light"] {
+    --toggle-track-bg: #ffffff;
+    --toggle-track-border: #000000;
+    --toggle-thumb-bg: #000000;
+    --toggle-track-hover-border: #0078d4;
+    --toggle-label-color: #000000;
+    --toggle-label-active-color: #000000;
+    --toggle-container-bg: #ffffff;
+    --toggle-container-border: #000000;
+    --toggle-focus-ring: #000000;
+    --toggle-focus-bg: #ffffff;
+}
+
+/* ==============================================
+   TOGGLE CONTAINER
+   ============================================== */
+
+#wysiwyg-toggle-container {
+    padding: 8px 12px;
+    background-color: var(--toggle-container-bg);
+    border-bottom: 1px solid var(--toggle-container-border);
+    display: flex;
+    justify-content: flex-end;
+    flex-shrink: 0;
+    position: relative;
+    z-index: 10;
+}
+
+#wysiwyg-toggle-container[data-position="left"] {
+    justify-content: flex-start;
+}
+
+#wysiwyg-toggle-container[data-position="right"] {
+    justify-content: flex-end;
+}
+
+/* HC border width */
+:is(
+    body[data-theme="ms.vss-web.vsts-theme-hc-dark"],
+    body[data-theme="ms.vss-web.vsts-theme-hc-light"]
+) #wysiwyg-toggle-container {
+    border-bottom-width: 2px;
+}
+
+/* ==============================================
+   TOGGLE SWITCH
+   ============================================== */
+
+.wysiwyg-toggle {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-family: 'Segoe UI', 'Segoe UI Web (West European)', -apple-system, BlinkMacSystemFont, Roboto, 'Helvetica Neue', sans-serif;
+    -webkit-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+}
+
+.toggle-label {
+    font-size: 14px;
+    font-weight: 400;
+    color: var(--toggle-label-color);
+    transition: color 0.1s ease;
+    cursor: pointer;
+}
+
+.toggle-label.active {
+    color: var(--toggle-label-active-color);
+    font-weight: 600;
+}
+
+.toggle-label:hover {
+    color: var(--toggle-label-active-color);
+}
+
+/* HC Light active underline */
+body[data-theme="ms.vss-web.vsts-theme-hc-light"] .toggle-label.active {
+    text-decoration: underline;
+}
+
+/* Switch Container */
+.toggle-switch {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    width: 40px;
+    height: 20px;
+    cursor: pointer;
+}
+
+.toggle-switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+    position: absolute;
+}
+
+/* Track */
+.toggle-slider {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: var(--toggle-track-bg);
+    border: 1px solid var(--toggle-track-border);
+    border-radius: 10px;
+    transition: all 0.1s ease;
+}
+
+/* HC border width */
+:is(
+    body[data-theme="ms.vss-web.vsts-theme-hc-dark"],
+    body[data-theme="ms.vss-web.vsts-theme-hc-light"]
+) .toggle-slider {
+    border-width: 2px;
+}
+
+/* Thumb */
+.toggle-slider:before {
+    position: absolute;
+    content: "";
+    height: 12px;
+    width: 12px;
+    left: 3px;
+    top: 50%;
+    transform: translateY(-50%);
+    background-color: var(--toggle-thumb-bg);
+    border-radius: 50%;
+    transition: all 0.1s ease;
+}
+
+/* Hover state - unchecked */
+.toggle-switch:hover .toggle-slider {
+    border-color: var(--toggle-track-hover-border);
+}
+
+.toggle-switch:hover .toggle-slider:before {
+    background-color: var(--toggle-thumb-hover-bg);
+}
+
+/* Checked state */
+.toggle-switch input:checked + .toggle-slider {
+    background-color: var(--toggle-checked-bg);
+    border-color: var(--toggle-checked-bg);
+}
+
+.toggle-switch input:checked + .toggle-slider:before {
+    background-color: #ffffff;
+    left: calc(100% - 15px);
+}
+
+/* HC Dark checked thumb is black */
+body[data-theme="ms.vss-web.vsts-theme-hc-dark"] .toggle-switch input:checked + .toggle-slider:before {
+    background-color: #000000;
+}
+
+/* Hover state - checked */
+.toggle-switch:hover input:checked + .toggle-slider {
+    background-color: var(--toggle-checked-hover-bg);
+    border-color: var(--toggle-checked-hover-bg);
+}
+
+/* Focus state */
+.toggle-switch input:focus-visible + .toggle-slider {
+    outline: none;
+    box-shadow: 0 0 0 2px var(--toggle-focus-bg), 0 0 0 4px var(--toggle-focus-ring);
+}
+
+/* Disabled state */
+.toggle-switch input:disabled + .toggle-slider {
+    background-color: #f3f2f1;
+    border-color: #c8c6c4;
+    cursor: not-allowed;
+}
+
+.toggle-switch input:disabled + .toggle-slider:before {
+    background-color: #c8c6c4;
+}
+
+/* Active/pressed state */
+.toggle-switch:active .toggle-slider:before {
+    width: 14px;
+}
+
+/* ==============================================
+   EDITOR CONTAINER LAYOUT (Azure DevOps Integration)
+   ============================================== */
+
+/* Parent container of .wiki-editor in Azure DevOps
+   This is the flexible pane in the splitter that contains the editor */
+.vss-Splitter--pane-flexible:has(.wiki-editor) {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+/* The wiki-editor container - main flex container for the editing area */
+.wiki-editor {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    height: 100%;
+    min-height: 0;
+    flex: 1;
+}
+
+/* Fixed header elements - should NOT scroll */
+.wiki-editor #wysiwyg-toggle-container,
+.wiki-editor .save-in-progress,
+.wiki-editor .bolt-header-with-commandbar,
+.wiki-editor .bolt-header,
+.wiki-editor .wiki-markdown-toolbar {
+    flex-shrink: 0;
+}
+
+/* WYSIWYG wiki editor root — takes remaining flex space */
+#wiki-editor-root {
+    margin-top: 0;
+    border: none;
+    flex: 1 1 0;
+    min-height: 0;
+    height: 0; /* Critical for flex scroll */
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+#wiki-editor-root > div,
+#wiki-editor-root .wiki-editor-shell {
+    flex: 1 1 0;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    min-height: 0;
+    height: 100%;
+}
+
+/* ProseMirror wiki path: `.editor` wraps the view (same inner layout as legacy bundle). */
+#wiki-editor-root .wiki-editor-shell .editor {
+    flex: 1 1 0;
+    min-height: 0;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Toolbar row should not shrink (fixed height band) */
+#wiki-editor-root .wiki-editor-toolbar {
+    flex-shrink: 0;
+}
+
+/* ProseMirror editor - the actual scrollable content area */
+#wiki-editor-root .ProseMirror {
+    flex: 1 1 0;
+    overflow-y: auto;
+    overflow-x: hidden;
+    min-height: 0;
+    height: 0; /* Critical for flex scroll */
+    padding: 16px;
+    outline: none;
+}
+
+/*
+ * Azure DevOps / wiki host CSS sometimes adds heading anchor affordances as
+ * pseudo-elements; those sit above the editable text and steal pointer events.
+ */
+#wiki-editor-root .ProseMirror h1::before,
+#wiki-editor-root .ProseMirror h1::after,
+#wiki-editor-root .ProseMirror h2::before,
+#wiki-editor-root .ProseMirror h2::after,
+#wiki-editor-root .ProseMirror h3::before,
+#wiki-editor-root .ProseMirror h3::after,
+#wiki-editor-root .ProseMirror h4::before,
+#wiki-editor-root .ProseMirror h4::after,
+#wiki-editor-root .ProseMirror h5::before,
+#wiki-editor-root .ProseMirror h5::after,
+#wiki-editor-root .ProseMirror h6::before,
+#wiki-editor-root .ProseMirror h6::after {
+    pointer-events: none;
+}
+
+/* Allow code blocks to scroll horizontally even when parent has overflow-x: hidden */
+/* Note: overflow-y cannot be 'visible' when overflow-x is 'auto' per CSS spec */
+/* Instead, we ensure height expands automatically so no vertical scrollbar appears */
+#wiki-editor-root .ProseMirror pre {
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+    height: auto !important;
+    max-height: none !important;
+    min-height: auto !important;
+    /* Ensure code blocks can scroll independently and expand naturally */
+    position: relative;
+    z-index: 1;
+    /* Force block display to ensure proper height calculation */
+    display: block !important;
+    /* Prevent flex constraints from parent */
+    flex-shrink: 0 !important;
+    flex-grow: 0 !important;
+    flex-basis: auto !important;
+}
+
+/* Ensure the text preview container (markdown mode) also fits properly */
+.wiki-editor .we-text-preview-container {
+    flex: 1;
+    min-height: 0;
+    overflow: hidden;
+}
+
+/* ==============================================
+   RESPONSIVE
+   ============================================== */
+
+@media (max-width: 768px) {
+    #wysiwyg-toggle-container {
+        padding: 6px 10px;
+    }
+    
+    .wysiwyg-toggle {
+        gap: 6px;
+    }
+    
+    .toggle-label {
+        font-size: 12px;
+    }
 }

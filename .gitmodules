@@ -1,0 +1,3 @@
+[submodule "talaka"]
+	path = talaka
+	url = https://github.com/bthos/talaka
