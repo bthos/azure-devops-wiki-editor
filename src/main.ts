@@ -27,7 +27,6 @@ export {};
 const MAX_RETRIES = 10;
 let retryCount = 0;
 let timeoutId: number | null = null;
-let editorReady = false;
 let isWysiwygMode = false;
 let mentionService: AdoMentionService | null = null;
 let attachmentServiceInstance: AdoAttachmentService | null = null;
@@ -310,12 +309,15 @@ async function initializeEditor(textarea: HTMLTextAreaElement, editorDiv: HTMLEl
 }
 
 function setupEditor(): void {
-    if (editorReady) {
-        return;
-    }
-
-    if (retryCount >= MAX_RETRIES) {
-        console.error('Failed to setup editor after multiple retries');
+    // Drive setup off live DOM state, not a sticky latch. Our toggle lives
+    // inside ADO's React tree, so it is present iff the *current* edit surface
+    // is already wired up. After a SPA navigation ADO unmounts the old page
+    // (and our toggle with it), so this correctly returns false on the new page.
+    if (document.querySelector('#wysiwyg-toggle-container')) {
+        if (timeoutId !== null) {
+            window.clearTimeout(timeoutId);
+            timeoutId = null;
+        }
         return;
     }
 
@@ -330,20 +332,11 @@ function setupEditor(): void {
     }
 
     if (!visibleTextarea) {
-        retryCount++;
-        timeoutId = window.setTimeout(setupEditor, 500);
+        // View mode (or still rendering): no edit textarea yet. The always-on
+        // MutationObserver stays connected as the durable trigger and re-enters
+        // here the instant the user clicks "Edit"; armPoll() supplies a bounded
+        // backstop poll for visibility flips that emit no DOM mutations.
         return;
-    }
-
-    editorReady = true;
-
-    if (timeoutId) {
-        window.clearTimeout(timeoutId);
-        timeoutId = null;
-    }
-    if (window.editorObserver) {
-        window.editorObserver.disconnect();
-        delete window.editorObserver;
     }
 
     const wikiEditor = document.querySelector('.wiki-editor') as HTMLElement;
@@ -353,83 +346,95 @@ function setupEditor(): void {
 
     const textarea = visibleTextarea;
 
-    if (document.querySelector('#wysiwyg-toggle-container')) {
-        return;
-    }
+    // Insert the toggle synchronously so #wysiwyg-toggle-container exists right
+    // away — this blocks the observer/poll from re-entering and double-mounting
+    // while the async storage read below is in flight. Position is a cosmetic
+    // attribute, so default to 'right' and refine it once storage resolves.
+    const toggle = createModeToggle('right');
+    wikiEditor.insertBefore(toggle, wikiEditor.firstChild);
 
-    function createToggleWithPosition(position: string) {
-        const toggle = createModeToggle(position);
-        wikiEditor.insertBefore(toggle, wikiEditor.firstChild);
-
-        const toggleInput = document.querySelector('#wysiwyg-toggle-input') as HTMLInputElement;
-        if (toggleInput) {
-            toggleInput.addEventListener('change', function () {
-                if (this.checked) {
-                    enableWysiwygMode(textarea, wikiEditor);
-                } else {
-                    disableWysiwygMode(textarea, wikiEditor);
-                }
-            });
-        }
+    const toggleInput = document.querySelector('#wysiwyg-toggle-input') as HTMLInputElement;
+    if (toggleInput) {
+        toggleInput.addEventListener('change', function () {
+            if (this.checked) {
+                enableWysiwygMode(textarea, wikiEditor);
+            } else {
+                disableWysiwygMode(textarea, wikiEditor);
+            }
+        });
     }
 
     if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.sync) {
         chrome.storage.sync.get(['togglePosition'], function (result) {
             const position = result.togglePosition || 'right';
-            createToggleWithPosition(position);
+            toggle.setAttribute('data-position', position);
         });
-    } else {
-        createToggleWithPosition('right');
     }
 }
 
-function observeDOM(): void {
-    window.editorObserver = new MutationObserver(() => {
-        if (retryCount < MAX_RETRIES && !editorReady) {
-            setupEditor();
-        }
-    });
-
-    window.editorObserver.observe(document.body, {
-        childList: true,
-        subtree: true,
-    });
-
-    setupEditor();
-}
-
-/**
- * Reset editor state and re-run setup after an in-document SPA navigation.
- * Called by the pushState / replaceState / popstate listeners below.
- *
- * Guard against tight loops: only reset if the toggle container has been
- * removed from the DOM (meaning the SPA actually tore down the wiki view)
- * and the current URL is a wiki URL.
- */
-function handleSpaNavigation(): void {
-    const togglePresent = !!document.querySelector('#wysiwyg-toggle-container');
-    if (editorReady && togglePresent) {
-        // Editor is live and the DOM hasn't changed — nothing to do.
-        return;
-    }
-
-    if (!/\/_wiki\//i.test(window.location.href)) {
-        // Navigated away from the wiki — don't attempt to set up.
-        return;
-    }
-
-    // Reset latches so setupEditor can run fresh.
-    editorReady = false;
-    retryCount = 0;
-    isWysiwygMode = false;
-
-    if (timeoutId) {
+function armPoll(): void {
+    // Bounded backstop poll. The MutationObserver is the primary trigger; this
+    // covers edit-mode transitions that change visibility without emitting a DOM
+    // mutation. Re-armed on every (re)bootstrap and SPA navigation so each new
+    // page gets a fresh grace period.
+    if (timeoutId !== null) {
         window.clearTimeout(timeoutId);
         timeoutId = null;
     }
-    if (window.editorObserver) {
-        window.editorObserver.disconnect();
-        delete window.editorObserver;
+    retryCount = 0;
+
+    const tick = (): void => {
+        timeoutId = null;
+        setupEditor();
+        if (document.querySelector('#wysiwyg-toggle-container')) {
+            return; // mounted — stop polling
+        }
+        if (retryCount < MAX_RETRIES) {
+            retryCount++;
+            timeoutId = window.setTimeout(tick, 500);
+        }
+    };
+
+    tick();
+}
+
+function observeDOM(): void {
+    // Connect the observer once and keep it connected for the lifetime of the
+    // document. ADO renders the wiki as a SPA, so document.body persists across
+    // in-app navigations; a single long-lived observer re-detects each new edit
+    // surface without us tearing down and reconnecting on every route change.
+    if (!window.editorObserver) {
+        window.editorObserver = new MutationObserver(() => {
+            setupEditor();
+        });
+
+        window.editorObserver.observe(document.body, {
+            childList: true,
+            subtree: true,
+        });
+    }
+
+    armPoll();
+}
+
+/**
+ * Re-arm editor setup after an in-document SPA navigation (pushState /
+ * replaceState / popstate). Azure DevOps renders the wiki as a single-page app,
+ * so navigating between pages never triggers the declarative content-script
+ * injection. Our toggle lives inside ADO's React tree and is unmounted when the
+ * old page tears down, so we don't remove anything ourselves — we just re-arm
+ * the bounded poll. The always-on MutationObserver (kept connected by
+ * observeDOM) does the heavy lifting of detecting the new edit surface.
+ *
+ * Safe to call on every history event: if the current edit surface is still
+ * mounted (e.g. ADO updated the URL while the user keeps editing), setupEditor
+ * sees our toggle and returns immediately, so re-arming is a no-op — and we
+ * deliberately do NOT touch isWysiwygMode, which would corrupt an active edit.
+ */
+function handleSpaNavigation(): void {
+    if (!/\/_wiki\//i.test(window.location.href)) {
+        // Navigated away from the wiki — leave the observer running but don't poll.
+        return;
     }
 
     observeDOM();
@@ -449,21 +454,10 @@ function handleSpaNavigation(): void {
 
 if (window.__adoWikiEditorLoaded) {
     // ── Re-injection path ────────────────────────────────────────────────────
-    // The background script already verified `__adoWikiEditorLoaded === false`
-    // before injecting, so this branch executes only when a previous run set the
-    // flag (e.g. declarative injection on a hard reload) and then background
-    // injects again on a subsequent SPA navigation where the flag was missed.
-    // Reset and re-init defensively.
-    editorReady = false;
-    retryCount = 0;
-    if (timeoutId) {
-        window.clearTimeout(timeoutId);
-        timeoutId = null;
-    }
-    if (window.editorObserver) {
-        window.editorObserver.disconnect();
-        delete window.editorObserver;
-    }
+    // The IIFE already ran in this frame (declarative load, or a prior background
+    // injection on the first SPA arrival). observeDOM() is idempotent: it reuses
+    // the existing long-lived observer and just re-arms the bounded poll, so a
+    // fresh edit surface is still picked up.
     observeDOM();
 } else {
     // ── First-load path ───────────────────────────────────────────────────────
