@@ -1,33 +1,33 @@
-name: Build and Release
+name: Release
 
+# Release pipeline: runs only on version tags. Day-to-day validation
+# (typecheck + tests + build on every push/PR) lives in ci.yml.
 on:
   push:
-    branches:
-      - main
     tags:
       - 'v*'
-    paths-ignore:
-      - '**.md'
-  pull_request:
-    branches: [ main ]
 
 permissions:
   contents: write
 
 jobs:
+  # Gate: reuse the full CI workflow. The release jobs below depend on this,
+  # so an untested commit can never produce a release.
+  ci:
+    uses: ./.github/workflows/ci.yml
+
   build:
-    # Skip if the commit message contains [skip ci]
-    if: "!contains(github.event.head_commit.message, '[skip ci]')"
+    needs: ci
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
       with:
         fetch-depth: 0
         token: ${{ secrets.PAT_TOKEN || github.token }}
-    
+
     - name: Use Node.js
-      uses: actions/setup-node@v3
+      uses: actions/setup-node@v4
       with:
         node-version: '20'
         cache: 'npm'
@@ -37,16 +37,15 @@ jobs:
 
     - name: Set version from tag
       id: get_version
-      if: startsWith(github.ref, 'refs/tags/v')
       run: |
         VERSION=${GITHUB_REF#refs/tags/v}
         echo "version=$VERSION" >> $GITHUB_OUTPUT
-        
+
         # Use our sync-version script instead of manual updates
         npm version $VERSION --no-git-tag-version --allow-same-version
         set -e
         node scripts/sync-version.js || { echo "Error: sync-version.js failed"; exit 1; }
-        
+
         # Commit version updates with [skip ci] to avoid circular trigger
         git config --global user.name 'GitHub Actions'
         git config --global user.email 'actions@github.com'
@@ -63,13 +62,11 @@ jobs:
       run: mkdir -p artifacts
 
     - name: Create versioned zip
-      if: startsWith(github.ref, 'refs/tags/v')
       run: |
         cd dist
         zip -r "../artifacts/azure-devops-wiki-editor-v${{ steps.get_version.outputs.version }}.zip" *
 
     - name: Upload build artifacts
-      if: startsWith(github.ref, 'refs/tags/v')
       uses: actions/upload-artifact@v4
       with:
         name: extension-dist-v${{ steps.get_version.outputs.version }}
@@ -79,7 +76,6 @@ jobs:
   release:
     needs: build
     runs-on: ubuntu-latest
-    if: startsWith(github.ref, 'refs/tags/v')
 
     steps:
     - name: Get Version
