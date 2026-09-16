@@ -23,10 +23,14 @@
     --toggle-focus-bg: #ffffff;
 }
 
-/* Dark theme toggle tokens */
+/* Dark theme toggle tokens. `data-wiki-editor-theme` is the resolved theme stamped on the
+   `.wiki-editor` container (see `setEditorDarkThemeClass` in `src/main.ts`), which accounts
+   for the popup's manual Editor theme override — not just ADO's own `body[data-theme]` — so
+   the toggle bar always follows the same theme as the editor content. */
 :is(
     [data-theme*="dark"],
-    body[data-theme="ms.vss-web.vsts-theme-dark"]
+    body[data-theme="ms.vss-web.vsts-theme-dark"],
+    [data-wiki-editor-theme="dark"]
 ) {
     --toggle-track-bg: #323130;
     --toggle-track-border: #323130;
@@ -39,6 +43,25 @@
     --toggle-container-border: #3b3a39;
     --toggle-focus-ring: #ffffff;
     --toggle-focus-bg: #1b1a19;
+}
+
+/* Forced-light override: re-asserts the light-theme tokens directly on `.wiki-editor` so they
+   win over an inherited dark value from `body[data-theme]` when ADO's real theme is dark but
+   the popup's Editor theme override is Light. */
+[data-wiki-editor-theme="light"] {
+    --toggle-track-bg: #ffffff;
+    --toggle-track-border: #8a8886;
+    --toggle-thumb-bg: #323130;
+    --toggle-track-hover-border: #323130;
+    --toggle-thumb-hover-bg: #201f1e;
+    --toggle-checked-bg: #0078d4;
+    --toggle-checked-hover-bg: #106ebe;
+    --toggle-label-color: #605e5c;
+    --toggle-label-active-color: #323130;
+    --toggle-container-bg: #faf9f8;
+    --toggle-container-border: #edebe9;
+    --toggle-focus-ring: #605e5c;
+    --toggle-focus-bg: #ffffff;
 }
 
 /* High Contrast Dark toggle tokens */
