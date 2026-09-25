@@ -136,6 +136,14 @@ function patchHtmlInlineForWiki(parser: MarkdownParser): void {
             previous(state, tok, tokens, i);
             return;
         }
+        /** ADO wiki table cells use `<br>` / `<br/>` for line breaks — map to `hard_break`, not a widget. */
+        if (/^<br\s*\/?\s*>$/i.test(raw.trim())) {
+            const hardBreak = state.schema.nodes.hard_break;
+            if (hardBreak) {
+                state.addNode(hardBreak);
+                return;
+            }
+        }
         const styleAttrs = tryParseWikiStyleSpanOpenHtml(raw);
         if (styleAttrs) {
             const mt = wikiSchema.marks['wikiStyle'];

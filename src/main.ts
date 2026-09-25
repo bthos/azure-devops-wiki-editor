@@ -40,6 +40,47 @@ function getMarkdownFromEditorInstance(inst: WikiEditor): string {
     return inst.getMarkdown();
 }
 
+/**
+ * Toggles {@link WIKI_EDITOR_DARK_CLASS} on the editor root — needed by widget code, e.g.
+ * `wikiEditorShellIsDark` in `wiki-mermaid-code-block-widget.ts` — and, when the popup's manual
+ * Editor theme override is active, stamps it as `data-wiki-editor-theme` on the surrounding
+ * `.wiki-editor` container.
+ *
+ * The chrome outside the ProseMirror root (the WYSIWYG/Markdown toggle bar in
+ * `custom-styles.css`) otherwise reads ADO's own `body[data-theme]` attribute directly. Because
+ * `data-wiki-editor-theme` is set directly on `.wiki-editor` — an ancestor of the toggle bar —
+ * a same-element CSS rule keyed on it wins over whatever would be inherited from `body`, in both
+ * directions (forcing dark on an ADO-light page, or forcing light on an ADO-dark page).
+ *
+ * In `'auto'` mode the attribute is removed so the `body[data-theme]` tokens (including the
+ * High Contrast Dark/Light variants) keep applying unchanged.
+ */
+function setEditorDarkThemeClass(editorDiv: HTMLElement, preference: EditorThemePreference): void {
+    const useDarkTheme = preference === 'auto' ? isDarkTheme() : preference === 'dark';
+    editorDiv.classList.toggle(WIKI_EDITOR_DARK_CLASS, useDarkTheme);
+    const container = editorDiv.closest('.wiki-editor');
+    if (preference === 'auto') {
+        container?.removeAttribute('data-wiki-editor-theme');
+    } else {
+        container?.setAttribute('data-wiki-editor-theme', preference);
+    }
+}
+
+type EditorThemePreference = 'auto' | 'light' | 'dark';
+
+/** Reads the popup's editor-theme override (`editorTheme` in `chrome.storage.sync`); defaults to `'auto'` (follow ADO). */
+function getEditorThemePreference(): Promise<EditorThemePreference> {
+    return new Promise((resolve) => {
+        if (typeof chrome === 'undefined' || !chrome.storage || !chrome.storage.sync) {
+            resolve('auto');
+            return;
+        }
+        chrome.storage.sync.get(['editorTheme'], (result) => {
+            resolve(result.editorTheme === 'light' || result.editorTheme === 'dark' ? result.editorTheme : 'auto');
+        });
+    });
+}
+
 function isElementVisible(element: HTMLElement): boolean {
     return !!(element.offsetWidth || element.offsetHeight || element.getClientRects().length) &&
         window.getComputedStyle(element).display !== 'none';
@@ -193,7 +234,7 @@ async function initializeEditor(textarea: HTMLTextAreaElement, editorDiv: HTMLEl
 
     const form = findClosest(textarea, 'form');
 
-    const useDarkTheme = isDarkTheme();
+    const editorThemePreference = await getEditorThemePreference();
 
     const wikiInfo = getWikiInfoFromUrl();
     let attachmentService: AdoAttachmentService | null = null;
@@ -246,9 +287,7 @@ async function initializeEditor(textarea: HTMLTextAreaElement, editorDiv: HTMLEl
 
         setupMentionProfileCard(editorDiv, mentionService);
 
-        if (useDarkTheme) {
-            editorDiv.classList.add(WIKI_EDITOR_DARK_CLASS);
-        }
+        setEditorDarkThemeClass(editorDiv, editorThemePreference);
 
         if (form instanceof HTMLFormElement) {
             const prevSubmit = formWikiSubmitHandlers.get(form);
@@ -438,6 +477,38 @@ function handleSpaNavigation(): void {
     }
 
     observeDOM();
+}
+
+/** Re-applies the popup's editor-theme override to the mounted editor without a page refresh. */
+function handleEditorThemeChange(): void {
+    const editorDiv = document.querySelector(`#${WIKI_EDITOR_ROOT_ID}`) as HTMLElement | null;
+    if (!editorDiv) {
+        return;
+    }
+
+    void getEditorThemePreference().then((preference) => {
+        setEditorDarkThemeClass(editorDiv, preference);
+    });
+}
+
+/** Re-applies the popup's toggle-position setting to the mounted toggle without a page refresh. */
+function handleTogglePositionChange(position: string): void {
+    const toggle = document.querySelector('#wysiwyg-toggle-container') as HTMLElement | null;
+    toggle?.setAttribute('data-position', position || 'right');
+}
+
+if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.onChanged) {
+    chrome.storage.onChanged.addListener((changes, area) => {
+        if (area !== 'sync') {
+            return;
+        }
+        if (changes.editorTheme) {
+            handleEditorThemeChange();
+        }
+        if (changes.togglePosition) {
+            handleTogglePositionChange(changes.togglePosition.newValue as string);
+        }
+    });
 }
 
 // ── Bootstrap ─────────────────────────────────────────────────────────────────
