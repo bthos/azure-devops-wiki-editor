@@ -66,7 +66,8 @@
 :is(
     [data-theme*="dark"],
     body[data-theme="ms.vss-web.vsts-theme-dark"],
-    .wiki-editor-dark
+    .wiki-editor-dark,
+    [data-wiki-editor-theme="dark"]
 ) {
     --ado-text-primary: rgba(243, 242, 241, 1);
     --ado-text-secondary: rgba(161, 159, 157, 1);
@@ -93,6 +94,38 @@
     
     --ado-danger-color: #f1707b;
     --ado-danger-bg: rgba(241, 112, 123, 0.15);
+}
+
+/* Forced-light override: re-asserts the light-theme tokens directly on `[data-wiki-editor-theme="light"]`
+   (the `.wiki-editor` container; see `setEditorDarkThemeClass` in `src/main.ts`) so they win over an
+   inherited dark value from `body[data-theme]` when ADO's real theme is dark but the popup's Editor
+   theme override is Light. */
+[data-wiki-editor-theme="light"] {
+    --ado-text-primary: rgba(0, 0, 0, 0.9);
+    --ado-text-secondary: rgba(0, 0, 0, 0.55);
+    --ado-text-tertiary: rgba(0, 0, 0, 0.7);
+
+    --ado-surface-bg: #ffffff;
+    --ado-surface-secondary: #faf9f8;
+    --ado-surface-overlay: rgba(0, 0, 0, 0.02);
+
+    --ado-border-color: rgba(234, 234, 234, 1);
+
+    --ado-link-color: rgba(0, 90, 158, 1);
+    --ado-link-hover: rgba(0, 69, 120, 1);
+
+    --ado-accent-color: rgba(0, 120, 212, 1);
+    --ado-accent-bg: rgba(0, 120, 212, 0.08);
+    --ado-accent-bg-hover: rgba(0, 120, 212, 0.15);
+    --ado-accent-selection: rgba(0, 120, 212, 0.2);
+
+    --ado-code-bg: rgba(0, 0, 0, 0.06);
+
+    --ado-shadow-sm: 0 1.6px 3.6px 0 rgba(0, 0, 0, 0.132), 0 0.3px 0.9px 0 rgba(0, 0, 0, 0.108);
+    --ado-shadow-md: 0 3.2px 7.2px 0 rgba(0, 0, 0, 0.132), 0 0.6px 1.8px 0 rgba(0, 0, 0, 0.108);
+
+    --ado-danger-color: #a80000;
+    --ado-danger-bg: rgba(168, 0, 0, 0.1);
 }
 
 /* ==============================================

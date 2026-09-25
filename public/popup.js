@@ -6,6 +6,7 @@ document.addEventListener("DOMContentLoaded", function () {
     
     // Settings event listeners
     document.getElementById("togglePosition").addEventListener("change", saveSettings);
+    document.getElementById("editorTheme").addEventListener("change", saveSettings);
     
     // Domain event listeners
     document.getElementById("addDomain").addEventListener("click", addDomain);
@@ -20,9 +21,12 @@ document.addEventListener("DOMContentLoaded", function () {
  * Load saved settings
  */
 function loadSettings() {
-    chrome.storage.sync.get(['togglePosition'], function(result) {
+    chrome.storage.sync.get(['togglePosition', 'editorTheme'], function(result) {
         const position = result.togglePosition || 'right'; // Default to right
         document.getElementById('togglePosition').value = position;
+
+        const editorTheme = result.editorTheme || 'auto'; // Default to auto (follow ADO)
+        document.getElementById('editorTheme').value = editorTheme;
     });
 }
 
@@ -31,13 +35,14 @@ function loadSettings() {
  */
 function saveSettings() {
     const togglePosition = document.getElementById('togglePosition').value;
-    
-    chrome.storage.sync.set({ togglePosition: togglePosition }, function() {
+    const editorTheme = document.getElementById('editorTheme').value;
+
+    chrome.storage.sync.set({ togglePosition: togglePosition, editorTheme: editorTheme }, function() {
         if (chrome.runtime.lastError) {
             console.error('Error saving settings:', chrome.runtime.lastError);
             return;
         }
-        console.log('Settings saved: togglePosition =', togglePosition);
+        console.log('Settings saved: togglePosition =', togglePosition, 'editorTheme =', editorTheme);
     });
 }
 
