@@ -9,17 +9,32 @@ function rowIsAllHeaders(row: Node): boolean {
     return ok;
 }
 
+/**
+ * Serialize cell content for a pipe table.
+ * ADO wiki line breaks inside a cell use `<br>` / `<br/>` (not real newlines, which break the row).
+ * Enter in the editor splits into multiple paragraphs (`paragraph+`); join those with `<br>`.
+ */
+function serializeTableCell(state: MarkdownSerializerState, cell: Node): void {
+    let wrote = false;
+    cell.forEach((child) => {
+        if (wrote) {
+            state.write('<br>');
+        }
+        wrote = true;
+        if (child.type.name === 'paragraph') {
+            state.renderInline(child, false);
+        } else {
+            state.renderContent(child);
+        }
+    });
+}
+
 /** Serialize one table row as `| a | b |`. */
 function serializeTableRow(state: MarkdownSerializerState, row: Node): void {
     state.write('|');
     row.forEach((cell) => {
         state.write(' ');
-        const first = cell.firstChild;
-        if (first && first.type.name === 'paragraph') {
-            state.renderInline(first, false);
-        } else if (first) {
-            state.renderContent(cell);
-        }
+        serializeTableCell(state, cell);
         state.write(' |');
     });
     state.write('\n');

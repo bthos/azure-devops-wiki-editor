@@ -119,6 +119,14 @@ function wikiSerializeOrderedList(state: MarkdownSerializerState, node: Node) {
 }
 
 const extraNodes: Record<string, NodeSerializer> = {
+    /**
+     * Default prosemirror-markdown emits `\\\n`, which splits a GFM/ADO pipe table row.
+     * ADO wiki documents in-cell breaks as HTML `<br/>`; use the same for hard breaks everywhere
+     * (wiki markdown allows raw HTML).
+     */
+    hard_break(state) {
+        state.write('<br>');
+    },
     ado_toc(state, node) {
         state.ensureNewLine();
         state.write('[[_TOC_]]');
