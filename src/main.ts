@@ -42,21 +42,28 @@ function getMarkdownFromEditorInstance(inst: WikiEditor): string {
 
 /**
  * Toggles {@link WIKI_EDITOR_DARK_CLASS} on the editor root — needed by widget code, e.g.
- * `wikiEditorShellIsDark` in `wiki-mermaid-code-block-widget.ts` — and stamps the *resolved*
- * theme (`'light'` | `'dark'`) as `data-wiki-editor-theme` on the surrounding `.wiki-editor`
- * container.
+ * `wikiEditorShellIsDark` in `wiki-mermaid-code-block-widget.ts` — and, when the popup's manual
+ * Editor theme override is active, stamps it as `data-wiki-editor-theme` on the surrounding
+ * `.wiki-editor` container.
  *
  * The chrome outside the ProseMirror root (the WYSIWYG/Markdown toggle bar in
- * `custom-styles.css`) otherwise reads ADO's own `body[data-theme]` attribute directly, which
- * only reflects the ADO page theme, not the popup's manual Editor theme override. Because
+ * `custom-styles.css`) otherwise reads ADO's own `body[data-theme]` attribute directly. Because
  * `data-wiki-editor-theme` is set directly on `.wiki-editor` — an ancestor of the toggle bar —
- * a same-element CSS rule keyed on it wins outright over whatever the toggle bar would
- * otherwise inherit from `body`, in both directions (forcing dark on an ADO-light page, or
- * forcing light on an ADO-dark page).
+ * a same-element CSS rule keyed on it wins over whatever would be inherited from `body`, in both
+ * directions (forcing dark on an ADO-light page, or forcing light on an ADO-dark page).
+ *
+ * In `'auto'` mode the attribute is removed so the `body[data-theme]` tokens (including the
+ * High Contrast Dark/Light variants) keep applying unchanged.
  */
-function setEditorDarkThemeClass(editorDiv: HTMLElement, useDarkTheme: boolean): void {
+function setEditorDarkThemeClass(editorDiv: HTMLElement, preference: EditorThemePreference): void {
+    const useDarkTheme = preference === 'auto' ? isDarkTheme() : preference === 'dark';
     editorDiv.classList.toggle(WIKI_EDITOR_DARK_CLASS, useDarkTheme);
-    editorDiv.closest('.wiki-editor')?.setAttribute('data-wiki-editor-theme', useDarkTheme ? 'dark' : 'light');
+    const container = editorDiv.closest('.wiki-editor');
+    if (preference === 'auto') {
+        container?.removeAttribute('data-wiki-editor-theme');
+    } else {
+        container?.setAttribute('data-wiki-editor-theme', preference);
+    }
 }
 
 type EditorThemePreference = 'auto' | 'light' | 'dark';
@@ -228,7 +235,6 @@ async function initializeEditor(textarea: HTMLTextAreaElement, editorDiv: HTMLEl
     const form = findClosest(textarea, 'form');
 
     const editorThemePreference = await getEditorThemePreference();
-    const useDarkTheme = editorThemePreference === 'auto' ? isDarkTheme() : editorThemePreference === 'dark';
 
     const wikiInfo = getWikiInfoFromUrl();
     let attachmentService: AdoAttachmentService | null = null;
@@ -281,7 +287,7 @@ async function initializeEditor(textarea: HTMLTextAreaElement, editorDiv: HTMLEl
 
         setupMentionProfileCard(editorDiv, mentionService);
 
-        setEditorDarkThemeClass(editorDiv, useDarkTheme);
+        setEditorDarkThemeClass(editorDiv, editorThemePreference);
 
         if (form instanceof HTMLFormElement) {
             const prevSubmit = formWikiSubmitHandlers.get(form);
@@ -481,8 +487,7 @@ function handleEditorThemeChange(): void {
     }
 
     void getEditorThemePreference().then((preference) => {
-        const useDarkTheme = preference === 'auto' ? isDarkTheme() : preference === 'dark';
-        setEditorDarkThemeClass(editorDiv, useDarkTheme);
+        setEditorDarkThemeClass(editorDiv, preference);
     });
 }
 
