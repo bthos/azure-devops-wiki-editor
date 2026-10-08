@@ -33,12 +33,12 @@
   "homepage": "https://github.com/bthos/azure-devops-wiki-editor#readme",
   "dependencies": {
     "highlight.js": "^11.11.1",
-    "katex": "^0.16.45",
-    "markdown-it": "^14.1.1",
+    "katex": "^0.18.2",
+    "markdown-it": "^14.3.2",
     "markdown-it-multimd-table": "^4.2.3",
     "markdown-it-task-lists": "^2.1.1",
     "mdast-util-to-markdown": "^2.1.2",
-    "mermaid": "^11.14.0",
+    "mermaid": "^11.16.1",
     "prosemirror-commands": "^1.7.1",
     "prosemirror-gapcursor": "^1.4.1",
     "prosemirror-history": "^1.5.0",
@@ -50,7 +50,7 @@
     "prosemirror-state": "^1.4.4",
     "prosemirror-tables": "^1.8.5",
     "prosemirror-transform": "^1.12.0",
-    "prosemirror-view": "^1.41.8",
+    "prosemirror-view": "^1.42.6",
     "remark-gfm": "^4.0.1",
     "remark-parse": "^11.0.0",
     "remark-stringify": "^11.0.0",
@@ -64,15 +64,15 @@
     "@types/markdown-it": "^14.1.2",
     "@vitest/coverage-v8": "^4.1.4",
     "archiver": "^7.0.1",
-    "commitizen": "^4.3.1",
+    "commitizen": "^4.3.2",
     "cross-env": "^7.0.3",
     "cz-conventional-changelog": "^3.3.0",
-    "esbuild": "^0.24.2",
+    "esbuild": "^0.28.2",
     "happy-dom": "^20.9.0",
     "http-server": "^14.1.1",
     "standard-version": "^9.5.0",
     "typescript": "^5.7.3",
-    "vitest": "^4.0.18"
+    "vitest": "^5.0.3"
   },
   "config": {
     "commitizen": {
